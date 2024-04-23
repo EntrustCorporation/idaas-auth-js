@@ -1,0 +1,20 @@
+{
+  "name": "idaas-spa-js",
+  "version": "0.1.0",
+  "description": "",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "1.1.0",
+    "@types/web": "0.0.143",
+    "biome": "0.3.3",
+    "typescript": "5.4.5"
+  },
+  "scripts": {
+    "build": "tsc",   
+    "format": "biome format .",
+    "lint": "biome check .",
+    "ci": "biome ci . && tsc",
+    "ci:fix": "bun run format --write && bun run lint --apply",
+    "clean": "rm -rf ./dist"
+  }
+}
