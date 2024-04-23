@@ -1,0 +1,37 @@
+{
+  "name": "@entrust/idaas-auth-spa",
+  "version": "0.1.15",
+  "description": "",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/types/index.d.ts",
+  "files": ["dist", "README.md"],
+  "devDependencies": {
+    "@biomejs/biome": "1.7.1",
+    "@happy-dom/global-registrator": "14.12.0",
+    "@playwright/test": "1.45.1",
+    "@types/bun": "1.1.0",
+    "@types/oidc-provider": "8.4.4",
+    "@types/web": "0.0.143",
+    "oidc-provider": "8.4.7",
+    "publint": "0.2.9",
+    "typescript": "5.4.5"
+  },
+  "scripts": {
+    "build": "tsc",
+    "format": "biome format .",
+    "lint": "biome check .",
+    "ci": "biome ci . && tsc",
+    "ci:fix": "bun run format --write && bun run lint --apply",
+    "clean": "rm -rf ./dist",
+    "test:e2e": "bunx playwright test",
+    "test:clean": "rm -rf playwright/test-app/out",
+    "test:bundle": "bun run test:clean; bun build playwright/test-app/app.ts --outdir playwright/test-app/dist",
+    "test:client": "bun run test:bundle && bun playwright/test-app/index.ts",
+    "test:oidc-server": "bun run playwright/test-app/oidc-provider.ts"
+  },
+  "dependencies": {
+    "jose": "5.2.4"
+  }
+}
