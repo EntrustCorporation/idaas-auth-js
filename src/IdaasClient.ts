@@ -19,7 +19,10 @@ interface TokenResponse {
 
 export class IdaasClient {
   private config: OidcConfig | null = null;
-  constructor(private issuerUrl: string, private clientId: string) {}
+  constructor(
+    private issuerUrl: string,
+    private clientId: string,
+  ) {}
 
   async loadConfiguration() {
     const wellKnownUrl = `${this.issuerUrl}/.well-known/openid-configuration`;
@@ -27,9 +30,7 @@ export class IdaasClient {
     try {
       const response = await fetch(wellKnownUrl);
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch OIDC configuration: ${response.statusText}`
-        );
+        throw new Error(`Failed to fetch OIDC configuration: ${response.statusText}`);
       }
       this.config = await response.json();
     } catch (error) {
@@ -37,11 +38,7 @@ export class IdaasClient {
     }
   }
 
-  async authorization(
-    redirectUri: string,
-    scope: string,
-    responseType: string
-  ): Promise<void> {}
+  async authorization(redirectUri: string, scope: string, responseType: string): Promise<void> {}
 
   async token(authorizationCode: string): Promise<TokenResponse | undefined> {
     return undefined;
