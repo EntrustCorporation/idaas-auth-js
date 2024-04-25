@@ -13,10 +13,18 @@ pipeline {
 
     NPM_CONFIG__AUTH = credentials("246abfdf-d036-4ed3-ada8-c24975556e65")
     NPM_CONFIG_EMAIL = "builder@entrustdatacard.com"
+    PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.bun/bin"
   }
   stages {
+    stage("⚙️  Setup") {
+      steps {
+        sh "curl -fsSL https://bun.sh/install | bash"
+        sh "n lts"
+      }
+    }
     stage("🏗️  Build") {
       steps {
+        sh "bun install --frozen-lockfile"
         sh "bun run ci"
       }
     }
