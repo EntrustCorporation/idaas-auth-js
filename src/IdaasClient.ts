@@ -1,46 +1,40 @@
-interface OidcConfig {
-  issuer: string;
-  clientId: string;
-  authorization_endpoint: string;
-  token_endpoint: string;
-  userinfo_endpoint: string;
-  jwks_uri: string;
-  scope: string;
-  responseType: string;
-}
-
-interface TokenResponse {
-  idToken: string;
-  accessToken: string;
-  expiresIn: string;
-  tokenType: string;
-  refreshToken?: string;
-}
+import { type OidcConfig, fetchOpenidConfiguration } from "./api";
 
 export class IdaasClient {
-  private config: OidcConfig | null = null;
+  private instantiated = false;
+  private config?: OidcConfig;
+  private readonly issuerUrl: string;
+
   constructor(
-    private issuerUrl: string,
-    private clientId: string,
-  ) {}
-
-  async loadConfiguration() {
-    const wellKnownUrl = `${this.issuerUrl}/.well-known/openid-configuration`;
-
-    try {
-      const response = await fetch(wellKnownUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch OIDC configuration: ${response.statusText}`);
-      }
-      this.config = await response.json();
-    } catch (error) {
-      throw new Error(`Failed to load OIDC configuration: ${error}`);
-    }
+    issuerUrl: string,
+    private readonly clientId: string,
+  ) {
+    // Format the issuerUrl to remove trailing /
+    this.issuerUrl = issuerUrl.endsWith("/") ? issuerUrl.slice(0, -1) : issuerUrl;
   }
 
-  async authorization(redirectUri: string, scope: string, responseType: string): Promise<void> {}
+  /**
+   * Begin the OIDC ceremony by navigating to the authorize endpoint with the necessary query parameters.
+   * @param redirectUri optional callback url, if not provided will default to window location when starting ceremony
+   */
+  public async login(redirectUri?: string) {}
 
-  async token(authorizationCode: string): Promise<TokenResponse | undefined> {
-    return undefined;
+  /**
+   * Handle the callback to the login redirectUri post-authorize and pass the received code to
+   * the token endpoint to get the auth token.
+   */
+  public async handleRedirect() {}
+
+  /**
+   * Clear the application session and navigate to the IDP's endsession endpoint.
+   */
+  public async logout() {}
+
+  /**
+   * Fetch the OIDC configuration from the well-known endpoint and populate internal fields.
+   */
+  private async loadConfiguration() {
+    this.config = await fetchOpenidConfiguration(this.issuerUrl);
+    this.instantiated = true;
   }
 }
