@@ -1,12 +1,10 @@
-import { keysToCamel } from "./utils";
-
 export interface OidcConfig {
   issuer: string;
-  authorizationEndpoint: string;
-  tokenEndpoint: string;
-  userinfoEndpoint: string;
-  endSessionEndpoint: string;
-  jwksUri: string;
+  authorization_endpoint: string;
+  token_endpoint: string;
+  userinfo_endpoint: string;
+  end_session_endpoint: string;
+  jwks_uri: string;
 }
 
 export const fetchOpenidConfiguration = async (issuerUrl: string): Promise<OidcConfig> => {
@@ -14,7 +12,7 @@ export const fetchOpenidConfiguration = async (issuerUrl: string): Promise<OidcC
 
   try {
     const response = await fetch(wellKnownUrl);
-    return keysToCamel(await response.json());
+    return await response.json();
   } catch (error) {
     throw new Error(`Failed to load OIDC configuration: ${error}`);
   }

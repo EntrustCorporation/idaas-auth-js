@@ -4,20 +4,25 @@ export const createRandomString = () => {
   return String.fromCharCode(...randomNumbers);
 };
 
-export const base64UrlStringEncode = (randomNumbers: string) => {
-  return btoa(randomNumbers).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+export const base64UrlStringEncode = (str: string) => {
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 };
 
-export const base64UrlBufferEncode = (arrayBuffer: Uint8Array) => {
-  return base64UrlStringEncode(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+export const base64UrlOctetEncode = (array: Uint8Array) => {
+  return base64UrlStringEncode(String.fromCharCode(...array));
 };
 
 export const generateChallengeVerifierPair = async () => {
   const randomString = createRandomString();
   const codeVerifier = base64UrlStringEncode(randomString);
-  const codeChallenge = await createCodeChallenge(randomString);
+  const codeChallenge = await createCodeChallenge(codeVerifier);
 
   return { codeVerifier, codeChallenge };
+};
+
+const createCodeChallenge = async (codeVerifier: string) => {
+  const hash = await sha256(codeVerifier);
+  return base64UrlOctetEncode(hash);
 };
 
 export const sha256 = async (string: string) => {
@@ -25,27 +30,4 @@ export const sha256 = async (string: string) => {
   const data = encoder.encode(string);
   const hash = await window.crypto.subtle.digest("SHA-256", data);
   return new Uint8Array(hash);
-};
-
-// biome-ignore lint/suspicious/noExplicitAny: dynamic object creation
-export const keysToCamel = (object: any) => {
-  // biome-ignore lint/suspicious/noExplicitAny: dynamic object creation
-  const newObject = {} as any;
-
-  if (typeof object === "object" && object !== null) {
-    for (const key of Object.keys(object)) {
-      newObject[toCamelCase(key)] = object[key];
-    }
-  }
-  return newObject;
-};
-
-const toCamelCase = (value: string): string => {
-  return value.replace(/(_\w)/g, (match) => match[1].toUpperCase());
-};
-
-const createCodeChallenge = async (randomString: string) => {
-  const hash = await sha256(randomString);
-  const base64Url = base64UrlBufferEncode(hash);
-  return base64Url;
 };

@@ -58,7 +58,7 @@ export class IdaasClient {
     const nonce = base64UrlStringEncode(createRandomString());
     const { codeVerifier, codeChallenge } = await generateChallengeVerifierPair();
 
-    const url = new URL(this.config.authorizationEndpoint);
+    const url = new URL(this.config.authorization_endpoint);
     url.searchParams.append("response_type", "code");
     url.searchParams.append("client_id", this.clientId);
     url.searchParams.append("redirect_uri", redirectUri ?? window.location.origin);
