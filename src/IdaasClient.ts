@@ -19,6 +19,10 @@ export class IdaasClient {
   constructor({ issuerUrl, clientId }: IdaasClientOptions) {
     this.issuerUrl = formatIssuerUrl(issuerUrl);
     this.persistenceManager = new PersistenceManager(clientId);
+    this.isAuthenticated = this.isAuthenticated.bind(this);
+    this.handleRedirect = this.handleRedirect.bind(this);
+    this.login = this.login.bind(this);
+    this.logout = this.logout.bind(this);
     this.clientId = clientId;
   }
 
