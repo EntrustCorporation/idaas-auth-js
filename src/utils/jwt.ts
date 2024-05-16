@@ -23,6 +23,7 @@ export const validateIdToken = ({
   nonce,
   idTokenSigningAlgValuesSupported,
   acrValuesSupported,
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: High number of simple checks
 }: ValidateIdTokenParams) => {
   const decodedJwt = decodeJwt(idToken);
   const { alg } = decodeProtectedHeader(idToken);

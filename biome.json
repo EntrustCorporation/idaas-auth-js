@@ -3,6 +3,9 @@
   "organizeImports": {
     "enabled": true
   },
+  "files": {
+    "ignore": ["dist"]
+  },
   "formatter": {
     "indentWidth": 2,
     "indentStyle": "space",
@@ -11,7 +14,13 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "style": {
+        "useNamingConvention": "off"
+      },
+      "performance": {
+        "noBarrelFile": "off"
+      },
+      "all": true,
       "correctness": {
         "useExhaustiveDependencies": "off"
       }

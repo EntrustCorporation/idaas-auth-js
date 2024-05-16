@@ -18,6 +18,30 @@ export interface IdaasClientOptions {
   clientId: string;
 }
 
+export interface UserClaims {
+  sub?: string;
+  name?: string;
+  given_name?: string;
+  family_name?: string;
+  middle_name?: string;
+  nickname?: string;
+  preferred_username?: string;
+  profile?: string;
+  picture?: string;
+  website?: string;
+  email?: string;
+  email_verified?: boolean;
+  gender?: string;
+  birthdate?: string;
+  zoneinfo?: string;
+  locale?: string;
+  phone_number?: string;
+  phone_number_verified?: boolean;
+  address?: string;
+  updated_at?: number;
+  [propName: string]: unknown;
+}
+
 export class IdaasClient {
   private readonly persistenceManager: PersistenceManager;
   private readonly issuerUrl: string;
@@ -28,10 +52,6 @@ export class IdaasClient {
   constructor({ issuerUrl, clientId }: IdaasClientOptions) {
     this.issuerUrl = formatIssuerUrl(issuerUrl);
     this.persistenceManager = new PersistenceManager(clientId);
-    this.isAuthenticated = this.isAuthenticated.bind(this);
-    this.handleRedirect = this.handleRedirect.bind(this);
-    this.login = this.login.bind(this);
-    this.logout = this.logout.bind(this);
     this.clientId = clientId;
   }
 
@@ -112,15 +132,20 @@ export class IdaasClient {
    * to the current window location
    */
   public async handleRedirect(callbackUrl: string = window.location.href) {
+    const authorizeResponse = this.parseRedirectSearchParams(callbackUrl);
+
+    // The provided url is not an authorized callback url
+    if (!authorizeResponse) {
+      return;
+    }
+
     const clientParams = this.persistenceManager.getClientParams();
     if (!clientParams) {
       throw new Error("Failed to recover IDaaS client state from local storage");
     }
     const { codeVerifier, redirectUri, state, nonce } = clientParams;
 
-    const authorizeResponse = this.parseRedirectSearchParams(callbackUrl);
     const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
-
     const tokens = await this.requestAndValidateTokens(authorizeCode, codeVerifier, redirectUri, nonce);
 
     this.persistenceManager.saveTokens(tokens);
@@ -129,6 +154,21 @@ export class IdaasClient {
   public isAuthenticated() {
     return !!this.persistenceManager.getTokens();
   }
+
+  /**
+   * Fetch the user information stored in the id_token
+   * @returns returns the decodedIdToken containing the user info.
+   */
+  public getUser(): UserClaims | null {
+    const tokens = this.persistenceManager.getTokens();
+
+    if (!tokens?.decodedIdToken) {
+      return null;
+    }
+
+    return tokens.decodedIdToken as UserClaims;
+  }
+
   /**
    * Clear the application session and navigate to the OpenID Provider's (OP) endsession endpoint.
    *
@@ -190,14 +230,21 @@ export class IdaasClient {
     return newAccessToken;
   }
 
-  private parseRedirectSearchParams(callbackUrl: string): AuthorizeResponse {
+  private parseRedirectSearchParams(callbackUrl: string): AuthorizeResponse | null {
     const url = new URL(callbackUrl);
     const searchParams = url.searchParams;
+
+    if (searchParams.toString() === "") {
+      return null;
+    }
 
     const state = searchParams.get("state");
     const code = searchParams.get("code");
     const error = searchParams.get("error");
     const error_description = searchParams.get("error_description");
+
+    url.search = "";
+    window.history.replaceState(null, document.title, url.toString());
 
     return {
       state,
@@ -215,7 +262,7 @@ export class IdaasClient {
       throw new Error("Error during authorization", { cause: error_description });
     }
 
-    if (!state || !code) {
+    if (!(code && state)) {
       throw new Error("URL must contain state and code for the authorization flow");
     }
 
@@ -319,11 +366,6 @@ export class IdaasClient {
   }
 
   private async getConfig(): Promise<OidcConfig> {
-    return !this.config ? await fetchOpenidConfiguration(this.issuerUrl) : this.config;
+    return this.config ? this.config : await fetchOpenidConfiguration(this.issuerUrl);
   }
-}
-
-interface RedirectParams {
-  state: string;
-  code: string;
 }
