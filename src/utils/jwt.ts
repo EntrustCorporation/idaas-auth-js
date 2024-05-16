@@ -93,14 +93,14 @@ export const validateIdToken = ({
 
   // Validate the token is valid at the current time
   const now = new Date();
-  const expDate = new Date(Math.floor((decodedJwt.exp + leeway) * 1000));
+  const expDate = new Date((decodedJwt.exp + leeway) * 1000);
 
   if (now > expDate) {
     throw new Error(`Expiration Time (exp) claim ${decodedJwt.exp} indicates that this token is now expired at ${now}`);
   }
 
   if (decodedJwt.nbf) {
-    const nbfDate = new Date(Math.floor((decodedJwt.nbf - leeway) * 1000));
+    const nbfDate = new Date((decodedJwt.nbf - leeway) * 1000);
     if (now < nbfDate) {
       throw new Error(
         `Not Before (nbf) claim ${decodedJwt.nbf} indicates that this token is not to be used yet at ${now}`,

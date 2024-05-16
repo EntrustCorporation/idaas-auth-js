@@ -23,6 +23,7 @@ interface ClientParams {
  */
 interface Tokens extends TokenResponse {
   decodedIdToken: JWTPayload;
+  expiresAt: number;
 }
 
 export class PersistenceManager {
