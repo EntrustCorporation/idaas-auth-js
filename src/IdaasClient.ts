@@ -1,4 +1,5 @@
-import { PersistenceManager, type Tokens } from "./PersistenceManager";
+import type { JWTPayload } from "jose";
+import { type AccessToken, PersistenceManager } from "./PersistenceManager";
 import {
   type AccessTokenRequest,
   type OidcConfig,
@@ -10,12 +11,31 @@ import {
 import type { AuthorizeResponse } from "./models";
 import { listenToPopup, openPopup } from "./utils/browser";
 import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPair } from "./utils/crypto";
-import { formatIssuerUrl } from "./utils/format";
+import { formatUrl } from "./utils/format";
 import { validateIdToken } from "./utils/jwt";
 
 export interface IdaasClientOptions {
   issuerUrl: string;
   clientId: string;
+  defaultScope?: string;
+  defaultAudience?: string;
+  defaultUseRefreshToken?: boolean;
+}
+
+export interface LoginOptions {
+  audience?: string;
+  scope?: string;
+  redirectUri?: string;
+  useRefreshToken?: boolean;
+  popup?: boolean;
+}
+
+export interface GetAccessTokenOptions {
+  audience?: string;
+  scope?: string;
+  fallback?: "redirect" | "popup";
+  redirectUri?: string;
+  useRefreshToken?: boolean;
 }
 
 export interface UserClaims {
@@ -42,15 +62,30 @@ export interface UserClaims {
   [propName: string]: unknown;
 }
 
+/**
+ * A validated token response, contains the TokenResponse as well as the decoded and encoded id token.
+ */
+export interface ValidatedTokenResponse {
+  tokenResponse: TokenResponse;
+  decodedIdToken: JWTPayload;
+  encodedIdToken: string;
+}
+
 export class IdaasClient {
   private readonly persistenceManager: PersistenceManager;
   private readonly issuerUrl: string;
   private readonly clientId: string;
+  private readonly defaultScope: string;
+  private readonly defaultAudience: string | undefined;
+  private readonly defaultUseRefreshToken: boolean;
 
   private config?: OidcConfig;
 
-  constructor({ issuerUrl, clientId }: IdaasClientOptions) {
-    this.issuerUrl = formatIssuerUrl(issuerUrl);
+  constructor({ issuerUrl, clientId, defaultAudience, defaultScope, defaultUseRefreshToken }: IdaasClientOptions) {
+    this.defaultAudience = defaultAudience;
+    this.defaultScope = defaultScope ?? "openid profile email";
+    this.defaultUseRefreshToken = defaultUseRefreshToken ?? false;
+    this.issuerUrl = formatUrl(issuerUrl);
     this.persistenceManager = new PersistenceManager(clientId);
     this.clientId = clientId;
   }
@@ -62,22 +97,24 @@ export class IdaasClient {
    * If using redirect (i.e. popup=false), your application must also be configured to call handleRedirect at the redirectUri
    * to complete the flow.
    *
-   * @param redirectUri optional callback url, if not provided will default to window location when starting ceremony
-   * @param audience passed to the authorization endpoint and applied to the access token
+   * @param redirectUri to navigate to after a successful authentication
+   * @param audience the intended audience for the received access token once login is complete
+   * @param scope the intended scope for the received access token once login is complete
+   * @param useRefreshToken determines if the received access token can be refreshed using refresh tokens
    * @param popup whether the authentication will occur in a new popup window, defaults to false. When false the browser will
-   * navigate to the OP to authenticate the user.
+   *  navigate to the OP to authenticate the user.
    */
-  async login(redirectUri = window.location.origin, popup = false, audience?: string) {
+  public async login({ audience, scope, redirectUri, useRefreshToken, popup = false }: LoginOptions) {
     const { response_modes_supported } = await this.getConfig();
     if (popup) {
       const popupSupported = response_modes_supported?.includes("web_message");
       if (!popupSupported) {
         throw new Error("Attempting to use popup but web_message is not supported by OpenID provider.");
       }
-      await this.loginWithPopup(redirectUri, audience);
-    } else {
-      await this.loginWithRedirect(redirectUri, audience);
+      return await this.loginWithPopup({ audience, scope, redirectUri, useRefreshToken });
     }
+
+    await this.loginWithRedirect({ audience, scope, redirectUri, useRefreshToken });
   }
 
   /**
@@ -85,23 +122,34 @@ export class IdaasClient {
    *
    * @param redirectUri to navigate to after a successful authentication
    * @param audience the intended audience for the received access token once login is complete
+   * @param scope the intended scope for the received access token once login is complete
+   * @param useRefreshToken determines if the received access token can be refreshed using refresh tokens
    */
-  private async loginWithPopup(redirectUri: string, audience?: string) {
+  private async loginWithPopup({ audience, scope, redirectUri, useRefreshToken }: LoginOptions) {
+    redirectUri = redirectUri ?? window.location.origin;
+
     const { url, nonce, state, codeVerifier } = await this.generateAuthorizationUrl(
       "web_message",
       redirectUri,
+      useRefreshToken,
+      scope,
       audience,
     );
 
     const popup = openPopup(url);
+
     const authorizeResponse = await listenToPopup(popup);
     const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
+    const validatedTokenResponse = await this.requestAndValidateTokens(authorizeCode, codeVerifier, redirectUri, nonce);
 
-    const tokens = await this.requestAndValidateTokens(authorizeCode, codeVerifier, redirectUri, nonce);
+    this.parseAndSaveTokenResponse(validatedTokenResponse);
 
-    this.persistenceManager.saveTokens(tokens);
+    // redirect only if the redirectUri is not the current uri
+    if (formatUrl(redirectUri) !== formatUrl(window.location.href)) {
+      window.location.href = redirectUri;
+    }
 
-    window.location.href = redirectUri;
+    return validatedTokenResponse.tokenResponse.access_token;
   }
 
   /**
@@ -110,9 +158,20 @@ export class IdaasClient {
    *
    * @param redirectUri to navigate to after a successful authentication
    * @param audience the intended audience for the received access token once login is complete
+   * @param scope the intended scope for the received access token once login is complete
+   * @param useRefreshToken determines if the received access token can be refreshed using refresh tokens
+   *
    */
-  private async loginWithRedirect(redirectUri: string, audience?: string) {
-    const { url, nonce, state, codeVerifier } = await this.generateAuthorizationUrl("query", redirectUri, audience);
+  private async loginWithRedirect({ audience, scope, redirectUri, useRefreshToken }: LoginOptions) {
+    redirectUri = redirectUri ?? window.location.origin;
+
+    const { url, nonce, state, codeVerifier } = await this.generateAuthorizationUrl(
+      "query",
+      redirectUri,
+      useRefreshToken,
+      scope,
+      audience,
+    );
 
     this.persistenceManager.saveClientParams({
       nonce,
@@ -146,13 +205,13 @@ export class IdaasClient {
     const { codeVerifier, redirectUri, state, nonce } = clientParams;
 
     const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
-    const tokens = await this.requestAndValidateTokens(authorizeCode, codeVerifier, redirectUri, nonce);
 
-    this.persistenceManager.saveTokens(tokens);
+    const validatedTokenResponse = await this.requestAndValidateTokens(authorizeCode, codeVerifier, redirectUri, nonce);
+    this.parseAndSaveTokenResponse(validatedTokenResponse);
   }
 
   public isAuthenticated() {
-    return !!this.persistenceManager.getTokens();
+    return !!this.persistenceManager.getIdToken();
   }
 
   /**
@@ -160,13 +219,13 @@ export class IdaasClient {
    * @returns returns the decodedIdToken containing the user info.
    */
   public getUser(): UserClaims | null {
-    const tokens = this.persistenceManager.getTokens();
+    const idToken = this.persistenceManager.getIdToken();
 
-    if (!tokens?.decodedIdToken) {
+    if (!idToken?.decoded) {
       return null;
     }
 
-    return tokens.decodedIdToken as UserClaims;
+    return idToken.decoded as UserClaims;
   }
 
   /**
@@ -176,58 +235,148 @@ export class IdaasClient {
    * in the OIDC application. If not provided, the user will remain at the OP.
    */
   public async logout(redirectUri?: string) {
-    const tokens = this.persistenceManager.getTokens();
-    if (!tokens?.id_token) {
+    const idToken = this.persistenceManager.getIdToken();
+    if (!idToken) {
       // Discontinue logout, the user is not authenticated
       return;
     }
-    const { id_token } = tokens;
+    const { encoded: encodedIdToken } = idToken;
 
     this.persistenceManager.remove();
 
-    window.location.href = await this.generateLogoutUrl(id_token, redirectUri);
+    window.location.href = await this.generateLogoutUrl(encodedIdToken, redirectUri);
   }
 
   /**
-   * Returns the stored access token if not expired.
-   * If expired, fetches and stores new access and refresh tokens, replacing the previous ones and returning the new access token.
+   * Returns an access token with the required scopes and audience that is unexpired or refreshable.
+   * The `fallback` parameter determines the result if there are no access tokens with the required scopes and audience that are unexpired or refreshable.
+   *
+   * To store and return an access token with the required scopes and audience if there are none available, set `fallback` to `popup`.
+   * To store an access token with the required scopes and audience if there are none available, set `fallback` to `redirect`.
+   *
+   * @throws error if there are no access tokens with the required scopes and audience that are unexpired or refreshable, and `fallback` is not specified.
+   *
+   * @param audience the audience of the token to be fetched
+   * @param scope the scope of the token to be fetched
+   * @param fallback the method to use to fetch the requested token if it is not stored
+   * @param redirectUri the URI to redirect to after execution of a `fallback` method.
+   * @param useRefreshToken determines if the new token returned by the fallback method can use refresh tokens.
    */
-  public async getAccessToken(): Promise<string | undefined> {
-    const currentTokens = this.persistenceManager.getTokens();
-    if (!currentTokens) {
+  public async getAccessToken({
+    audience,
+    scope,
+    fallback,
+    redirectUri,
+    useRefreshToken,
+  }: GetAccessTokenOptions): Promise<string | undefined> {
+    const usedScope = scope ?? this.defaultScope;
+    const usedAudience = audience ?? this.defaultAudience;
+    const accessTokens = this.persistenceManager.getAccessTokens();
+    const requestedScopes = usedScope.split(" ");
+
+    // No access tokens stored
+    if (!accessTokens) {
       return undefined;
     }
-    const { refresh_token: currentRefreshToken, expiresAt } = currentTokens;
 
-    // buffer (in seconds) to refresh early, ensuring unexpired token is returned
-    const buffer = 15;
+    // 1. Find all tokens with the required audience that possess all required scopes
+    // Tokens that have the required audience
+    const tokensWithAudience = accessTokens.filter((token) => token.audience === usedAudience);
 
-    const now = new Date();
-    const expDate = new Date((expiresAt - buffer) * 1000);
+    // Tokens that have the required audience and all scopes
+    const possibleTokens = tokensWithAudience.filter((token) => {
+      const tokenScopes = token.scope.split(" ");
+      return requestedScopes.every((scope) => tokenScopes.includes(scope));
+    });
 
-    if (now < expDate) {
-      return currentTokens.access_token;
+    // Sorts tokens by number of scopes in ascending order
+    const sortedPossibleTokens = possibleTokens.sort(
+      (token1, token2) => token1.scope.split(" ").length - token2.scope.split(" ").length,
+    );
+
+    // 2. Moving from the tokens found above with the fewest number of scopes to those with the most number of scopes
+    // - If the token is not expired, return it
+    // - If the token is expired and not refreshable, remove it from storage
+    // - If the token is expired but refreshable, refresh it, remove it from storage, store the refreshed token, then return the refreshed token
+    for (const possibleAccessToken of sortedPossibleTokens) {
+      const { refreshToken, accessToken, expiresAt, scope, audience } = possibleAccessToken;
+      // buffer (in seconds) to refresh early, ensuring unexpired token is returned
+      const buffer = 15;
+
+      const now = new Date();
+      const expDate = new Date((expiresAt - buffer) * 1000);
+
+      // Token not expired
+      if (expDate > now) {
+        return accessToken;
+      }
+
+      // No refresh token
+      if (!refreshToken) {
+        await this.persistenceManager.removeAccessToken(possibleAccessToken);
+        continue;
+      }
+      const {
+        refresh_token: newRefreshToken,
+        access_token: newEncodedAccessToken,
+        expires_in,
+      } = await this.requestTokenUsingRefreshToken(refreshToken);
+      const issuedAt = Math.floor(Date.now() / 1000);
+      const newExpiration = Number.parseInt(expires_in) + issuedAt;
+
+      // the refreshed access token to be stored, maintaining expired token's scope and audience
+      const newAccessToken: AccessToken = {
+        accessToken: newEncodedAccessToken,
+        refreshToken: newRefreshToken,
+        expiresAt: newExpiration,
+        audience,
+        scope,
+      };
+
+      this.persistenceManager.removeAccessToken(possibleAccessToken);
+      this.persistenceManager.saveAccessToken(newAccessToken);
+      return newEncodedAccessToken;
     }
 
-    if (!currentRefreshToken) {
+    // 3. If no suitable tokens were found or all suitable tokens were expired and not refreshable, determine how to proceed based on the 'fallback' param
+    // No suitable tokens found
+    if (fallback === "redirect") {
+      await this.login({
+        scope: usedScope,
+        audience: usedAudience,
+        redirectUri,
+        useRefreshToken,
+      });
+
+      // not possible to retrieve the access token created from redirect login flow, return undefined
       return undefined;
     }
-    const tokenResponse = await this.requestTokenUsingRefreshToken(currentRefreshToken);
+    if (fallback === "popup") {
+      return await this.login({ audience, scope, popup: true, useRefreshToken });
+    }
 
-    const { refresh_token: newRefreshToken, access_token: newAccessToken } = tokenResponse;
+    throw new Error("Requested token not found, no fallback method specified");
+  }
+
+  private parseAndSaveTokenResponse(validatedTokenResponse: ValidatedTokenResponse) {
+    const { tokenResponse, decodedIdToken, encodedIdToken } = validatedTokenResponse;
+    const { refresh_token, access_token, expires_in } = tokenResponse;
+
     const issuedAt = Math.floor(Date.now() / 1000);
-    const newExpiration = Number.parseInt(tokenResponse.expires_in) + issuedAt;
+    const expiresAt = Number.parseInt(expires_in) + issuedAt;
+    const { audience, scope } = this.persistenceManager.getTokenParams();
+    this.persistenceManager.removeTokenParams();
 
-    const newTokens = {
-      ...currentTokens,
-      refresh_token: newRefreshToken,
-      access_token: newAccessToken,
-      expiresAt: newExpiration,
+    const newAccessToken: AccessToken = {
+      refreshToken: refresh_token,
+      accessToken: access_token,
+      expiresAt,
+      audience,
+      scope,
     };
 
-    this.persistenceManager.saveTokens(newTokens);
-
-    return newAccessToken;
+    this.persistenceManager.saveIdToken({ encoded: encodedIdToken, decoded: decodedIdToken });
+    this.persistenceManager.saveAccessToken(newAccessToken);
   }
 
   private parseRedirectSearchParams(callbackUrl: string): AuthorizeResponse | null {
@@ -280,7 +429,7 @@ export class IdaasClient {
     codeVerifier: string,
     redirectUri: string,
     nonce: string,
-  ): Promise<Tokens> {
+  ): Promise<ValidatedTokenResponse> {
     const { token_endpoint, id_token_signing_alg_values_supported, acr_values_supported } = await this.getConfig();
 
     const tokenRequest: AccessTokenRequest = {
@@ -293,19 +442,16 @@ export class IdaasClient {
 
     const tokenResponse = await requestToken(token_endpoint, tokenRequest);
 
-    const decodedIdToken = validateIdToken({
+    const { decodedJwt: decodedIdToken, idToken } = validateIdToken({
       clientId: this.clientId,
-      idToken: tokenResponse.id_token as string,
+      idToken: tokenResponse.id_token,
       issuer: this.issuerUrl,
       nonce,
       idTokenSigningAlgValuesSupported: id_token_signing_alg_values_supported,
       acrValuesSupported: acr_values_supported,
     });
 
-    const issuedAt = Math.floor(Date.now() / 1000);
-    const expiresAt = Number.parseInt(tokenResponse.expires_in) + issuedAt;
-
-    return { ...tokenResponse, decodedIdToken, expiresAt };
+    return { tokenResponse, decodedIdToken, encodedIdToken: idToken };
   }
 
   private async requestTokenUsingRefreshToken(refreshToken: string): Promise<TokenResponse> {
@@ -319,15 +465,31 @@ export class IdaasClient {
 
     return await requestToken(token_endpoint, tokenRequest);
   }
+
   /**
    * Generate the authorization url by generating searchParams. codeVerifier will need to be stored for use after redirect.
    */
   private async generateAuthorizationUrl(
     responseMode: "query" | "web_message",
-    redirectUri: string,
+    redirectUri?: string,
+    refreshToken?: boolean,
+    scope?: string,
     audience?: string,
   ) {
+    const usedRedirectUri = redirectUri ?? window.location.origin;
+    const usedRefreshToken = refreshToken ?? this.defaultUseRefreshToken;
+    const tempScope = scope ?? this.defaultScope;
+    const usedAudience = audience ?? this.defaultAudience;
     const { authorization_endpoint } = await this.getConfig();
+    const scopeAsArray = tempScope.split(" ");
+
+    scopeAsArray.push("openid");
+    if (usedRefreshToken) {
+      scopeAsArray.push("offline_access");
+    }
+
+    // removes duplicate values
+    const usedScope = [...new Set(scopeAsArray)].join(" ");
 
     const state = base64UrlStringEncode(createRandomString());
     const nonce = base64UrlStringEncode(createRandomString());
@@ -335,16 +497,18 @@ export class IdaasClient {
     const url = new URL(authorization_endpoint);
     url.searchParams.append("response_type", "code");
     url.searchParams.append("client_id", this.clientId);
-    url.searchParams.append("redirect_uri", redirectUri);
-    if (audience) {
-      url.searchParams.append("audience", audience);
+    url.searchParams.append("redirect_uri", usedRedirectUri);
+    if (usedAudience) {
+      url.searchParams.append("audience", usedAudience);
     }
-    url.searchParams.append("scope", "openid profile offline_access");
+    url.searchParams.append("scope", usedScope);
     url.searchParams.append("state", state);
     url.searchParams.append("nonce", nonce);
     url.searchParams.append("response_mode", responseMode);
     url.searchParams.append("code_challenge", codeChallenge);
     url.searchParams.append("code_challenge_method", "S256");
+
+    this.persistenceManager.saveTokenParams({ audience: usedAudience, scope: usedScope });
 
     return { url: url.toString(), nonce, state, codeVerifier };
   }

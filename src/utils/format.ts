@@ -1,6 +1,6 @@
-export const formatIssuerUrl = (issuerUrl: string): string => {
+export const formatUrl = (initialUrl: string): string => {
   // remove trailing /
-  const url = issuerUrl.endsWith("/") ? issuerUrl.slice(0, -1) : issuerUrl;
+  const finalUrl = initialUrl.endsWith("/") ? initialUrl.slice(0, -1) : initialUrl;
   // prepend https:// if it's not already there
-  return url.startsWith("https://") ? url : `https://${url}`;
+  return finalUrl.startsWith("https://") ? finalUrl : `https://${finalUrl}`;
 };

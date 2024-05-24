@@ -1,7 +1,7 @@
 import { decodeJwt, decodeProtectedHeader } from "jose";
 
 interface ValidateIdTokenParams {
-  idToken: string;
+  idToken?: string;
   issuer: string;
   clientId: string;
   nonce: string;
@@ -25,6 +25,9 @@ export const validateIdToken = ({
   acrValuesSupported,
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: High number of simple checks
 }: ValidateIdTokenParams) => {
+  if (!idToken) {
+    throw new Error("No ID token supplied");
+  }
   const decodedJwt = decodeJwt(idToken);
   const { alg } = decodeProtectedHeader(idToken);
 
@@ -126,5 +129,5 @@ export const validateIdToken = ({
     );
   }
 
-  return decodedJwt;
+  return { idToken, decodedJwt };
 };
