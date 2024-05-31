@@ -62,7 +62,6 @@ export const listenToPopup = (popup: Window) => {
     };
 
     window.addEventListener("message", popupWebMessageEventHandler, {
-      once: true,
       signal: popupListenerAbortController.signal,
     });
   });
