@@ -6,13 +6,14 @@ import {
   type RefreshTokenRequest,
   type TokenResponse,
   fetchOpenidConfiguration,
+  getUserInfo,
   requestToken,
 } from "./api";
-import type { AuthorizeResponse } from "./models";
+import type { AuthorizeResponse, UserClaims } from "./models";
 import { listenToPopup, openPopup } from "./utils/browser";
 import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPair } from "./utils/crypto";
-import { formatUrl } from "./utils/format";
-import { validateIdToken } from "./utils/jwt";
+import { expiryToEpochSeconds, formatUrl } from "./utils/format";
+import { validateIdToken, validateUserInfoToken } from "./utils/jwt";
 
 export interface IdaasClientOptions {
   issuerUrl: string;
@@ -36,30 +37,6 @@ export interface GetAccessTokenOptions {
   fallback?: "redirect" | "popup";
   redirectUri?: string;
   useRefreshToken?: boolean;
-}
-
-export interface UserClaims {
-  sub?: string;
-  name?: string;
-  given_name?: string;
-  family_name?: string;
-  middle_name?: string;
-  nickname?: string;
-  preferred_username?: string;
-  profile?: string;
-  picture?: string;
-  website?: string;
-  email?: string;
-  email_verified?: boolean;
-  gender?: string;
-  birthdate?: string;
-  zoneinfo?: string;
-  locale?: string;
-  phone_number?: string;
-  phone_number_verified?: boolean;
-  address?: string;
-  updated_at?: number;
-  [propName: string]: unknown;
 }
 
 /**
@@ -313,7 +290,7 @@ export class IdaasClient {
 
       // No refresh token
       if (!refreshToken) {
-        await this.persistenceManager.removeAccessToken(possibleAccessToken);
+        this.persistenceManager.removeAccessToken(possibleAccessToken);
         continue;
       }
       const {
@@ -321,8 +298,7 @@ export class IdaasClient {
         access_token: newEncodedAccessToken,
         expires_in,
       } = await this.requestTokenUsingRefreshToken(refreshToken);
-      const issuedAt = Math.floor(Date.now() / 1000);
-      const newExpiration = Number.parseInt(expires_in) + issuedAt;
+      const newExpiration = expiryToEpochSeconds(expires_in);
 
       // the refreshed access token to be stored, maintaining expired token's scope and audience
       const newAccessToken: AccessToken = {
@@ -362,8 +338,7 @@ export class IdaasClient {
     const { tokenResponse, decodedIdToken, encodedIdToken } = validatedTokenResponse;
     const { refresh_token, access_token, expires_in } = tokenResponse;
 
-    const issuedAt = Math.floor(Date.now() / 1000);
-    const expiresAt = Number.parseInt(expires_in) + issuedAt;
+    const expiresAt = expiryToEpochSeconds(expires_in);
     const { audience, scope } = this.persistenceManager.getTokenParams();
     this.persistenceManager.removeTokenParams();
 
@@ -377,6 +352,47 @@ export class IdaasClient {
 
     this.persistenceManager.saveIdToken({ encoded: encodedIdToken, decoded: decodedIdToken });
     this.persistenceManager.saveAccessToken(newAccessToken);
+  }
+
+  /**
+   * Get the user claims from the OpenId Provider using the userinfo endpoint.
+   *
+   * @param accessToken when provided its scopes will be used to determine the claims returned from the userinfo endpoint.
+   * If not provided, the access token with the default scopes and audience will be used if available.
+   */
+  public async getUserInfo(accessToken?: string): Promise<UserClaims | undefined> {
+    const { userinfo_endpoint, issuer, jwks_uri } = await this.getConfig();
+
+    const userInfoAccessToken = accessToken ?? (await this.getAccessToken({}));
+
+    if (!userInfoAccessToken) {
+      throw new Error("Client is not authorized to access the UserInfo endpoint");
+    }
+
+    const userInfo = await getUserInfo(userinfo_endpoint, userInfoAccessToken);
+
+    let claims: UserClaims | undefined;
+
+    // 1. Check if userInfo is a JWT. If it is, its signature must be verified.
+    claims = await validateUserInfoToken({
+      userInfoToken: userInfo,
+      clientId: this.clientId,
+      jwksEndpoint: jwks_uri,
+      issuer,
+    });
+
+    // 2. If not a jwt, treat the response as an unsigned JSON
+    if (!claims) {
+      claims = JSON.parse(userInfo) as UserClaims;
+    }
+
+    // 3. Finally, validate that the sub claim in the UserInfo response exactly matches the sub claim in the ID token
+    const idToken = this.persistenceManager.getIdToken();
+    if (idToken?.decoded.sub !== claims.sub) {
+      return undefined;
+    }
+
+    return claims;
   }
 
   private parseRedirectSearchParams(callbackUrl: string): AuthorizeResponse | null {

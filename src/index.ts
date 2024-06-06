@@ -1,1 +1,2 @@
-export { IdaasClient, type UserClaims } from "./IdaasClient";
+export { IdaasClient } from "./IdaasClient";
+export type { UserClaims } from "./models";

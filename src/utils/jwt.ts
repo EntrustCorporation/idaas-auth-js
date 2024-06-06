@@ -1,4 +1,5 @@
-import { decodeJwt, decodeProtectedHeader } from "jose";
+import { createRemoteJWKSet, decodeJwt, decodeProtectedHeader, jwtVerify } from "jose";
+import type { UserClaims } from "../models";
 
 interface ValidateIdTokenParams {
   idToken?: string;
@@ -7,6 +8,13 @@ interface ValidateIdTokenParams {
   nonce: string;
   idTokenSigningAlgValuesSupported: string[];
   acrValuesSupported?: string[];
+}
+
+interface ValidateUserInfoTokenParams {
+  userInfoToken: string;
+  issuer: string;
+  clientId: string;
+  jwksEndpoint: string;
 }
 
 /**
@@ -130,4 +138,39 @@ export const validateIdToken = ({
   }
 
   return { idToken, decodedJwt };
+};
+
+/**
+ * Validate the signed token received from the /userinfo endpoint by checking its signature against the JWKS at the OpenId Provider.
+ *
+ * See more at: https://openid.net/specs/openid-connect-core-1_0-errata2.html#UserInfo
+ */
+export const validateUserInfoToken = async ({
+  userInfoToken,
+  issuer,
+  clientId,
+  jwksEndpoint,
+}: ValidateUserInfoTokenParams): Promise<UserClaims | undefined> => {
+  // Do this to check that the token is actually a jwt, without having to call the JWKS endpoint
+  try {
+    decodeJwt(userInfoToken);
+  } catch {
+    return undefined;
+  }
+
+  /*
+  Since the token is a jwt, validate it using the OP's JWKS endpoint. This will validate that:
+  - The signature on the jwt is valid
+  - The issuer and the audience are present
+  - The audience is/includes the RP's client ID
+  - The issuer is the OP's issuer URL
+   */
+  const jwks = createRemoteJWKSet(new URL(jwksEndpoint));
+
+  const verifiedJwt = await jwtVerify(userInfoToken, jwks, {
+    audience: clientId,
+    issuer,
+  });
+
+  return verifiedJwt.payload as UserClaims;
 };

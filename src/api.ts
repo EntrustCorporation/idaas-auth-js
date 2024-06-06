@@ -101,3 +101,22 @@ export const requestToken = async (
 
   return await response.json();
 };
+
+/**
+ * Make a request to the userinfo endpoint.
+ *
+ * @param userInfoEndpoint the UserInfo endpoint as defined in the public OpenID provider metadata
+ * @param accessToken an access token retrieved through the OIDC ceremony, with the OP as the audience
+ * @return a string representing either a JSON object or a signed jwt containing the user claims, depending on the OIDC
+ * application configuration
+ */
+export const getUserInfo = async (userInfoEndpoint: string, accessToken: string) => {
+  const response = await fetch(userInfoEndpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return await response.text();
+};
