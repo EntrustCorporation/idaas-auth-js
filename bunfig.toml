@@ -1,0 +1,4 @@
+[test]
+preload = "./happydom.ts"
+coverage = true
+coverageThreshold = { lines = 0.88, functions = 0.88 }

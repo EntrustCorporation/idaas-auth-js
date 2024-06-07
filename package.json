@@ -8,6 +8,7 @@
   "files": ["dist", "README.md"],
   "devDependencies": {
     "@biomejs/biome": "1.7.1",
+    "@happy-dom/global-registrator": "14.12.0",
     "@types/bun": "1.1.0",
     "@types/web": "0.0.143",
     "typescript": "5.4.5"

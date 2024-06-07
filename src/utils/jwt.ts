@@ -1,7 +1,7 @@
 import { type JWTPayload, createRemoteJWKSet, decodeJwt, decodeProtectedHeader, jwtVerify } from "jose";
 import type { UserClaims } from "../models";
 
-interface ValidateIdTokenParams {
+export interface ValidateIdTokenParams {
   idToken?: string | JWTPayload;
   issuer: string;
   clientId: string;
@@ -10,7 +10,7 @@ interface ValidateIdTokenParams {
   acrValuesSupported?: string[];
 }
 
-interface ValidateUserInfoTokenParams {
+export interface ValidateUserInfoTokenParams {
   userInfoToken: string;
   issuer: string;
   clientId: string;

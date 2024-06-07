@@ -8,7 +8,7 @@ import type { JWTPayload } from "jose";
  * @member redirectUri The URI to redirect to upon successful login to the IDP server
  * @member state A random generated string used to validate the OIDC flow
  */
-interface ClientParams {
+export interface ClientParams {
   nonce: string;
   codeVerifier: string;
   redirectUri: string;
@@ -19,7 +19,7 @@ interface ClientParams {
  * Token parameters required in the AccessToken object.
  * Can be used to identify a unique access token.
  */
-interface TokenParams {
+export interface TokenParams {
   audience?: string;
   scope: string;
 }
@@ -27,7 +27,7 @@ interface TokenParams {
 /**
  * Contains the encoded and decoded versions of an id token.
  */
-interface IdToken {
+export interface IdToken {
   encoded: string;
   decoded: JWTPayload;
 }
@@ -172,7 +172,7 @@ export class PersistenceManager {
    * Retrieves the stored token params.
    * @returns The TokenParams object stored.
    */
-  public getTokenParams() {
+  public getTokenParams(): TokenParams | undefined {
     return this.get(this.tokenParamsStorageKey);
   }
 

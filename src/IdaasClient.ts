@@ -18,7 +18,7 @@ import { validateIdToken, validateUserInfoToken } from "./utils/jwt";
 /**
  * A validated token response, contains the TokenResponse as well as the decoded and encoded id token.
  */
-interface ValidatedTokenResponse {
+export interface ValidatedTokenResponse {
   tokenResponse: TokenResponse;
   decodedIdToken: JWTPayload;
   encodedIdToken: string;
@@ -301,6 +301,7 @@ export class IdaasClient {
         audience: usedAudience,
         redirectUri,
         useRefreshToken,
+        popup: false,
       });
 
       // not possible to retrieve the access token created from redirect login flow, return undefined
@@ -318,7 +319,11 @@ export class IdaasClient {
     const { refresh_token, access_token, expires_in } = tokenResponse;
 
     const expiresAt = expiryToEpochSeconds(expires_in);
-    const { audience, scope } = this.persistenceManager.getTokenParams();
+    const tokenParams = this.persistenceManager.getTokenParams();
+    if (!tokenParams) {
+      throw new Error("No token params stored, unable to parse");
+    }
+    const { audience, scope } = tokenParams;
     this.persistenceManager.removeTokenParams();
 
     const newAccessToken: AccessToken = {
