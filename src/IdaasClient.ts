@@ -498,6 +498,8 @@ export class IdaasClient {
     url.searchParams.append("nonce", nonce);
     url.searchParams.append("response_mode", responseMode);
     url.searchParams.append("code_challenge", codeChallenge);
+    // Note: The PKCE spec defines an additional code_challenge_method 'plain', but it is explicitly NOT recommended
+    // https://datatracker.ietf.org/doc/html/rfc7636#section-7.2
     url.searchParams.append("code_challenge_method", "S256");
 
     this.persistenceManager.saveTokenParams({ audience: usedAudience, scope: usedScope });
