@@ -1,8 +1,8 @@
-import { createRemoteJWKSet, type JWTPayload, decodeJwt, decodeProtectedHeader, jwtVerify } from "jose";
+import { type JWTPayload, createRemoteJWKSet, decodeJwt, decodeProtectedHeader, jwtVerify } from "jose";
 import type { UserClaims } from "../models";
 
 interface ValidateIdTokenParams {
-  idToken?: string;
+  idToken?: string | JWTPayload;
   issuer: string;
   clientId: string;
   nonce: string;
@@ -37,16 +37,25 @@ export const validateIdToken = ({
     throw new Error("No ID token supplied");
   }
 
+  // Store the stringified token for simpler type-ing later on
+  let stringifiedToken: string;
   let decodedJwt: JWTPayload;
   let alg: string | undefined;
 
   try {
-    decodedJwt = decodeJwt(idToken);
-    alg = decodeProtectedHeader(idToken).alg;
+    if (typeof idToken !== "string") {
+      // If the token is not a jwt string, use it directly as an unsigned object
+      stringifiedToken = JSON.stringify(idToken);
+      decodedJwt = idToken;
+      alg = "none";
+    } else {
+      // Otherwise, we have a signed jwt string to decode
+      stringifiedToken = idToken;
+      decodedJwt = decodeJwt(idToken);
+      alg = decodeProtectedHeader(idToken).alg;
+    }
   } catch {
-    // If the token is not a jwt, treat it as a JSON
-    decodedJwt = JSON.parse(JSON.stringify(idToken)); // TODO this is a workaround for TS
-    alg = "none";
+    throw new Error("ID token format is neither a valid JSON object nor a signed JWT");
   }
 
   if (!decodedJwt.sub) {
@@ -147,7 +156,7 @@ export const validateIdToken = ({
     );
   }
 
-  return { idToken, decodedJwt };
+  return { idToken: stringifiedToken, decodedJwt };
 };
 
 /**

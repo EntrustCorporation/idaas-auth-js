@@ -1,3 +1,5 @@
+import type { JWTPayload } from "jose";
+
 /**
  * Interface describing the OpenID provider metadata retrieved during OIDC discovery.
  *
@@ -52,7 +54,7 @@ export interface RefreshTokenRequest {
  */
 export interface TokenResponse {
   access_token: string;
-  id_token?: string;
+  id_token?: string | JWTPayload;
   token_type: string;
   expires_in: string;
   refresh_token?: string;
