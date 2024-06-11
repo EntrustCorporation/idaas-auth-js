@@ -1,10 +1,10 @@
 {
   "name": "@entrust/idaas-spa-js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "",
   "type": "module",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": ["dist", "README.md"],
   "devDependencies": {
     "@biomejs/biome": "1.7.1",

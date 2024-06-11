@@ -9,40 +9,16 @@ import {
   getUserInfo,
   requestToken,
 } from "./api";
-import type { AuthorizeResponse, UserClaims } from "./models";
+import type { AuthorizeResponse, GetAccessTokenOptions, IdaasClientOptions, LoginOptions, UserClaims } from "./models";
 import { listenToPopup, openPopup } from "./utils/browser";
 import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPair } from "./utils/crypto";
 import { expiryToEpochSeconds, formatUrl } from "./utils/format";
 import { validateIdToken, validateUserInfoToken } from "./utils/jwt";
 
-export interface IdaasClientOptions {
-  issuerUrl: string;
-  clientId: string;
-  defaultScope?: string;
-  defaultAudience?: string;
-  defaultUseRefreshToken?: boolean;
-}
-
-export interface LoginOptions {
-  audience?: string;
-  scope?: string;
-  redirectUri?: string;
-  useRefreshToken?: boolean;
-  popup?: boolean;
-}
-
-export interface GetAccessTokenOptions {
-  audience?: string;
-  scope?: string;
-  fallback?: "redirect" | "popup";
-  redirectUri?: string;
-  useRefreshToken?: boolean;
-}
-
 /**
  * A validated token response, contains the TokenResponse as well as the decoded and encoded id token.
  */
-export interface ValidatedTokenResponse {
+interface ValidatedTokenResponse {
   tokenResponse: TokenResponse;
   decodedIdToken: JWTPayload;
   encodedIdToken: string;

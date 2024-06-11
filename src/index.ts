@@ -1,2 +1,2 @@
 export { IdaasClient } from "./IdaasClient";
-export type { UserClaims } from "./models";
+export type { IdaasClientOptions, UserClaims, LoginOptions, GetAccessTokenOptions } from "./models";
