@@ -68,6 +68,8 @@ export class IdaasClient {
     }
 
     await this.loginWithRedirect({ audience, scope, redirectUri, useRefreshToken });
+
+    return null;
   }
 
   /**
@@ -78,7 +80,12 @@ export class IdaasClient {
    * @param scope the intended scope for the received access token once login is complete
    * @param useRefreshToken determines if the received access token can be refreshed using refresh tokens
    */
-  private async loginWithPopup({ audience, scope, redirectUri, useRefreshToken }: LoginOptions) {
+  private async loginWithPopup({
+    audience,
+    scope,
+    redirectUri,
+    useRefreshToken,
+  }: LoginOptions): Promise<string | null> {
     redirectUri = redirectUri ?? window.location.origin;
 
     const { url, nonce, state, codeVerifier } = await this.generateAuthorizationUrl(
@@ -139,14 +146,11 @@ export class IdaasClient {
   /**
    * Handle the callback to the login redirectUri post-authorize and pass the received code to the token endpoint to get
    * the access token, ID token, and optionally refresh token (optional). Additionally, validate the ID token claims.
-   *
-   * @param callbackUrl optional url of the redirect after the initial authorization is complete, if not provided will default
-   * to the current window location
    */
-  public async handleRedirect(callbackUrl: string = window.location.href) {
-    const authorizeResponse = this.parseRedirectSearchParams(callbackUrl);
+  public async handleRedirect() {
+    const authorizeResponse = this.parseRedirectSearchParams();
 
-    // The provided url is not an authorized callback url
+    // The current url is not an authorized callback url
     if (!authorizeResponse) {
       return;
     }
@@ -163,22 +167,21 @@ export class IdaasClient {
     this.parseAndSaveTokenResponse(validatedTokenResponse);
   }
 
-  public isAuthenticated() {
-    return !!this.persistenceManager.getIdToken();
-  }
-
   /**
    * Fetch the user information stored in the id_token
    * @returns returns the decodedIdToken containing the user info.
    */
-  public getUser(): UserClaims | null {
+  public getIdToken(): UserClaims | null {
     const idToken = this.persistenceManager.getIdToken();
-
     if (!idToken?.decoded) {
       return null;
     }
 
     return idToken.decoded as UserClaims;
+  }
+
+  public isAuthenticated() {
+    return !!this.persistenceManager.getIdToken();
   }
 
   /**
@@ -221,7 +224,7 @@ export class IdaasClient {
     fallback,
     redirectUri,
     useRefreshToken,
-  }: GetAccessTokenOptions): Promise<string | undefined> {
+  }: GetAccessTokenOptions): Promise<string | null> {
     const usedScope = scope ?? this.defaultScope;
     const usedAudience = audience ?? this.defaultAudience;
     const accessTokens = this.persistenceManager.getAccessTokens();
@@ -229,7 +232,7 @@ export class IdaasClient {
 
     // No access tokens stored
     if (!accessTokens) {
-      return undefined;
+      return null;
     }
 
     // 1. Find all tokens with the required audience that possess all required scopes
@@ -301,7 +304,7 @@ export class IdaasClient {
       });
 
       // not possible to retrieve the access token created from redirect login flow, return undefined
-      return undefined;
+      return null;
     }
     if (fallback === "popup") {
       return await this.login({ audience, scope, popup: true, useRefreshToken });
@@ -336,7 +339,7 @@ export class IdaasClient {
    * @param accessToken when provided its scopes will be used to determine the claims returned from the userinfo endpoint.
    * If not provided, the access token with the default scopes and audience will be used if available.
    */
-  public async getUserInfo(accessToken?: string): Promise<UserClaims | undefined> {
+  public async getUserInfo(accessToken?: string): Promise<UserClaims | null> {
     const { userinfo_endpoint, issuer, jwks_uri } = await this.getConfig();
 
     const userInfoAccessToken = accessToken ?? (await this.getAccessToken({}));
@@ -347,7 +350,7 @@ export class IdaasClient {
 
     const userInfo = await getUserInfo(userinfo_endpoint, userInfoAccessToken);
 
-    let claims: UserClaims | undefined;
+    let claims: UserClaims | null;
 
     // 1. Check if userInfo is a JWT. If it is, its signature must be verified.
     claims = await validateUserInfoToken({
@@ -365,14 +368,14 @@ export class IdaasClient {
     // 3. Finally, validate that the sub claim in the UserInfo response exactly matches the sub claim in the ID token
     const idToken = this.persistenceManager.getIdToken();
     if (idToken?.decoded.sub !== claims.sub) {
-      return undefined;
+      return null;
     }
 
     return claims;
   }
 
-  private parseRedirectSearchParams(callbackUrl: string): AuthorizeResponse | null {
-    const url = new URL(callbackUrl);
+  private parseRedirectSearchParams(): AuthorizeResponse | null {
+    const url = new URL(window.location.href);
     const searchParams = url.searchParams;
 
     if (searchParams.toString() === "") {

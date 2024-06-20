@@ -169,12 +169,12 @@ export const validateUserInfoToken = async ({
   issuer,
   clientId,
   jwksEndpoint,
-}: ValidateUserInfoTokenParams): Promise<UserClaims | undefined> => {
+}: ValidateUserInfoTokenParams): Promise<UserClaims | null> => {
   // Do this to check that the token is actually a jwt, without having to call the JWKS endpoint
   try {
     decodeJwt(userInfoToken);
   } catch {
-    return undefined;
+    return null;
   }
 
   /*
