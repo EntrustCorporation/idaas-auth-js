@@ -36,6 +36,8 @@ pipeline {
       }
       steps {
           sh "bun test --bail"
+          sh "bunx playwright install --with-deps"
+          sh "bun run test:e2e"
       }
     }
     stage("📦  Publish") {

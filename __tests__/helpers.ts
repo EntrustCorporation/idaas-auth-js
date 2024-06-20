@@ -83,8 +83,7 @@ export const getLogoutUrlParams = (href: string) => {
   const url = new URL(href);
   const searchParams = url.searchParams;
   const logoutRedirect = searchParams.get("post_logout_redirect_uri");
-  const idTokenHint = searchParams.get("id_token_hint");
   const clientId = searchParams.get("client_id");
 
-  return { clientId, logoutRedirect, idTokenHint };
+  return { clientId, logoutRedirect };
 };

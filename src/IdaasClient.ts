@@ -95,12 +95,11 @@ export class IdaasClient {
     redirectUri,
     useRefreshToken,
   }: LoginOptions): Promise<string | null> {
-    redirectUri = redirectUri ?? window.location.href;
-    redirectUri = sanitizeUri(redirectUri);
+    const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
 
     const { url, nonce, state, codeVerifier } = await this.generateAuthorizationUrl(
       "web_message",
-      redirectUri,
+      finalRedirectUri,
       useRefreshToken,
       scope,
       audience,
@@ -109,13 +108,18 @@ export class IdaasClient {
     const popup = openPopup(url);
     const authorizeResponse = await listenToPopup(popup);
     const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
-    const validatedTokenResponse = await this.requestAndValidateTokens(authorizeCode, codeVerifier, redirectUri, nonce);
+    const validatedTokenResponse = await this.requestAndValidateTokens(
+      authorizeCode,
+      codeVerifier,
+      finalRedirectUri,
+      nonce,
+    );
 
     this.parseAndSaveTokenResponse(validatedTokenResponse);
 
     // redirect only if the redirectUri is not the current uri
-    if (formatUrl(redirectUri) !== formatUrl(window.location.href)) {
-      window.location.href = redirectUri;
+    if (formatUrl(window.location.href) !== formatUrl(finalRedirectUri)) {
+      window.location.href = finalRedirectUri;
     }
 
     return validatedTokenResponse.tokenResponse.access_token;
@@ -132,12 +136,11 @@ export class IdaasClient {
    *
    */
   private async loginWithRedirect({ audience, scope, redirectUri, useRefreshToken }: LoginOptions) {
-    redirectUri = redirectUri ?? window.location.href;
-    redirectUri = sanitizeUri(redirectUri);
+    const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
 
     const { url, nonce, state, codeVerifier } = await this.generateAuthorizationUrl(
       "query",
-      redirectUri,
+      finalRedirectUri,
       useRefreshToken,
       scope,
       audience,
@@ -147,7 +150,7 @@ export class IdaasClient {
       nonce,
       state,
       codeVerifier,
-      redirectUri,
+      redirectUri: finalRedirectUri,
     });
 
     window.location.href = url;
@@ -201,16 +204,14 @@ export class IdaasClient {
    * in the OIDC application. If not provided, the user will remain at the OP.
    */
   public async logout({ redirectUri }: LogoutOptions = {}) {
-    const idToken = this.persistenceManager.getIdToken();
-    if (!idToken) {
+    if (!this.isAuthenticated()) {
       // Discontinue logout, the user is not authenticated
       return;
     }
-    const { encoded: encodedIdToken } = idToken;
 
     this.persistenceManager.remove();
 
-    window.location.href = await this.generateLogoutUrl(encodedIdToken, redirectUri);
+    window.location.href = await this.generateLogoutUrl(redirectUri);
   }
 
   /**
@@ -529,11 +530,10 @@ export class IdaasClient {
   /**
    * Generate the endsession url with the required query params to log out the user from the OpenID Provider
    */
-  private async generateLogoutUrl(idToken: string, redirectUri?: string): Promise<string> {
+  private async generateLogoutUrl(redirectUri?: string): Promise<string> {
     const { end_session_endpoint } = await this.getConfig();
 
     const url = new URL(end_session_endpoint);
-    url.searchParams.append("id_token_hint", idToken);
     url.searchParams.append("client_id", this.clientId);
     if (redirectUri) {
       url.searchParams.append("post_logout_redirect_uri", redirectUri);

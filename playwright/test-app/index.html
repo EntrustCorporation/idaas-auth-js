@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IDaaS</title>
+    <meta charset="utf-8" />
+  </head>
+
+  <body>
+    <div id="app">
+      <h1>IDaaS Auth SPA JS Test UI</h1>
+
+      <button id="login-with-popup" data-testid="popup">
+        Login with Popup
+      </button>
+      <button id="login-with-redirect" data-testid="redirect">
+        Login with Redirect
+      </button>
+      <button id="handle-redirect" data-testid="handle-redirect">
+        Handle Redirect
+      </button>
+      <button id="logout" data-testid="logout">Logout</button>
+
+      <br />
+
+      <div>
+        <h4>User Info</h4>
+        <button id="get-user-info">Get User Info</button>
+        <pre id="user-info-state" data-testid="user-info-state"></pre>
+      </div>
+
+      <br />
+
+      <div>
+        <h4>Is Authenticated?</h4>
+        <label id="authenticated-state" data-testid="authenticated-state">
+        </label>
+      </div>
+
+      <br />
+
+      <div>
+        <h4>ID Token</h4>
+        <pre id="id-token-state" data-testid="id-token-state"></pre>
+      </div>
+
+      <br />
+
+      <div>
+        <h4>Access Token</h4>
+        <pre id="access-token-state" data-testid="access-token-state"></pre>
+      </div>
+    </div>
+
+    <script type="module" src="./dist/app.js"></script>
+  </body>
+</html>

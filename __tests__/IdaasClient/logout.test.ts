@@ -1,5 +1,5 @@
 import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
-import { NO_DEFAULT_IDAAS_CLIENT, TEST_BASE_URI, TEST_CLIENT_ID, TEST_ID_TOKEN_OBJECT } from "../constants";
+import { NO_DEFAULT_IDAAS_CLIENT, TEST_BASE_URI, TEST_CLIENT_ID } from "../constants";
 import { getLogoutUrlParams, mockFetch, storeData } from "../helpers";
 
 describe("IdaasClient.logout", () => {
@@ -49,9 +49,8 @@ describe("IdaasClient.logout", () => {
     const redirectUri = generateLogoutCall[1];
     expect(redirectUri).toBeUndefined();
 
-    const { idTokenHint, clientId, logoutRedirect } = getLogoutUrlParams(window.location.href);
+    const { clientId, logoutRedirect } = getLogoutUrlParams(window.location.href);
 
-    expect(idTokenHint).toStrictEqual(TEST_ID_TOKEN_OBJECT.encoded);
     expect(clientId).toStrictEqual(TEST_CLIENT_ID);
     expect(logoutRedirect).toBeNull();
   });
@@ -64,11 +63,10 @@ describe("IdaasClient.logout", () => {
 
     expect(spyOnGenerateLogoutUrl).toBeCalledTimes(1);
     const generateLogoutCall = spyOnGenerateLogoutUrl.mock.calls[0] as string[];
-    const passedRedirectUri = generateLogoutCall[1];
+    const passedRedirectUri = generateLogoutCall[0];
     expect(passedRedirectUri).toStrictEqual(redirectUri);
 
-    const { idTokenHint, clientId, logoutRedirect } = getLogoutUrlParams(window.location.href);
-    expect(idTokenHint).toStrictEqual(TEST_ID_TOKEN_OBJECT.encoded);
+    const { clientId, logoutRedirect } = getLogoutUrlParams(window.location.href);
     expect(clientId).toStrictEqual(TEST_CLIENT_ID);
     expect(logoutRedirect).toStrictEqual(TEST_BASE_URI);
   });
