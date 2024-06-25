@@ -1,5 +1,5 @@
 {
-  "name": "@entrust/idaas-spa-js",
+  "name": "@entrust/idaas-auth-spa",
   "version": "0.1.4",
   "description": "",
   "type": "module",
