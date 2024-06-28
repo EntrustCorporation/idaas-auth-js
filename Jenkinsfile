@@ -31,12 +31,12 @@ pipeline {
       }
     }
     stage("🧪  Test") {
-          when {
-            environment name: "RUN_TESTS", value: "true"
-          }
-          steps {
-              sh "bun run test"
-          }
+      when {
+        environment name: "RUN_TESTS", value: "true"
+      }
+      steps {
+          sh "bun test --bail"
+      }
     }
     stage("📦  Publish") {
       when {

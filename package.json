@@ -19,8 +19,7 @@
     "lint": "biome check .",
     "ci": "biome ci . && tsc",
     "ci:fix": "bun run format --write && bun run lint --apply",
-    "clean": "rm -rf ./dist",
-    "test": "bun test --bail"
+    "clean": "rm -rf ./dist"
   },
   "dependencies": {
     "jose": "5.2.4"
