@@ -9,7 +9,14 @@ import {
   getUserInfo,
   requestToken,
 } from "./api";
-import type { AuthorizeResponse, GetAccessTokenOptions, IdaasClientOptions, LoginOptions, UserClaims } from "./models";
+import type {
+  AuthorizeResponse,
+  GetAccessTokenOptions,
+  IdaasClientOptions,
+  LoginOptions,
+  LogoutOptions,
+  UserClaims,
+} from "./models";
 import { listenToPopup, openPopup } from "./utils/browser";
 import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPair } from "./utils/crypto";
 import { expiryToEpochSeconds, formatUrl } from "./utils/format";
@@ -57,7 +64,7 @@ export class IdaasClient {
    * @param popup whether the authentication will occur in a new popup window, defaults to false. When false the browser will
    *  navigate to the OP to authenticate the user.
    */
-  public async login({ audience, scope, redirectUri, useRefreshToken, popup = false }: LoginOptions) {
+  public async login({ audience, scope, redirectUri, useRefreshToken = false, popup = false }: LoginOptions = {}) {
     const { response_modes_supported } = await this.getConfig();
     if (popup) {
       const popupSupported = response_modes_supported?.includes("web_message");
@@ -97,7 +104,6 @@ export class IdaasClient {
     );
 
     const popup = openPopup(url);
-
     const authorizeResponse = await listenToPopup(popup);
     const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
     const validatedTokenResponse = await this.requestAndValidateTokens(authorizeCode, codeVerifier, redirectUri, nonce);
@@ -190,7 +196,7 @@ export class IdaasClient {
    * @param redirectUri optional url to redirect to after logout, must be one of the allowed logout redirect URLs defined
    * in the OIDC application. If not provided, the user will remain at the OP.
    */
-  public async logout(redirectUri?: string) {
+  public async logout({ redirectUri }: LogoutOptions = {}) {
     const idToken = this.persistenceManager.getIdToken();
     if (!idToken) {
       // Discontinue logout, the user is not authenticated
@@ -219,16 +225,14 @@ export class IdaasClient {
    * @param useRefreshToken determines if the new token returned by the fallback method can use refresh tokens.
    */
   public async getAccessToken({
-    audience,
-    scope,
+    audience = this.defaultAudience,
+    scope = this.defaultScope,
     fallback,
     redirectUri,
     useRefreshToken,
-  }: GetAccessTokenOptions): Promise<string | null> {
-    const usedScope = scope ?? this.defaultScope;
-    const usedAudience = audience ?? this.defaultAudience;
+  }: GetAccessTokenOptions = {}): Promise<string | null> {
     const accessTokens = this.persistenceManager.getAccessTokens();
-    const requestedScopes = usedScope.split(" ");
+    const requestedScopes = scope.split(" ");
 
     // No access tokens stored
     if (!accessTokens) {
@@ -237,7 +241,7 @@ export class IdaasClient {
 
     // 1. Find all tokens with the required audience that possess all required scopes
     // Tokens that have the required audience
-    const tokensWithAudience = accessTokens.filter((token) => token.audience === usedAudience);
+    const tokensWithAudience = accessTokens.filter((token) => token.audience === audience);
 
     // Tokens that have the required audience and all scopes
     const possibleTokens = tokensWithAudience.filter((token) => {
@@ -297,8 +301,8 @@ export class IdaasClient {
     // No suitable tokens found
     if (fallback === "redirect") {
       await this.login({
-        scope: usedScope,
-        audience: usedAudience,
+        scope,
+        audience,
         redirectUri,
         useRefreshToken,
         popup: false,
@@ -481,20 +485,16 @@ export class IdaasClient {
    */
   private async generateAuthorizationUrl(
     responseMode: "query" | "web_message",
-    redirectUri?: string,
-    refreshToken?: boolean,
-    scope?: string,
-    audience?: string,
+    redirectUri: string = window.location.origin,
+    refreshToken: boolean = this.defaultUseRefreshToken,
+    scope: string = this.defaultScope,
+    audience: string | undefined = this.defaultAudience,
   ) {
-    const usedRedirectUri = redirectUri ?? window.location.origin;
-    const usedRefreshToken = refreshToken ?? this.defaultUseRefreshToken;
-    const tempScope = scope ?? this.defaultScope;
-    const usedAudience = audience ?? this.defaultAudience;
     const { authorization_endpoint } = await this.getConfig();
-    const scopeAsArray = tempScope.split(" ");
+    const scopeAsArray = scope.split(" ");
 
     scopeAsArray.push("openid");
-    if (usedRefreshToken) {
+    if (refreshToken) {
       scopeAsArray.push("offline_access");
     }
 
@@ -507,9 +507,9 @@ export class IdaasClient {
     const url = new URL(authorization_endpoint);
     url.searchParams.append("response_type", "code");
     url.searchParams.append("client_id", this.clientId);
-    url.searchParams.append("redirect_uri", usedRedirectUri);
-    if (usedAudience) {
-      url.searchParams.append("audience", usedAudience);
+    url.searchParams.append("redirect_uri", redirectUri);
+    if (audience) {
+      url.searchParams.append("audience", audience);
     }
     url.searchParams.append("scope", usedScope);
     url.searchParams.append("state", state);
@@ -520,7 +520,7 @@ export class IdaasClient {
     // https://datatracker.ietf.org/doc/html/rfc7636#section-7.2
     url.searchParams.append("code_challenge_method", "S256");
 
-    this.persistenceManager.saveTokenParams({ audience: usedAudience, scope: usedScope });
+    this.persistenceManager.saveTokenParams({ audience, scope: usedScope });
 
     return { url: url.toString(), nonce, state, codeVerifier };
   }
@@ -537,7 +537,6 @@ export class IdaasClient {
     if (redirectUri) {
       url.searchParams.append("post_logout_redirect_uri", redirectUri);
     }
-
     return url.toString();
   }
 

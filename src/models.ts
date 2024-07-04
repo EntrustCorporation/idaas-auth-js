@@ -58,6 +58,13 @@ export interface LoginOptions {
 }
 
 /**
+ * The configurable options for the Logout method.
+ */
+export interface LogoutOptions {
+  redirectUri?: string;
+}
+
+/**
  * The configurable options when requesting an AccessToken.
  */
 export interface GetAccessTokenOptions {

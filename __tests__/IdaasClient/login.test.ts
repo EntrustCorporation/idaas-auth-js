@@ -42,7 +42,7 @@ describe("IdaasClient.login", () => {
   });
 
   test("fetches supported response modes from config", async () => {
-    await NO_DEFAULT_IDAAS_CLIENT.login({});
+    await NO_DEFAULT_IDAAS_CLIENT.login();
 
     expect(spyOnGetConfig).toBeCalled();
   });
@@ -72,7 +72,7 @@ describe("IdaasClient.login", () => {
   });
 
   test("defaults to loginWithRedirect if popup param not supplied", async () => {
-    await NO_DEFAULT_IDAAS_CLIENT.login({});
+    await NO_DEFAULT_IDAAS_CLIENT.login();
 
     expect(spyOnLoginWithRedirect).toBeCalled();
     expect(spyOnLoginWithPopup).not.toBeCalled();
@@ -80,19 +80,19 @@ describe("IdaasClient.login", () => {
 
   describe("login with redirect", () => {
     test("client params are saved", async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.login({});
+      await NO_DEFAULT_IDAAS_CLIENT.login();
 
       expect(localStorage.getItem(TEST_CLIENT_PAIR.key)).toBeTruthy();
     });
 
     test("token params are saved", async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.login({});
+      await NO_DEFAULT_IDAAS_CLIENT.login();
 
       expect(localStorage.getItem(TEST_TOKEN_PAIR.key)).toBeTruthy();
     });
 
     test("generateAuthorizationUrl returns {url, nonce, state, codeVerifier}", async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.login({});
+      await NO_DEFAULT_IDAAS_CLIENT.login();
 
       expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url, nonce, state, codeVerifier } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as {
@@ -111,7 +111,7 @@ describe("IdaasClient.login", () => {
 
     describe("scopes in auth url", () => {
       test("auth url contains scopes", async () => {
-        await NO_DEFAULT_IDAAS_CLIENT.login({});
+        await NO_DEFAULT_IDAAS_CLIENT.login();
 
         expect(spyOnGenerateAuthorizationUrl).toBeCalled();
         const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
@@ -133,7 +133,7 @@ describe("IdaasClient.login", () => {
       });
 
       test("default scope used if none supplied in client constructor or login call", async () => {
-        await NO_DEFAULT_IDAAS_CLIENT.login({});
+        await NO_DEFAULT_IDAAS_CLIENT.login();
 
         expect(spyOnGenerateAuthorizationUrl).toBeCalled();
         const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
@@ -149,7 +149,7 @@ describe("IdaasClient.login", () => {
         // @ts-ignore private method
         const spyOnGenerateAuthorizationUrl = spyOn(SET_DEFAULTS_IDAAS_CLIENT, "generateAuthorizationUrl");
 
-        await SET_DEFAULTS_IDAAS_CLIENT.login({});
+        await SET_DEFAULTS_IDAAS_CLIENT.login();
 
         expect(spyOnGenerateAuthorizationUrl).toBeCalled();
         const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
@@ -164,7 +164,7 @@ describe("IdaasClient.login", () => {
     });
 
     test("auth url contains correct response_mode and response_type", async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.login({});
+      await NO_DEFAULT_IDAAS_CLIENT.login();
 
       expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
@@ -178,7 +178,7 @@ describe("IdaasClient.login", () => {
       // @ts-ignore same as all other .mockResolvedValue issues
       spyOnGenerateAuthorizationUrl.mockResolvedValueOnce({ url: TEST_REDIRECT_URI });
 
-      await NO_DEFAULT_IDAAS_CLIENT.login({});
+      await NO_DEFAULT_IDAAS_CLIENT.login();
       const newLocation = formatUrl(window.location.href);
 
       expect(newLocation).toStrictEqual(formatUrl(TEST_REDIRECT_URI));

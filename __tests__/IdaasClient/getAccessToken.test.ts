@@ -36,12 +36,12 @@ describe("IdaasClient.getAccessToken", () => {
   };
 
   test("fetches stored access tokens from persistenceManager", async () => {
-    await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({});
+    await NO_DEFAULT_IDAAS_CLIENT.getAccessToken();
     expect(spyOnGetAccessTokens).toBeCalled();
   });
 
   test("returns null when no access tokens stored", async () => {
-    expect(await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({})).toBeNull();
+    expect(await NO_DEFAULT_IDAAS_CLIENT.getAccessToken()).toBeNull();
     expect(spyOnGetAccessTokens.mock.results[0].value).toBeUndefined();
   });
 
@@ -52,7 +52,7 @@ describe("IdaasClient.getAccessToken", () => {
       storeToken(TEST_ACCESS_TOKEN_OBJECT);
 
       expect(async () => {
-        await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({});
+        await NO_DEFAULT_IDAAS_CLIENT.getAccessToken();
       }).toThrowError();
     });
 
@@ -102,7 +102,7 @@ describe("IdaasClient.getAccessToken", () => {
     storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, audience: undefined, accessToken: TEST_DIFFERENT_ACCESS_TOKEN });
     storeToken(TEST_ACCESS_TOKEN_OBJECT);
 
-    const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({});
+    const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken();
 
     expect(token).toStrictEqual(TEST_DIFFERENT_ACCESS_TOKEN);
   });

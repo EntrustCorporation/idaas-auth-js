@@ -60,7 +60,7 @@ describe("IdaasClient.logout", () => {
     storeData({ idToken: true, tokenParams: true, clientParams: true, accessToken: true });
     const redirectUri = TEST_BASE_URI;
 
-    await NO_DEFAULT_IDAAS_CLIENT.logout(redirectUri);
+    await NO_DEFAULT_IDAAS_CLIENT.logout({ redirectUri });
 
     expect(spyOnGenerateLogoutUrl).toBeCalledTimes(1);
     const generateLogoutCall = spyOnGenerateLogoutUrl.mock.calls[0] as string[];
