@@ -65,10 +65,12 @@ export class IdaasClient {
    *  navigate to the OP to authenticate the user.
    */
   public async login({ audience, scope, redirectUri, useRefreshToken = false, popup = false }: LoginOptions = {}) {
-    const { response_modes_supported } = await this.getConfig();
     if (popup) {
+      const popupWindow = openPopup("");
+      const { response_modes_supported } = await this.getConfig();
       const popupSupported = response_modes_supported?.includes("web_message");
       if (!popupSupported) {
+        popupWindow.close();
         throw new Error("Attempting to use popup but web_message is not supported by OpenID provider.");
       }
       return await this.loginWithPopup({ audience, scope, redirectUri, useRefreshToken });
