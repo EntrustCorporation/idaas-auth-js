@@ -104,7 +104,7 @@ export class IdaasClient {
     );
 
     const popup = openPopup(url);
-    const authorizeResponse = await listenToPopup(popup);
+    const authorizeResponse = await listenToPopup(popup, url);
     const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
     const validatedTokenResponse = await this.requestAndValidateTokens(
       authorizeCode,

@@ -21,12 +21,14 @@ export const openPopup = (popupUrl: string) => {
   return popup;
 };
 
-export const listenToPopup = (popup: Window) => {
+export const listenToPopup = (popup: Window, url: string) => {
+  const expectedOrigin = new URL(url).origin;
+
   return new Promise<AuthorizeResponse>((resolve, reject) => {
     const popupListenerAbortController = new AbortController();
 
     const popupWebMessageEventHandler = (event: MessageEvent) => {
-      if (!event.data || event.data.type !== "authorization_response") {
+      if (event.origin !== expectedOrigin || !event.data || event.data.type !== "authorization_response") {
         return;
       }
 
