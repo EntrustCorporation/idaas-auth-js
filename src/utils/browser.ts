@@ -36,7 +36,7 @@ export const listenToPopup = (popup: Window, url: string) => {
 
       const response = event.data.response;
       if (response.error) {
-        reject(response);
+        reject(new Error(response.error));
       } else {
         resolve(response as AuthorizeResponse);
       }
@@ -46,14 +46,14 @@ export const listenToPopup = (popup: Window, url: string) => {
     const pollPopupInterval = setInterval(() => {
       if (popup.closed) {
         cleanUpPopup();
-        reject("Authentication was cancelled by the user");
+        reject(new Error("Authentication was cancelled by the user"));
       }
     }, 1000);
 
     // Ensure the popup is closed after a certain timeout period
     const popupTimeout = setTimeout(() => {
       cleanUpPopup();
-      reject("User took too long to authenticate");
+      reject(new Error("User took too long to authenticate"));
     }, DEFAULT_POPUP_TIMEOUT_SECONDS * 1000);
 
     const cleanUpPopup = () => {
