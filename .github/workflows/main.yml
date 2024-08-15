@@ -1,0 +1,27 @@
+name: Build and Test
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Build Package
+        run: |
+          bun install --frozen-lockfile
+          bun run ci
+
+      - name: Bun Tests
+        run: bun test --bail
+
+      - name: Playwright Tests
+        run: |
+          bunx playwright install --with-deps
+          bun run test:e2e
