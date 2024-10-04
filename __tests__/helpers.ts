@@ -54,7 +54,6 @@ export const storeData = ({ idToken, accessToken, clientParams, tokenParams }: S
 export const getUrlParams = (href: string) => {
   const url = new URL(href);
   const searchParams = url.searchParams;
-  // biome-ignore lint: type depends on url, only use in tests
   const paramData: any = {};
 
   searchParams.forEach((val, key) => {

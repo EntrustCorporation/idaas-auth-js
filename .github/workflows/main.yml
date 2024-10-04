@@ -13,13 +13,13 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Build Package
+      - name: Build Bun Package
         run: |
           bun install --frozen-lockfile
           bun run ci
 
-      - name: Bun Tests
-        run: bun test --bail
+      - name: Run Vitest Tests
+        run: bun run test:vitest
 
       - name: Playwright Tests
         run: |

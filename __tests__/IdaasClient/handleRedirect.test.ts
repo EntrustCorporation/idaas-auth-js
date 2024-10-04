@@ -1,7 +1,6 @@
-import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, test, vi } from "vitest";
 import type { ValidatedTokenResponse } from "../../src/IdaasClient";
 import type { AuthorizeResponse } from "../../src/models";
-// biome-ignore lint: needed for spyOn
 import * as jwt from "../../src/utils/jwt";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
@@ -17,28 +16,24 @@ import {
 import { mockFetch, storeData } from "../helpers";
 
 describe("IdaasClient.handleRedirect", () => {
-  // @ts-ignore not full type
-  const spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
-  // @ts-ignore private method
-  const spyOnParseRedirectSearchParams = spyOn(NO_DEFAULT_IDAAS_CLIENT, "parseRedirectSearchParams");
-  // @ts-ignore private method
-  const spyOnValidateAuthorizeResponse = spyOn(NO_DEFAULT_IDAAS_CLIENT, "validateAuthorizeResponse");
-  // @ts-ignore private method
-  const spyOnParseAndSaveTokenResponse = spyOn(NO_DEFAULT_IDAAS_CLIENT, "parseAndSaveTokenResponse");
-  const spyOnValidateIdToken = spyOn(jwt, "validateIdToken").mockImplementation(() => {
+  const spyOnFetch = vi.spyOn(window as any, "fetch").mockImplementation(mockFetch);
+  const spyOnParseRedirectSearchParams = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "parseRedirectSearchParams");
+  const spyOnValidateAuthorizeResponse = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "validateAuthorizeResponse");
+  const spyOnParseAndSaveTokenResponse = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "parseAndSaveTokenResponse");
+  const spyOnValidateIdToken = vi.spyOn(jwt, "validateIdToken").mockImplementation(() => {
     return { decodedJwt: TEST_ID_TOKEN_OBJECT.decoded, idToken: TEST_ID_TOKEN_OBJECT.encoded };
   });
   const successUrl = `${TEST_BASE_URI}?code=${TEST_CODE}&state=${TEST_STATE}`;
   const startLocation = window.location.href;
 
   afterAll(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
     window.location.href = startLocation;
     localStorage.clear();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("returns early if no search params in uri", async () => {
@@ -75,7 +70,7 @@ describe("IdaasClient.handleRedirect", () => {
 
     expect(async () => {
       await NO_DEFAULT_IDAAS_CLIENT.handleRedirect();
-    }).toThrowError();
+    }).rejects.toThrowError();
   });
 
   test("throws error if error found in search params", () => {
@@ -84,7 +79,7 @@ describe("IdaasClient.handleRedirect", () => {
 
     expect(async () => {
       await NO_DEFAULT_IDAAS_CLIENT.handleRedirect();
-    }).toThrowError();
+    }).rejects.toThrowError();
 
     const validationResultType = spyOnValidateAuthorizeResponse.mock.results[0].type;
     const response = spyOnParseRedirectSearchParams.mock.results[0].value as AuthorizeResponse | null;
@@ -99,7 +94,7 @@ describe("IdaasClient.handleRedirect", () => {
 
     expect(async () => {
       await NO_DEFAULT_IDAAS_CLIENT.handleRedirect();
-    }).toThrowError();
+    }).rejects.toThrowError();
 
     const validationResultType = spyOnValidateAuthorizeResponse.mock.results[0].type;
     expect(validationResultType).toStrictEqual("throw");
@@ -136,14 +131,15 @@ describe("IdaasClient.handleRedirect", () => {
   });
 
   describe("parseAndValidateTokens", () => {
-    test("throws error if no token params stored", () => {
+    test("throws error if no token params stored", async () => {
       storeData({ clientParams: true });
       window.location.href = successUrl;
 
-      expect(async () => {
+      await expect(async () => {
         await NO_DEFAULT_IDAAS_CLIENT.handleRedirect();
-      }).toThrowError();
+      }).rejects.toThrowError();
 
+      expect(spyOnParseAndSaveTokenResponse).toBeCalled();
       expect(spyOnParseAndSaveTokenResponse.mock.results[0].type).toStrictEqual("throw");
     });
 
@@ -179,8 +175,7 @@ describe("IdaasClient.handleRedirect", () => {
       window.location.href = successUrl;
 
       await NO_DEFAULT_IDAAS_CLIENT.handleRedirect();
-      // @ts-ignore accessing private var
-      const storedToken = NO_DEFAULT_IDAAS_CLIENT.persistenceManager.getAccessTokens()[0];
+      const storedToken = (NO_DEFAULT_IDAAS_CLIENT as any).persistenceManager.getAccessTokens()[0];
       const validatedTokenResponse = spyOnParseAndSaveTokenResponse.mock.calls[0][0] as ValidatedTokenResponse;
       const { tokenResponse } = validatedTokenResponse;
 
@@ -196,8 +191,7 @@ describe("IdaasClient.handleRedirect", () => {
       window.location.href = successUrl;
 
       await NO_DEFAULT_IDAAS_CLIENT.handleRedirect();
-      // @ts-ignore accessing private var
-      const storedToken = NO_DEFAULT_IDAAS_CLIENT.persistenceManager.getIdToken();
+      const storedToken = (NO_DEFAULT_IDAAS_CLIENT as any).persistenceManager.getIdToken();
       const validatedTokenResponse = spyOnParseAndSaveTokenResponse.mock.calls[0][0] as ValidatedTokenResponse;
       const { decodedIdToken, encodedIdToken } = validatedTokenResponse;
 

@@ -1,7 +1,6 @@
-import { describe, expect, spyOn, test } from "bun:test";
-// biome-ignore lint: needed for spyOn
 import * as jose from "jose";
-import { readAccessToken, validateIdToken, validateUserInfoToken } from "../src/utils/jwt";
+import { describe, expect, test, vi } from "vitest";
+import { joseObj, readAccessToken, validateIdToken, validateUserInfoToken } from "../src/utils/jwt";
 import {
   TEST_CLIENT_ID,
   TEST_ENCODED_TOKEN,
@@ -98,7 +97,7 @@ describe("jwt.ts", () => {
 
     test("throw error if token is expired", () => {
       expect(() => {
-        validateIdToken({ ...TEST_VALIDATE_ID_TOKEN_PARAMS, idToken: { ...TEST_JWT_PAYLOAD, exp: 0 } });
+        validateIdToken({ ...TEST_VALIDATE_ID_TOKEN_PARAMS, idToken: { ...TEST_JWT_PAYLOAD, exp: 1 } });
       }).toThrowError("exp");
     });
 
@@ -154,10 +153,9 @@ describe("jwt.ts", () => {
     });
 
     test("returns the JWT payload if no errors raised from jwtVerify", async () => {
-      const _spyOnJwtVerify = spyOn(jose, "jwtVerify").mockImplementationOnce(
-        // @ts-ignore not full return type
-        async (userInfoToken) => ({ payload: jose.decodeJwt(userInfoToken) }),
-      );
+      const _spyOnJwtVerify = vi
+        .spyOn(joseObj, "jwtVerify")
+        .mockImplementationOnce(async (userInfoToken) => ({ payload: jose.decodeJwt(userInfoToken as any) }) as any);
 
       const result = await validateUserInfoToken({
         ...TEST_VALIDATE_USER_INFO_PARAMS,

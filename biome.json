@@ -4,7 +4,7 @@
     "enabled": true
   },
   "files": {
-    "ignore": ["dist"]
+    "ignore": ["dist", "coverage"]
   },
   "formatter": {
     "indentWidth": 2,
@@ -25,5 +25,20 @@
         "useExhaustiveDependencies": "off"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "include": ["__tests__/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          },
+          "style": {
+            "noNamespaceImport": "off"
+          }
+        }
+      }
+    }
+  ]
 }

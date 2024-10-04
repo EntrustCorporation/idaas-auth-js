@@ -132,14 +132,9 @@ export class PersistenceManager {
       return;
     }
 
-    const index = accessTokens.findIndex((token) => token.accessToken === removedToken.accessToken);
+    const notRemovedTokens = accessTokens.filter((token) => token.accessToken !== removedToken.accessToken);
 
-    if (index === -1) {
-      throw new Error("error removing access token, token not found");
-    }
-
-    accessTokens.splice(index, 1);
-    const stringifiedData = JSON.stringify(accessTokens);
+    const stringifiedData = JSON.stringify(notRemovedTokens);
     this.save(this.accessTokenStorageKey, stringifiedData);
   }
 

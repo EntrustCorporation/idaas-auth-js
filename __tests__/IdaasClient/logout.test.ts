@@ -1,23 +1,20 @@
-import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, test, vi } from "vitest";
 import { NO_DEFAULT_IDAAS_CLIENT, TEST_BASE_URI, TEST_CLIENT_ID } from "../constants";
 import { getUrlParams, mockFetch, storeData } from "../helpers";
 
 describe("IdaasClient.logout", () => {
-  // @ts-ignore not full type
-  const _spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
-  // @ts-ignore private method
-  const spyOnGetConfig = spyOn(NO_DEFAULT_IDAAS_CLIENT, "getConfig");
-  // @ts-ignore private method
-  const spyOnGenerateLogoutUrl = spyOn(NO_DEFAULT_IDAAS_CLIENT, "generateLogoutUrl");
+  const _spyOnFetch = vi.spyOn(window as any, "fetch").mockImplementation(mockFetch);
+  const spyOnGetConfig = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "getConfig");
+  const spyOnGenerateLogoutUrl = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "generateLogoutUrl");
   const startLocation = window.location.href;
 
   afterAll(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
     localStorage.clear();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     window.location.href = startLocation;
   });
 
