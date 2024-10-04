@@ -1,28 +1,25 @@
-import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, test, vi } from "vitest";
 import type { IdToken } from "../../src/PersistenceManager";
 
 import { NO_DEFAULT_IDAAS_CLIENT, TEST_ACCESS_TOKEN, TEST_BASE_URI, TEST_ID_PAIR, TEST_SUB_CLAIM } from "../constants";
 import { mockFetch } from "../helpers";
 
 describe("IdaasClient.getUserInfo", () => {
-  // @ts-ignore not full type
-  const spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
-  // @ts-ignore accessing private var
-  const spyOnGetIdToken = spyOn(NO_DEFAULT_IDAAS_CLIENT.persistenceManager, "getIdToken");
+  const spyOnFetch = vi.spyOn(window as any, "fetch").mockImplementation(mockFetch);
+  const spyOnGetIdToken = vi.spyOn((NO_DEFAULT_IDAAS_CLIENT as any).persistenceManager, "getIdToken");
+  const spyOnGetAccessToken = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT, "getAccessToken");
 
   afterAll(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
   });
 
   test("throws error if no user info access token", () => {
-    expect(async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.getUserInfo();
-    }).toThrowError();
+    expect(async () => await NO_DEFAULT_IDAAS_CLIENT.getUserInfo()).rejects.toThrowError();
   });
 
   test("makes a fetch request to the userinfo endpoint", async () => {
@@ -55,5 +52,14 @@ describe("IdaasClient.getUserInfo", () => {
 
     expect(storedSubClaim).toStrictEqual(TEST_SUB_CLAIM);
     expect(result).not.toBeUndefined();
+  });
+
+  test("throws error if client is not authorized to access userInfo endpoint", () => {
+    localStorage.setItem(TEST_ID_PAIR.key, JSON.stringify(TEST_ID_PAIR.data));
+    spyOnGetAccessToken.mockImplementationOnce(() => undefined);
+
+    expect(async () => {
+      await NO_DEFAULT_IDAAS_CLIENT.getUserInfo();
+    }).rejects.toThrowError("Client is not authorized");
   });
 });

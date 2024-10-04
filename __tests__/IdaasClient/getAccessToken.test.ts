@@ -1,4 +1,4 @@
-import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, test, vi } from "vitest";
 import type { LoginOptions } from "../../src";
 import type { AccessToken } from "../../src/PersistenceManager";
 import type { TokenResponse } from "../../src/api";
@@ -19,23 +19,22 @@ import { mockFetch } from "../helpers";
 
 describe("IdaasClient.getAccessToken", () => {
   afterAll(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
     localStorage.clear();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  // @ts-ignore private
-  const spyOnPersistenceGetAccessTokens = spyOn(NO_DEFAULT_IDAAS_CLIENT.persistenceManager, "getAccessTokens");
-  // @ts-ignore private
-  const spyOnRemoveUnusableTokens = spyOn(NO_DEFAULT_IDAAS_CLIENT, "removeUnusableTokens");
-  // @ts-ignore not full type
-  const spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
+  const spyOnPersistenceGetAccessTokens = vi.spyOn(
+    (NO_DEFAULT_IDAAS_CLIENT as any).persistenceManager,
+    "getAccessTokens",
+  );
+  const spyOnRemoveUnusableTokens = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "removeUnusableTokens");
+  const spyOnFetch = vi.spyOn(window as any, "fetch").mockImplementation(mockFetch);
   const storeToken = (token: AccessToken) => {
-    // @ts-ignore private method call
-    NO_DEFAULT_IDAAS_CLIENT.persistenceManager.saveAccessToken(token);
+    (NO_DEFAULT_IDAAS_CLIENT as any).persistenceManager.saveAccessToken(token);
   };
 
   test("fetches stored access tokens from persistenceManager", async () => {
@@ -48,7 +47,7 @@ describe("IdaasClient.getAccessToken", () => {
   });
 
   describe("fallback options", () => {
-    const spyOnLogin = spyOn(NO_DEFAULT_IDAAS_CLIENT, "login").mockImplementation(async () => "test");
+    const spyOnLogin = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT, "login").mockImplementation(async () => "test");
 
     describe("fallback login parameters", () => {
       test("scope specified in getAccessToken param is passed to login", async () => {
@@ -85,10 +84,7 @@ describe("IdaasClient.getAccessToken", () => {
     describe("with tokens stored", () => {
       test("if no suitable tokens, throws error if `fallbackAuthorizationOptions` is undefined", () => {
         storeToken(TEST_ACCESS_TOKEN_OBJECT);
-
-        expect(async () => {
-          await NO_DEFAULT_IDAAS_CLIENT.getAccessToken();
-        }).toThrowError();
+        expect(async () => await NO_DEFAULT_IDAAS_CLIENT.getAccessToken()).rejects.toThrowError();
       });
 
       test("if no suitable tokens, calls login with `popup: true` if specified in the fallbackAuthorizationOptions", async () => {
@@ -100,7 +96,7 @@ describe("IdaasClient.getAccessToken", () => {
         });
 
         const loginRequest = spyOnLogin.mock.calls[0][0] as LoginOptions;
-        expect(loginRequest.popup).toBeTrue();
+        expect(loginRequest.popup).toBeTruthy();
       });
 
       test("if no suitable tokens, calls login with `popup: false` if specified in the fallbackAuthorizationOptions", async () => {
@@ -112,15 +108,13 @@ describe("IdaasClient.getAccessToken", () => {
         });
 
         const loginRequest = spyOnLogin.mock.calls[0][0] as LoginOptions;
-        expect(loginRequest.popup).toBeFalse();
+        expect(loginRequest.popup).toBeFalsy();
       });
     });
 
     describe("with no tokens stored", () => {
       test("throws error if `fallbackAuthorizationOptions` is undefined", () => {
-        expect(async () => {
-          await NO_DEFAULT_IDAAS_CLIENT.getAccessToken();
-        }).toThrowError();
+        expect(async () => await NO_DEFAULT_IDAAS_CLIENT.getAccessToken()).rejects.toThrowError();
       });
 
       test("calls login with `popup: true` if specified in the fallbackAuthorizationOptions", async () => {
@@ -131,7 +125,7 @@ describe("IdaasClient.getAccessToken", () => {
         });
 
         const loginRequest = spyOnLogin.mock.calls[0][0] as LoginOptions;
-        expect(loginRequest.popup).toBeTrue();
+        expect(loginRequest.popup).toBeTruthy();
       });
 
       test("calls login with `popup: false` if specified in the fallbackAuthorizationOptions", async () => {
@@ -142,7 +136,7 @@ describe("IdaasClient.getAccessToken", () => {
         });
 
         const loginRequest = spyOnLogin.mock.calls[0][0] as LoginOptions;
-        expect(loginRequest.popup).toBeFalse();
+        expect(loginRequest.popup).toBeFalsy();
       });
     });
   });
@@ -179,6 +173,25 @@ describe("IdaasClient.getAccessToken", () => {
     const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken();
 
     expect(token).toStrictEqual(TEST_DIFFERENT_ACCESS_TOKEN);
+  });
+
+  test("tokens without an acr claim are excluded when acrValues are defined", () => {
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, acr: undefined });
+    expect(async () => {
+      await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+        acrValues: ["anyAcr"],
+        audience: TEST_AUDIENCE,
+        scope: TEST_SCOPE,
+      });
+    }).rejects.toThrowError();
+  });
+
+  test("throws error if an expired token without a refresh token", () => {
+    spyOnRemoveUnusableTokens.mockImplementationOnce(() => "does nothing");
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, refreshToken: undefined });
+    expect(async () => {
+      await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE, scope: TEST_SCOPE });
+    }).rejects.toThrowError();
   });
 
   test("if multiple suitable tokens, returns the one with the fewest permissions", async () => {
@@ -228,7 +241,7 @@ describe("IdaasClient.getAccessToken", () => {
     const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ scope: "1", audience: TEST_AUDIENCE });
 
     expect(spyOnFetch).toBeCalled();
-    const grantType = spyOnFetch.mock.calls[1][1].body
+    const grantType = (spyOnFetch.mock.calls[1][1] as any).body
       .toString()
       .split("&")
       .find((str) => str.includes("grant_type"))
@@ -335,16 +348,16 @@ describe("IdaasClient.getAccessToken", () => {
       storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, maxAgeExpiry: 1 });
       await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ fallbackAuthorizationOptions: {} });
 
-      // @ts-ignore private
-      expect(NO_DEFAULT_IDAAS_CLIENT.persistenceManager.getAccessTokens()).toStrictEqual([]);
+      expect((NO_DEFAULT_IDAAS_CLIENT as any).persistenceManager.getAccessTokens()).toStrictEqual([]);
     });
 
     test("keeps tokens that have not reached their max_age", async () => {
       storeToken(TEST_ACCESS_TOKEN_OBJECT);
       await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ fallbackAuthorizationOptions: {} });
 
-      // @ts-ignore private
-      expect(NO_DEFAULT_IDAAS_CLIENT.persistenceManager.getAccessTokens()).toStrictEqual([TEST_ACCESS_TOKEN_OBJECT]);
+      expect((NO_DEFAULT_IDAAS_CLIENT as any).persistenceManager.getAccessTokens()).toStrictEqual([
+        TEST_ACCESS_TOKEN_OBJECT,
+      ]);
     });
 
     test("removes a token with the requested scopes and audience that is expired and non-refreshable", async () => {

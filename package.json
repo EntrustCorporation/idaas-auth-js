@@ -18,9 +18,11 @@
     "@types/bun": "1.1.0",
     "@types/oidc-provider": "8.4.4",
     "@types/web": "0.0.143",
+    "@vitest/coverage-v8": "2.0.5",
     "oidc-provider": "8.4.7",
     "publint": "0.2.9",
-    "typescript": "5.4.5"
+    "typescript": "5.4.5",
+    "vitest": "2.0.5"
   },
   "scripts": {
     "build": "tsc",
@@ -29,6 +31,7 @@
     "ci": "biome ci . && tsc",
     "ci:fix": "bun run format --write && bun run lint --apply",
     "clean": "rm -rf ./dist",
+    "test:vitest": "vitest run",
     "test:e2e": "bunx playwright test",
     "test:clean": "rm -rf playwright/test-app/out",
     "test:bundle": "bun run test:clean; bun build playwright/test-app/app.ts --outdir playwright/test-app/dist",

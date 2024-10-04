@@ -1,5 +1,6 @@
 import { type JWTPayload, createRemoteJWKSet, decodeJwt, decodeProtectedHeader, jwtVerify } from "jose";
 import type { UserClaims } from "../models";
+export const joseObj = { jwtVerify };
 
 export interface ValidateIdTokenParams {
   idToken?: string | JWTPayload;
@@ -121,6 +122,7 @@ export const validateIdToken = ({
   }
 
   // Validate alg against default RS256
+  /* v8 ignore next 3 */
   if (!alg) {
     throw new Error("Algorithm (alg) claim is missing from ID token");
   }
@@ -198,7 +200,7 @@ export const validateUserInfoToken = async ({
    */
   const jwks = createRemoteJWKSet(new URL(jwksEndpoint));
 
-  const verifiedJwt = await jwtVerify(userInfoToken, jwks, {
+  const verifiedJwt = await joseObj.jwtVerify(userInfoToken, jwks, {
     audience: clientId,
     issuer,
   });

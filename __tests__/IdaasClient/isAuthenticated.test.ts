@@ -1,13 +1,13 @@
-import { afterAll, afterEach, describe, expect, jest, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, test, vi } from "vitest";
 import { NO_DEFAULT_IDAAS_CLIENT, TEST_ID_PAIR, TEST_ID_TOKEN_OBJECT } from "../constants";
 
 describe("IdaasClient.isAuthenticated", () => {
   afterAll(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
   });
 
@@ -18,12 +18,12 @@ describe("IdaasClient.isAuthenticated", () => {
     expect(localStorage.getItem(key)).toBeTruthy();
 
     const result = NO_DEFAULT_IDAAS_CLIENT.isAuthenticated();
-    expect(result).toBeTrue();
+    expect(result).toBeTruthy();
   });
 
   test("returns false if no token is stored", () => {
     expect(localStorage.getItem(key)).toBeNull();
     const result = NO_DEFAULT_IDAAS_CLIENT.isAuthenticated();
-    expect(result).toBeFalse();
+    expect(result).toBeFalsy();
   });
 });

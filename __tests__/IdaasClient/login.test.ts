@@ -1,8 +1,6 @@
-import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
-// biome-ignore lint: needed for spyOn
+import { afterAll, afterEach, describe, expect, test, vi } from "vitest";
 import * as browser from "../../src/utils/browser";
 import { formatUrl } from "../../src/utils/format";
-// biome-ignore lint: needed for spyOn
 import * as jwt from "../../src/utils/jwt";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
@@ -22,25 +20,20 @@ import {
 import { getUrlParams, mockFetch } from "../helpers";
 
 describe("IdaasClient.login", () => {
-  // @ts-ignore not full type
-  const _spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
-  // @ts-ignore private method
-  const spyOnLoginWithRedirect = spyOn(NO_DEFAULT_IDAAS_CLIENT, "loginWithRedirect");
-  // @ts-ignore private method
-  const spyOnLoginWithPopup = spyOn(NO_DEFAULT_IDAAS_CLIENT, "loginWithPopup");
-  // @ts-ignore private method
-  const spyOnGetConfig = spyOn(NO_DEFAULT_IDAAS_CLIENT, "getConfig");
-  // @ts-ignore private method
-  const spyOnGenerateAuthorizationUrl = spyOn(NO_DEFAULT_IDAAS_CLIENT, "generateAuthorizationUrl");
+  const _spyOnFetch = vi.spyOn(window as any, "fetch").mockImplementation(mockFetch);
+  const spyOnLoginWithRedirect = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "loginWithRedirect");
+  const spyOnLoginWithPopup = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "loginWithPopup");
+  const spyOnGetConfig = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "getConfig");
+  const spyOnGenerateAuthorizationUrl = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "generateAuthorizationUrl");
   const startLocation = TEST_BASE_URI;
 
   afterAll(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
     localStorage.clear();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     window.location.href = startLocation;
   });
 
@@ -51,12 +44,11 @@ describe("IdaasClient.login", () => {
   });
 
   test("throws error if attempting to login with popup, but web_message response mode not supported", () => {
-    // @ts-ignore not assignable to parameter type 'never'
     spyOnGetConfig.mockResolvedValueOnce({ ...TEST_OIDC_CONFIG, response_modes_supported: ["query"] });
 
     expect(async () => {
       await NO_DEFAULT_IDAAS_CLIENT.login({ popup: true });
-    }).toThrowError();
+    }).rejects.toThrowError();
   });
 
   test("calls loginWithPopup if popup is true", async () => {
@@ -123,6 +115,16 @@ describe("IdaasClient.login", () => {
         expect(scope).toBeTruthy();
       });
 
+      test("if refresh token is true, `offline_access` scope is present", async () => {
+        await NO_DEFAULT_IDAAS_CLIENT.login({ useRefreshToken: true });
+
+        expect(spyOnGenerateAuthorizationUrl).toBeCalled();
+        const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
+        const { scope } = getUrlParams(authUrl);
+
+        expect(scope.split(" ")).toContain("offline_access");
+      });
+
       test("scopes specified in login call are used", async () => {
         await NO_DEFAULT_IDAAS_CLIENT.login({ scope: "test_scope1 test_scope2" });
 
@@ -149,8 +151,7 @@ describe("IdaasClient.login", () => {
       });
 
       test("scope supplied in constructor used if not specified in login call", async () => {
-        // @ts-ignore private method
-        const spyOnGenerateAuthorizationUrl = spyOn(SET_DEFAULTS_IDAAS_CLIENT, "generateAuthorizationUrl");
+        const spyOnGenerateAuthorizationUrl = vi.spyOn(SET_DEFAULTS_IDAAS_CLIENT as any, "generateAuthorizationUrl");
 
         await SET_DEFAULTS_IDAAS_CLIENT.login();
 
@@ -178,7 +179,7 @@ describe("IdaasClient.login", () => {
     });
 
     test("auth url contains max_age param if maxAge >= 0", async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.login({ maxAge: "0" });
+      await NO_DEFAULT_IDAAS_CLIENT.login({ maxAge: 0 });
 
       expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
@@ -198,7 +199,7 @@ describe("IdaasClient.login", () => {
     });
 
     test("auth url does not contain max_age param if maxAge is negative", async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.login({ maxAge: "-1" });
+      await NO_DEFAULT_IDAAS_CLIENT.login({ maxAge: -1 });
 
       expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
@@ -240,7 +241,6 @@ describe("IdaasClient.login", () => {
     });
 
     test("redirects to the url provided by generateAuthorizationUrl", async () => {
-      // @ts-ignore same as all other .mockResolvedValue issues
       spyOnGenerateAuthorizationUrl.mockResolvedValueOnce({ url: TEST_REDIRECT_URI });
 
       await NO_DEFAULT_IDAAS_CLIENT.login();
@@ -251,21 +251,17 @@ describe("IdaasClient.login", () => {
   });
 
   describe("login with popup", () => {
-    // @ts-ignore wrong return type
-    spyOn(browser, "openPopup").mockImplementation(() => "test");
-    spyOn(browser, "listenToPopup").mockResolvedValue(TEST_AUTH_RESPONSE);
-    spyOn(jwt, "validateIdToken").mockImplementation(() => {
+    vi.spyOn(browser as any, "openPopup").mockImplementation(() => "test");
+    vi.spyOn(browser, "listenToPopup").mockResolvedValue(TEST_AUTH_RESPONSE);
+    vi.spyOn(jwt, "validateIdToken").mockImplementation(() => {
       return { decodedJwt: TEST_ID_TOKEN_OBJECT.decoded, idToken: TEST_ID_TOKEN_OBJECT.encoded };
     });
 
-    const spyOnValidateAuthorizeResponse = spyOn(
-      NO_DEFAULT_IDAAS_CLIENT, // @ts-ignore private method
-      "validateAuthorizeResponse",
-    ).mockImplementation((object) => object.code);
-    // @ts-ignore private method
-    const spyOnRequestAndValidateTokens = spyOn(NO_DEFAULT_IDAAS_CLIENT, "requestAndValidateTokens");
-    // @ts-ignore private method
-    const spyOnParseAndSaveTokenResponse = spyOn(NO_DEFAULT_IDAAS_CLIENT, "parseAndSaveTokenResponse");
+    const spyOnValidateAuthorizeResponse = vi
+      .spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "validateAuthorizeResponse")
+      .mockImplementation((object) => (object as any).code);
+    const spyOnRequestAndValidateTokens = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "requestAndValidateTokens");
+    const spyOnParseAndSaveTokenResponse = vi.spyOn(NO_DEFAULT_IDAAS_CLIENT as any, "parseAndSaveTokenResponse");
 
     test("generateAuthorizationUrl is called", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.login({ popup: true });

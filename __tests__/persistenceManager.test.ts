@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { type AccessToken, PersistenceManager } from "../src/PersistenceManager";
 import {
   TEST_ACCESS_TOKEN_KEY,

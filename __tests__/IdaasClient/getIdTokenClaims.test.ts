@@ -1,14 +1,14 @@
-import { afterAll, afterEach, describe, expect, jest, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, test, vi } from "vitest";
 import { NO_DEFAULT_IDAAS_CLIENT, TEST_ID_PAIR } from "../constants";
 
 describe("IdaasClient.getIdTokenClaims", () => {
   afterAll(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
     localStorage.clear();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("if user info is stored, returns the user info", () => {
