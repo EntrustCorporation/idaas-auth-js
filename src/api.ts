@@ -158,17 +158,20 @@ export const requestAuthChallenge = async (userId: string, clientId: string, end
   return await response.json();
 };
 
+// TODO: clean
 export const submitAuthChallengeResponse = async (
   clientId: string,
   token: string,
   endpoint: string,
   cancel = false,
   response = "",
+  faceResponse = "",
 ) => {
   const requestAuthChallengeParams = {
     applicationId: clientId,
     response,
     cancel,
+    faceResponse,
   };
 
   const apiResponse = await fetch(endpoint, {

@@ -723,7 +723,9 @@ export class IdaasClient {
     }
   }
 
-  public async submitAuthChallengeResponse(response: string): Promise<boolean> {
+  // faceResponse is the workflow run id to check for bio auth
+  // TODO: params for other specific methods
+  public async submitAuthChallengeResponse(response: string, faceResponse?: string): Promise<boolean> {
     const authenticationParams = this.persistenceManager.getAuthenticationParams();
 
     if (!authenticationParams) {
@@ -733,7 +735,22 @@ export class IdaasClient {
     const { method, token, userId } = authenticationParams;
     const authResponseEndpoint = `${this.getIssuerOrigin()}/api/web/v1/authentication/users/authenticate/${method}/complete`;
 
-    const authResponse = await submitAuthChallengeResponse(this.clientId, token, authResponseEndpoint, false, response);
+    let authResponse = null;
+
+    // TODO clean
+    if (method === "FACE") {
+      authResponse = await submitAuthChallengeResponse(
+        this.clientId,
+        token,
+        authResponseEndpoint,
+        false,
+        response,
+        faceResponse,
+      );
+    } else {
+      authResponse = await submitAuthChallengeResponse(this.clientId, token, authResponseEndpoint, false, response);
+    }
+
     this.parseResponseErrors(authResponse);
     const { authenticationCompleted, token: newToken } = authResponse;
     this.persistenceManager.setAuthenticationParams({ method, token: newToken as string, userId });
