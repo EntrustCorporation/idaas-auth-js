@@ -1827,6 +1827,10 @@
             "type": "string",
             "description": "Client provided information about the application that will be included in the authentication audits if provided."
           },
+          "authRequestKey": {
+            "type": "string",
+            "description": "Unique identifier of the client authentication request."
+          },
           "cancel": {
             "type": "boolean",
             "description": "Cancel Identity as a Service authentication to the application",

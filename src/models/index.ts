@@ -1,4 +1,4 @@
-import type { GridChallenge, KbaChallenge, TempAccessCodeChallenge } from "./openapi-ts";
+import type { GridChallenge, KbaChallenge, TempAccessCodeChallenge, TransactionDetail } from "./openapi-ts";
 
 /**
  * The configurable options of the IdaasClient.
@@ -219,6 +219,7 @@ export interface AuthenticationRequestParams {
   mutualChallengeEnabled?: boolean;
   audience?: string;
   maxAge?: number;
+  transactionDetails?: TransactionDetail[];
 }
 
 /**
@@ -234,7 +235,7 @@ export interface AuthenticationSubmissionParams {
    * The user's answers to the KBA challenge questions.
    * Answers must be in the order of the questions returned when requesting the challenge.
    */
-  // TODO: individual responses (ie gridResponse, password, OTP, etc) ???
+  // TODO: individual responses (ie gridResponse, password, OTP, etc)
   kbaChallengeAnswers?: string[];
 }
 

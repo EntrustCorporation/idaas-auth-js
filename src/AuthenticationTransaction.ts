@@ -14,6 +14,7 @@ import type {
   FIDOChallenge,
   FaceChallenge,
   KbaChallenge,
+  TransactionDetail,
   UserAuthenticateParameters,
   UserAuthenticateQueryResponse,
   UserChallengeParameters,
@@ -21,7 +22,7 @@ import type {
 import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPair } from "./utils/crypto";
 import { calculateEpochExpiry } from "./utils/format";
 
-export interface TransactionDetails {
+export interface AuthenticationDetails {
   method?: IdaasAuthenticationMethod;
   token?: string;
   secondFactor?: IdaasAuthenticationMethod;
@@ -56,8 +57,9 @@ export class AuthenticationTransaction {
   private readonly mutualChallengeEnabled?: boolean;
   private readonly audience?: string;
   private readonly maxAge?: number;
+  private readonly transactionDetails?: TransactionDetail[];
 
-  private transactionDetails: TransactionDetails;
+  private authenticationDetails: AuthenticationDetails;
 
   private requiredDetails?: RequiredDetails;
   private faceChallenge?: FaceChallenge;
@@ -75,6 +77,7 @@ export class AuthenticationTransaction {
     mutualChallengeEnabled,
     audience,
     maxAge,
+    transactionDetails,
   }: {
     config: OidcConfig;
     userId?: string;
@@ -86,14 +89,16 @@ export class AuthenticationTransaction {
     mutualChallengeEnabled?: boolean;
     audience?: string;
     maxAge?: number;
+    transactionDetails?: TransactionDetail[];
   }) {
     const { issuer } = config;
 
-    this.transactionDetails = {
+    this.authenticationDetails = {
       scope,
       useRefreshToken,
     };
 
+    this.transactionDetails = transactionDetails;
     this.maxAge = maxAge;
     this.audience = audience;
     this.mutualChallengeEnabled = mutualChallengeEnabled;
@@ -121,8 +126,8 @@ export class AuthenticationTransaction {
     // get authentication method and second factor
     const { authenticationMethod: method, secondFactor } = await this.determineAuthenticationMethod();
 
-    this.transactionDetails.method = method;
-    this.transactionDetails.secondFactor = secondFactor;
+    this.authenticationDetails.method = method;
+    this.authenticationDetails.secondFactor = secondFactor;
 
     const requestBody = this.constructUserChallengeParams();
 
@@ -136,7 +141,7 @@ export class AuthenticationTransaction {
 
     const { token, faceChallenge, fidoChallenge, kbaChallenge } = requestAuthChallengeResponse;
 
-    this.transactionDetails.token = token;
+    this.authenticationDetails.token = token;
     this.fidoChallenge = fidoChallenge;
     this.faceChallenge = faceChallenge;
     this.kbaChallenge = kbaChallenge;
@@ -147,12 +152,12 @@ export class AuthenticationTransaction {
   }
 
   private async generateJwtAuthorizeUrl() {
-    const { useRefreshToken } = this.transactionDetails;
+    const { useRefreshToken } = this.authenticationDetails;
     const url = new URL(`${this.config.issuer}/authorizejwt`);
     const { codeVerifier, codeChallenge } = await generateChallengeVerifierPair();
     const state = base64UrlStringEncode(createRandomString());
     const nonce = base64UrlStringEncode(createRandomString());
-    const scope = this.transactionDetails.scope ?? "";
+    const scope = this.authenticationDetails.scope ?? "";
     const scopeAsArray = scope.split(" ");
     scopeAsArray.push("openid");
 
@@ -180,7 +185,7 @@ export class AuthenticationTransaction {
     // https://datatracker.ietf.org/doc/html/rfc7636#section-7.2
     url.searchParams.append("code_challenge_method", "S256");
 
-    this.transactionDetails.scope = usedScope;
+    this.authenticationDetails.scope = usedScope;
 
     return { url: url.toString(), codeVerifier };
   }
@@ -192,10 +197,12 @@ export class AuthenticationTransaction {
     if (!this.requiredDetails) {
       throw new Error("Jwt params not initialized");
     }
+
     const queryUserAuthResponse: UserAuthenticateQueryResponse = await queryUserAuthOptions(
       {
+        transactionDetails: this.transactionDetails,
         userId: this.userId,
-        authRequestKey: this.transactionDetails.authRequestKey,
+        authRequestKey: this.authenticationDetails.authRequestKey,
         applicationId: this.requiredDetails.applicationId,
       },
       this.issuerOrigin,
@@ -271,7 +278,7 @@ export class AuthenticationTransaction {
     const requestBody = this.constructUserChallengeParams();
     const response = await requestAuthChallenge(requestBody, "PASSWORD_AND_SECONDFACTOR", this.issuerOrigin);
 
-    this.transactionDetails.token = response.token;
+    this.authenticationDetails.token = response.token;
 
     return response;
   }
@@ -298,7 +305,7 @@ export class AuthenticationTransaction {
     response,
     kbaChallengeAnswers,
   }: AuthenticationSubmissionParams): Promise<AuthenticationResponse> {
-    const { method, token, isSecondFactor } = this.transactionDetails;
+    const { method, token, isSecondFactor } = this.authenticationDetails;
 
     if (!(method && token)) {
       throw new Error("Error parsing authentication params");
@@ -316,7 +323,7 @@ export class AuthenticationTransaction {
     }
 
     if (authenticationResponse.authenticationCompleted) {
-      this.transactionDetails.token = authenticationResponse.token;
+      this.authenticationDetails.token = authenticationResponse.token;
       await this.handleSuccessfulAuthentication();
     }
 
@@ -334,7 +341,7 @@ export class AuthenticationTransaction {
       code: authRequestKey,
       code_verifier: codeVerifier,
       grant_type: "jwt_idaas",
-      jwt: this.transactionDetails.token as string,
+      jwt: this.authenticationDetails.token as string,
     };
     const { id_token, access_token, expires_in, refresh_token } = await requestToken(
       this.config.token_endpoint,
@@ -345,12 +352,12 @@ export class AuthenticationTransaction {
       throw new Error("failed to fetch id token and access token from IDaaS");
     }
 
-    if (this.transactionDetails.useRefreshToken && !refresh_token) {
+    if (this.authenticationDetails.useRefreshToken && !refresh_token) {
       throw new Error("failed to fetch refresh token from IDaaS");
     }
 
-    this.transactionDetails = {
-      ...this.transactionDetails,
+    this.authenticationDetails = {
+      ...this.authenticationDetails,
       idToken: id_token as string,
       accessToken: access_token as string,
       refreshToken: refresh_token as string,
@@ -363,22 +370,22 @@ export class AuthenticationTransaction {
   private prepareForSecondFactorSubmission = async (
     firstFactorResponse: AuthenticationResponse,
   ): Promise<AuthenticationResponse> => {
-    this.transactionDetails.isSecondFactor = true;
+    this.authenticationDetails.isSecondFactor = true;
     const { token } = firstFactorResponse;
 
-    const secondFactor = this.transactionDetails.secondFactor;
+    const secondFactor = this.authenticationDetails.secondFactor;
     if (!secondFactor) {
       throw new Error("error parsing authentication params");
     }
 
-    this.transactionDetails.token = token;
+    this.authenticationDetails.token = token;
     const secondFactorRequest = await this.requestSecondFactorAuth();
     const { faceChallenge, fidoChallenge, kbaChallenge, token: secondFactorToken } = secondFactorRequest;
 
     this.fidoChallenge = fidoChallenge;
     this.faceChallenge = faceChallenge;
     this.kbaChallenge = kbaChallenge;
-    this.transactionDetails.token = secondFactorToken;
+    this.authenticationDetails.token = secondFactorToken;
 
     const pollForCompletion = this.shouldPoll(secondFactor);
     return {
@@ -388,6 +395,78 @@ export class AuthenticationTransaction {
       method: firstFactorResponse.method,
     };
   };
+
+  private async poll(): Promise<AuthenticatedResponse> {
+    const { token, method } = this.authenticationDetails;
+
+    if (!(token && method)) {
+      throw new Error("Error parsing authentication params");
+    }
+    const requestBody = this.constructUserAuthenticateParams("POLL");
+
+    const authResponse = await submitAuthChallenge(requestBody, method, token, this.issuerOrigin);
+
+    this.parseResponseErrors(authResponse);
+
+    return authResponse;
+  }
+
+  /**
+   * Polls the IDaaS Authentication API to determine if the user has completed authentication.
+   */
+  public async pollForAuthCompletion(): Promise<AuthenticationResponse> {
+    // set polling
+    this.authenticationDetails.continuePolling = true;
+    let authResponse: AuthenticatedResponse = {};
+
+    while (this.authenticationDetails.continuePolling) {
+      authResponse = await this.poll();
+      const { status } = authResponse;
+
+      switch (status) {
+        // Should never happen, IDaaS would throw before this is reached
+        case undefined: {
+          throw new Error("The method of authentication requires a user response.");
+        }
+        // Continue polling, wait for user to authenticate
+        case "NO_RESPONSE": {
+          break;
+        }
+        // Stop polling, return the api response
+        default: {
+          this.authenticationDetails.continuePolling = false;
+          break;
+        }
+      }
+
+      // wait 1 second between requests
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    if (authResponse.authenticationCompleted) {
+      this.authenticationDetails.token = authResponse.token;
+      await this.handleSuccessfulAuthentication();
+    }
+
+    return authResponse;
+  }
+
+  /**
+   * Cancels an authentication challenge received from the IDaaS Authentication API.
+   */
+  public async cancelAuthChallenge() {
+    const { token, method } = this.authenticationDetails;
+
+    if (!(token && method)) {
+      throw new Error("error parsing authentication params");
+    }
+
+    const requestBody = this.constructUserAuthenticateParams("CANCEL");
+
+    // end polling
+    this.authenticationDetails.continuePolling = false;
+    await submitAuthChallenge(requestBody, method, token, this.issuerOrigin);
+  }
 
   private parseResponseErrors(response: AuthenticatedResponse) {
     const errorResponse = response as ErrorInfo;
@@ -402,7 +481,7 @@ export class AuthenticationTransaction {
     return method === "FACE" || method === "TOKENPUSH" || method === "SMARTCREDENTIALPUSH";
   };
 
-  public getTransactionDetails = (): TransactionDetails => {
+  public getAuthenticationDetails = (): AuthenticationDetails => {
     return {
       ...this.transactionDetails,
       ...this.requiredDetails,
@@ -410,17 +489,17 @@ export class AuthenticationTransaction {
   };
 
   private constructUserChallengeParams = (): UserChallengeParameters => {
-    const { method, isSecondFactor, secondFactor, token } = this.transactionDetails;
-
+    const { method, isSecondFactor, secondFactor, token } = this.authenticationDetails;
     if (!this.requiredDetails) {
-      throw new Error("Required details not initialized");
+      throw new Error("Jwt params not initialized");
     }
 
     if (!method) {
-      throw new Error("Error parsing authentication params");
+      throw new Error("error parsing authentication params");
     }
 
     const requestBody: UserChallengeParameters = {
+      transactionDetails: this.transactionDetails,
       applicationId: this.requiredDetails.applicationId,
       userId: this.userId,
     };
@@ -457,13 +536,13 @@ export class AuthenticationTransaction {
     requestType: "POLL" | "CANCEL" | "SUBMIT",
     response?: string,
   ): UserAuthenticateParameters => {
-    const { secondFactor, isSecondFactor, method } = this.transactionDetails;
-
+    const { secondFactor, isSecondFactor, method } = this.authenticationDetails;
     if (!this.requiredDetails) {
       throw new Error("Required details not initialized");
     }
 
     const requestBody: UserAuthenticateParameters = {
+      transactionDetails: this.transactionDetails,
       applicationId: this.requiredDetails.applicationId,
       userId: this.userId,
     };
@@ -487,6 +566,7 @@ export class AuthenticationTransaction {
         break;
       }
       case "SUBMIT": {
+        requestBody.authRequestKey = this.requiredDetails.authRequestKey;
         requestBody.response = response;
         requestBody.kbaChallenge = this.kbaChallenge ?? undefined;
         break;

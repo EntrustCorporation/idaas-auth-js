@@ -673,7 +673,6 @@ export class IdaasClient {
       clientId: this.clientId,
     });
   };
-
   public async requestChallenge(options: AuthenticationRequestParams): Promise<AuthenticationResponse> {
     await this.initializeAuthenticationTransaction(options);
 
@@ -688,10 +687,27 @@ export class IdaasClient {
     }
     return authenticationResponse;
   }
+  public async pollAuth(): Promise<AuthenticationResponse> {
+    if (!this.authenticationTransaction) {
+      throw new Error("No authentication transacation in progress!");
+    }
+    const authenticationResponse = await this.authenticationTransaction.pollForAuthCompletion();
+
+    if (authenticationResponse.authenticationCompleted) {
+      this.handleAuthenticationTransactionSuccess();
+    }
+    return authenticationResponse;
+  }
+  public async cancelAuth(): Promise<void> {
+    if (!this.authenticationTransaction) {
+      throw new Error("No authentication transacation in progress!");
+    }
+    return await this.authenticationTransaction.cancelAuthChallenge();
+  }
 
   public async submitChallenge(options: AuthenticationSubmissionParams): Promise<AuthenticationResponse> {
     if (!this.authenticationTransaction) {
-      throw new Error("No authentication transaction in progress!");
+      throw new Error("No authentication transacation in progress!");
     }
     const authenticationResponse = await this.authenticationTransaction.submitAuthChallenge({ ...options });
 
@@ -704,17 +720,14 @@ export class IdaasClient {
 
   private handleAuthenticationTransactionSuccess = () => {
     if (!this.authenticationTransaction) {
-      throw new Error("No authentication transaction in progress!");
+      throw new Error("should never happen");
     }
 
     const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience } =
-      this.authenticationTransaction.getTransactionDetails();
-
+      this.authenticationTransaction.getAuthenticationDetails();
     if (!(idToken && accessToken && expiresAt && scope)) {
-      throw new Error("Required values not present in token response");
+      throw new Error("Error saving id token from authentication");
     }
-
-    const maxAgeExpiry = maxAge ? calculateEpochExpiry(maxAge.toString()) : undefined;
 
     this.persistenceManager.saveIdToken({ encoded: idToken, decoded: decodeJwt(idToken) });
     this.persistenceManager.saveAccessToken({
@@ -723,7 +736,7 @@ export class IdaasClient {
       scope,
       refreshToken,
       audience,
-      maxAgeExpiry,
+      maxAgeExpiry: maxAge ? calculateEpochExpiry(maxAge.toString()) : undefined,
     });
 
     this.authenticationTransaction = undefined;
