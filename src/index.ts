@@ -6,4 +6,6 @@ export type {
   LogoutOptions,
   GetAccessTokenOptions,
   SignUpOptions,
+  AUTH_REQUEST_RETURN,
+  AuthenticationRequestParams,
 } from "./models";

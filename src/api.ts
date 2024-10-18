@@ -123,3 +123,62 @@ export const getUserInfo = async (userInfoEndpoint: string, accessToken: string)
 
   return await response.text();
 };
+
+export const queryUserAuthOptions = async (userId: string, clientId: string, endpoint: string) => {
+  const queryAuthenticatorsRequestParams = {
+    applicationId: clientId,
+    userId: userId,
+  };
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(queryAuthenticatorsRequestParams),
+  });
+
+  return await response.json();
+};
+
+export const requestAuthChallenge = async (userId: string, clientId: string, endpoint: string) => {
+  const requestAuthChallengeParams = {
+    applicationId: clientId,
+    userId: userId,
+  };
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestAuthChallengeParams),
+  });
+
+  return await response.json();
+};
+
+export const submitAuthChallengeResponse = async (
+  clientId: string,
+  token: string,
+  endpoint: string,
+  cancel = false,
+  response = "",
+) => {
+  const requestAuthChallengeParams = {
+    applicationId: clientId,
+    response,
+    cancel,
+  };
+
+  const apiResponse = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestAuthChallengeParams),
+  });
+
+  return await apiResponse.json();
+};

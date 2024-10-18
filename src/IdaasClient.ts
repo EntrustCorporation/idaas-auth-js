@@ -7,9 +7,14 @@ import {
   type TokenResponse,
   fetchOpenidConfiguration,
   getUserInfo,
+  queryUserAuthOptions,
+  requestAuthChallenge,
   requestToken,
+  submitAuthChallengeResponse,
 } from "./api";
 import type {
+  AUTH_REQUEST_RETURN,
+  AuthenticationRequestParams,
   AuthorizeResponse,
   GetAccessTokenOptions,
   IdaasClientOptions,
@@ -54,7 +59,7 @@ export class IdaasClient {
 
   public async signUp({ redirectUri, popup = false }: SignUpOptions = {}) {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
-    const url = await this.generateSignUpUrl({ redirectUri: finalRedirectUri, popup });
+    const url = this.generateSignUpUrl({ redirectUri: finalRedirectUri, popup });
 
     if (popup) {
       const testPopupWindow = openPopup("");
@@ -621,12 +626,8 @@ export class IdaasClient {
     return { url: url.toString(), nonce, state, codeVerifier };
   }
 
-  private async generateSignUpUrl({
-    redirectUri = sanitizeUri(window.location.href),
-    popup,
-  }: SignUpOptions): Promise<string> {
-    const { issuer } = await this.getConfig();
-    const issuerOrigin = new URL(issuer).origin;
+  private generateSignUpUrl({ redirectUri = sanitizeUri(window.location.href), popup }: SignUpOptions): string {
+    const issuerOrigin = this.getIssuerOrigin();
     const signUpUrl = new URL(issuerOrigin);
 
     signUpUrl.pathname = "/api/web/user/onboard";
@@ -655,5 +656,153 @@ export class IdaasClient {
 
   private async getConfig(): Promise<OidcConfig> {
     return this.config ? this.config : await fetchOpenidConfiguration(this.issuerUrl);
+  }
+
+  private getIssuerOrigin(): string {
+    return new URL(this.issuerUrl).origin;
+  }
+
+  public async requestAuthChallenge({
+    userId,
+    preferredAuthenticationMethod,
+    strict,
+  }: AuthenticationRequestParams): Promise<AUTH_REQUEST_RETURN> {
+    const issuerOrigin = this.getIssuerOrigin();
+    const queryAuthEndpoint = `${issuerOrigin}/api/web/v2/authentication/users`;
+    const queryUserAuthResponse = await queryUserAuthOptions(userId, this.clientId, queryAuthEndpoint);
+
+    this.parseResponseErrors(queryUserAuthResponse);
+
+    const { userLoginEnabled, authenticationTypes } = queryUserAuthResponse;
+
+    if (!userLoginEnabled) {
+      throw new Error("The User Login flow must be enabled");
+    }
+
+    const preferredMethodAvailable: boolean = authenticationTypes.includes(preferredAuthenticationMethod);
+    let method = "";
+
+    if (!preferredMethodAvailable && strict) {
+      throw new Error("The preferred method of authentication is not available for this user!");
+    }
+
+    if (preferredAuthenticationMethod && preferredMethodAvailable) {
+      method = preferredAuthenticationMethod;
+    } else {
+      method = authenticationTypes[0];
+    }
+
+    if (!method) {
+      throw new Error("No available methods to authenticate this user!");
+    }
+
+    const authChallengeEndpoint = `${issuerOrigin}/api/web/v2/authentication/users/authenticate/${method}`;
+    const requestAuthChallengeResponse = await requestAuthChallenge(userId, this.clientId, authChallengeEndpoint);
+
+    this.parseResponseErrors(requestAuthChallengeResponse);
+
+    const { token, faceChallenge } = requestAuthChallengeResponse;
+
+    if (!token) {
+      throw new Error("No token in auth challenge request response");
+    }
+
+    this.persistenceManager.setAuthenticationParams({ method, token, userId });
+
+    // TODO: other specific returns
+    switch (method) {
+      case "FACE":
+        return {
+          method,
+          authSpecificReturn: faceChallenge,
+        };
+      default:
+        return {
+          method,
+        };
+    }
+  }
+
+  public async submitAuthChallengeResponse(response: string): Promise<boolean> {
+    const authenticationParams = this.persistenceManager.getAuthenticationParams();
+
+    if (!authenticationParams) {
+      throw new Error("Failed to parse authentication params, no authentication params stored!");
+    }
+
+    const { method, token, userId } = authenticationParams;
+    const authResponseEndpoint = `${this.getIssuerOrigin()}/api/web/v1/authentication/users/authenticate/${method}/complete`;
+
+    const authResponse = await submitAuthChallengeResponse(this.clientId, token, authResponseEndpoint, false, response);
+    this.parseResponseErrors(authResponse);
+    const { authenticationCompleted, token: newToken } = authResponse;
+    this.persistenceManager.setAuthenticationParams({ method, token: newToken as string, userId });
+
+    if (authenticationCompleted) {
+      this.persistenceManager.clearAuthenticationParams();
+      return true;
+    }
+    return false;
+  }
+
+  public async pollForAuthCompletion(secondsToPoll = 30) {
+    if (secondsToPoll < 1 || secondsToPoll > 600) {
+      // TODO: error message
+      throw new Error("secondsToPoll must be between 1 and 600");
+    }
+
+    const authenticationParams = this.persistenceManager.getAuthenticationParams();
+
+    if (!authenticationParams) {
+      throw new Error("Failed to parse authentication params, no authentication params stored!");
+    }
+    const { method, token } = authenticationParams;
+
+    const authResponseEndpoint = `${this.getIssuerOrigin()}/api/web/v1/authentication/users/authenticate/${method}/complete`;
+
+    for (let i = 0; i < secondsToPoll; i++) {
+      const authResponse = await submitAuthChallengeResponse(this.clientId, token, authResponseEndpoint);
+
+      try {
+        this.parseResponseErrors(authResponse);
+      } catch (error) {
+        // The authentication request was cancelled
+        if ((error as { message: string }).message === "no_transaction") {
+          return false;
+        }
+        // Throw other errors
+        throw error;
+      }
+
+      const { authenticationCompleted } = authResponse;
+
+      if (authenticationCompleted) {
+        return true;
+      }
+
+      // wait 1 second between requests
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    await this.cancelAuthRequest();
+    throw new Error("Timed out while waiting for success response");
+  }
+
+  public async cancelAuthRequest() {
+    const authenticationParams = this.persistenceManager.getAuthenticationParams();
+    if (!authenticationParams) {
+      throw new Error("Failed to parse authentication params, no authentication params stored!");
+    }
+    const { token, method } = authenticationParams;
+
+    const cancelEndpoint = `${this.getIssuerOrigin()}/api/web/v1/authentication/users/authenticate/${method}/complete`;
+
+    await submitAuthChallengeResponse(this.clientId, token, cancelEndpoint, true);
+  }
+  private parseResponseErrors(response: { errorCode: string; errorMessage: string }) {
+    const { errorCode, errorMessage } = response;
+    if (errorCode) {
+      throw new Error(errorCode, { cause: errorMessage });
+    }
   }
 }

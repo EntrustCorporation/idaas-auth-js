@@ -204,3 +204,63 @@ export interface UserClaims {
   updated_at?: number;
   [propName: string]: unknown;
 }
+
+export interface AuthenticationChallengeParams {
+  method: string;
+  token: string;
+  userId: string;
+}
+
+export interface AuthenticationRequestParams {
+  userId: string;
+  preferredAuthenticationMethod?: IDAAS_AUTHENTICATION_METHODS;
+  strict?: boolean;
+}
+
+type IDAAS_AUTHENTICATION_METHODS =
+  | "MACHINE"
+  | "PASSWORD"
+  | "EXTERNAL"
+  | "KBA"
+  | "TEMP_ACCESS_CODE"
+  | "OTP"
+  | "GRID"
+  | "TOKEN"
+  | "TOKENPUSH"
+  | "FIDO"
+  | "SMARTCREDENTIALPUSH"
+  | "PASSWORD_AND_SECONDFACTOR"
+  | "SMART_LOGIN"
+  | "IDP"
+  | "PASSKEY"
+  | "IDP_AND_SECONDFACTOR"
+  | "USER_CERTIFICATE"
+  | "FACE";
+
+export interface AUTH_REQUEST_RETURN {
+  method: string;
+  authSpecificReturn?: IDAAS_FACE_CHALLENGE | IDAAS_FIDO_CHALLENGE | IDAAS_KBA_CHALLENGE;
+}
+
+interface IDAAS_FACE_CHALLENGE {
+  applicantId: string;
+  sdkToken: string;
+  workflowRunId: string;
+}
+
+interface IDAAS_FIDO_CHALLENGE {
+  allowCredentials: string[];
+  challenge: string;
+  timeout: number;
+}
+
+interface IDAAS_KBA_CHALLENGE {
+  id: string;
+  userQuestions: {
+    answer: string;
+    id: string;
+    question: string;
+  }[];
+}
+
+// TODO: other types
