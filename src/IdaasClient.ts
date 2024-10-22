@@ -48,6 +48,7 @@ export class IdaasClient {
   private readonly globalUseRefreshToken: boolean;
 
   private config?: OidcConfig;
+  private faceResponse?: string;
 
   constructor({
     issuerUrl,
@@ -716,6 +717,10 @@ export class IdaasClient {
       throw new Error("No token in auth challenge request response");
     }
 
+    if (faceChallenge) {
+      this.faceResponse = faceChallenge.workflowRunId;
+    }
+
     this.persistenceManager.setAuthenticationParams({ method, token, userId });
 
     return {
@@ -726,35 +731,26 @@ export class IdaasClient {
 
   // faceResponse is the workflow run id to check for bio auth
   // TODO: params for other specific methods
-  public async submitAuthChallengeResponse(response: string, faceResponse?: string): Promise<boolean> {
+  public async submitAuthChallengeResponse(response: string): Promise<boolean> {
     const authenticationParams = this.persistenceManager.getAuthenticationParams();
 
     if (!authenticationParams) {
       throw new Error("Failed to parse authentication params, no authentication params stored!");
     }
 
-    const { method, token, userId } = authenticationParams;
-    const authResponseEndpoint = `${this.getIssuerOrigin()}/api/web/v1/authentication/users/authenticate/${method}/complete`;
+    const { method, token } = authenticationParams;
 
-    let authResponse = null;
-
-    // TODO clean
-    if (method === "FACE") {
-      authResponse = await submitAuthChallengeResponse(
-        this.authApiId,
-        token,
-        authResponseEndpoint,
-        false,
-        response,
-        faceResponse,
-      );
-    } else {
-      authResponse = await submitAuthChallengeResponse(this.authApiId, token, authResponseEndpoint, false, response);
-    }
+    const authResponse = await submitAuthChallengeResponse(
+      this.authApiId,
+      token,
+      this.getIssuerOrigin(),
+      method,
+      false,
+      response,
+    );
 
     this.parseResponseErrors(authResponse);
-    const { authenticationCompleted, token: newToken } = authResponse;
-    this.persistenceManager.setAuthenticationParams({ method, token: newToken as string, userId });
+    const { authenticationCompleted } = authResponse;
 
     if (authenticationCompleted) {
       this.persistenceManager.clearAuthenticationParams();
@@ -776,10 +772,16 @@ export class IdaasClient {
     }
     const { method, token } = authenticationParams;
 
-    const authResponseEndpoint = `${this.getIssuerOrigin()}/api/web/v1/authentication/users/authenticate/${method}/complete`;
-
     for (let i = 0; i < secondsToPoll; i++) {
-      const authResponse = await submitAuthChallengeResponse(this.authApiId, token, authResponseEndpoint);
+      const authResponse = await submitAuthChallengeResponse(
+        this.authApiId,
+        token,
+        this.getIssuerOrigin(),
+        method,
+        false,
+        "",
+        this.faceResponse,
+      );
 
       try {
         this.parseResponseErrors(authResponse);
@@ -813,9 +815,7 @@ export class IdaasClient {
     }
     const { token, method } = authenticationParams;
 
-    const cancelEndpoint = `${this.getIssuerOrigin()}/api/web/v1/authentication/users/authenticate/${method}/complete`;
-
-    await submitAuthChallengeResponse(this.authApiId, token, cancelEndpoint, true);
+    await submitAuthChallengeResponse(this.authApiId, token, this.getIssuerOrigin(), method, true);
   }
   private parseResponseErrors(response: { errorCode: string; errorMessage: string }) {
     const { errorCode, errorMessage } = response;

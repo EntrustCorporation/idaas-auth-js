@@ -162,11 +162,14 @@ export const requestAuthChallenge = async (userId: string, clientId: string, end
 export const submitAuthChallengeResponse = async (
   clientId: string,
   token: string,
-  endpoint: string,
+  issuerOrigin: string,
+  method: string,
   cancel = false,
   response = "",
   faceResponse = "",
 ) => {
+  const authResponseEndpoint = `${issuerOrigin}/api/web/v1/authentication/users/authenticate/${method}/complete`;
+
   const requestAuthChallengeParams = {
     applicationId: clientId,
     response,
@@ -174,7 +177,7 @@ export const submitAuthChallengeResponse = async (
     faceResponse,
   };
 
-  const apiResponse = await fetch(endpoint, {
+  const apiResponse = await fetch(authResponseEndpoint, {
     method: "POST",
     headers: {
       Authorization: token,
