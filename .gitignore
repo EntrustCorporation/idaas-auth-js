@@ -177,3 +177,6 @@ dist
 # Playwright artefacts
 test-results
 playwright-report
+
+# open-api generated files
+**/openapi-ts

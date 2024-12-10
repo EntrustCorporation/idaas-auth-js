@@ -4,7 +4,7 @@
     "enabled": true
   },
   "files": {
-    "ignore": ["dist"]
+    "ignore": ["dist", "src/models/openapi-ts"]
   },
   "formatter": {
     "indentWidth": 2,

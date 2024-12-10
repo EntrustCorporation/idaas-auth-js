@@ -9,3 +9,11 @@ export type {
   AuthRequestReturn,
   AuthenticationRequestParams,
 } from "./models";
+
+export type {
+  FIDOChallenge,
+  FaceChallenge,
+  KbaChallenge,
+  GridChallenge,
+  TempAccessCodeChallenge,
+} from "./models/openapi-ts";

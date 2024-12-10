@@ -27,6 +27,7 @@ pipeline {
     stage("🏗️  Build") {
       steps {
         sh "bun install --frozen-lockfile"
+        sh "bun run generate:api"
         sh "bun run ci"
       }
     }
