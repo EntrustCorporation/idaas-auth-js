@@ -1,4 +1,10 @@
-import type { GridChallenge, KbaChallenge, TempAccessCodeChallenge, TransactionDetail } from "./openapi-ts";
+import type {
+  FaceChallenge,
+  GridChallenge,
+  KbaChallenge,
+  TempAccessCodeChallenge,
+  TransactionDetail,
+} from "./openapi-ts";
 
 /**
  * The configurable options of the IdaasClient.
@@ -275,6 +281,8 @@ export interface AuthenticationResponse {
    * Parameters required for completing the `KBA` authentication method.
    */
   kbaChallenge?: KbaChallenge;
+
+  faceChallenge?: FaceChallenge;
 
   /**
    * Parameters defining the behaviour of the `TEMP_ACCESS_CODE` authentication method.
