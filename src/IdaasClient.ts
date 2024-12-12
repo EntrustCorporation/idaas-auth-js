@@ -687,6 +687,28 @@ export class IdaasClient {
     }
     return authenticationResponse;
   }
+
+  public authenticatePassword = async (options: AuthenticationRequestParams, password: string) => {
+    await this.initializeAuthenticationTransaction({
+      ...options,
+      strict: true,
+      preferredAuthenticationMethod: "PASSWORD",
+    });
+
+    if (!this.authenticationTransaction) {
+      throw new Error();
+    }
+
+    await this.authenticationTransaction.requestAuthChallenge();
+    const authResult = await this.authenticationTransaction.submitAuthChallenge({ response: password });
+
+    if (authResult.authenticationCompleted) {
+      this.handleAuthenticationTransactionSuccess();
+    }
+
+    return authResult;
+  };
+
   public async pollAuth(): Promise<AuthenticationResponse> {
     if (!this.authenticationTransaction) {
       throw new Error("No authentication transacation in progress!");
@@ -698,6 +720,7 @@ export class IdaasClient {
     }
     return authenticationResponse;
   }
+
   public async cancelAuth(): Promise<void> {
     if (!this.authenticationTransaction) {
       throw new Error("No authentication transacation in progress!");

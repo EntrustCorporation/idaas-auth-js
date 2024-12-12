@@ -483,7 +483,7 @@ export class AuthenticationTransaction {
 
   public getAuthenticationDetails = (): AuthenticationDetails => {
     return {
-      ...this.transactionDetails,
+      ...this.authenticationDetails,
       ...this.requiredDetails,
     };
   };
