@@ -1,6 +1,6 @@
 {
-  "name": "@entrust/idaas-auth-spa",
-  "version": "0.1.34",
+  "name": "@entrustcorp/idaas-auth-spa",
+  "version": "0.1.35",
   "description": "",
   "license": "Apache-2.0",
   "type": "module",
