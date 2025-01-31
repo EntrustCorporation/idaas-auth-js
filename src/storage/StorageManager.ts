@@ -180,8 +180,8 @@ export class StorageManager {
    * Retrieves the access tokens stored in local storage.
    * @returns The array of access tokens.
    */
-  public getAccessTokens(): AccessToken[] | undefined {
-    return this.get(this.accessTokenStorageKey);
+  public getAccessTokens(): AccessToken[] {
+    return this.get(this.accessTokenStorageKey) ?? [];
   }
 
   /**

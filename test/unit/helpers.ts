@@ -1,3 +1,4 @@
+import type { AccessToken, ClientParams, IdToken, TokenParams } from "../../src/storage/StorageManager";
 import {
   TEST_ACCESS_PAIR,
   TEST_BASE_URI,
@@ -8,6 +9,51 @@ import {
   TEST_TOKEN_RESPONSE,
   TEST_USER_INFO_STR,
 } from "./constants";
+
+interface Opts {
+  audience?: string;
+  scope?: string;
+}
+
+export const getAccessToken = (opts: Opts = {}): AccessToken => {
+  const { audience, scope } = opts;
+
+  return {
+    accessToken: Bun.randomUUIDv7("base64"),
+    expiresAt: Math.floor(Date.now() / 1000) + 120,
+    scope: scope ?? "openid profile email",
+    audience: audience ?? "https://entrust.com/audience",
+    refreshToken: "testingrefreshtoken",
+    maxAgeExpiry: Math.floor(Date.now() / 1000) + 240,
+    acr: "testingacrclaim",
+  };
+};
+
+export const getClientParams = (): ClientParams => {
+  return {
+    nonce: Bun.randomUUIDv7("hex"),
+    redirectUri: `${TEST_BASE_URI}/redirect`,
+    codeVerifier: Bun.randomUUIDv7("hex"),
+    state: Bun.randomUUIDv7("hex"),
+  };
+};
+
+export const getIdToken = (): IdToken => {
+  return {
+    encoded: Bun.randomUUIDv7("base64"),
+    decoded: {
+      sub: "testingsubclaim",
+      acr: "testingacrclaim",
+    },
+  };
+};
+
+export const getTokenParams = (): TokenParams => {
+  return {
+    scope: "openid profile email",
+    audience: "https://entrust.com/audience",
+  };
+};
 
 export const mockFetch = async (url, _config) => {
   switch (url) {
