@@ -50,6 +50,7 @@
     "api:download": "bun scripts/download.ts",
     "api:generate": "openapi-ts",
     "lint": "biome ci .",
+    "lint:fix": "biome format . --write && bun run lint",
     "lint:types": "attw .",
     "test:e2e": "bunx playwright test"
   },

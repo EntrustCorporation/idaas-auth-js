@@ -51,7 +51,6 @@ interface RequiredDetails {
   authRequestKey: string;
   applicationId: string;
   codeVerifier: string;
-  origin: string;
 }
 
 export class AuthenticationTransaction {
@@ -62,7 +61,7 @@ export class AuthenticationTransaction {
   private readonly strict: boolean;
   private readonly useRefreshToken: boolean;
   private readonly userId: string;
-  private readonly conditionalMediation?: boolean;
+  private readonly conditionalMediation: boolean;
 
   private readonly audience?: string;
   private readonly maxAge?: number;
@@ -79,7 +78,6 @@ export class AuthenticationTransaction {
   private kbaChallenge?: KbaChallenge;
   private requiredDetails?: RequiredDetails;
   private token?: string;
-
   private abortController?: AbortController;
 
   constructor({
@@ -112,7 +110,7 @@ export class AuthenticationTransaction {
     this.transactionDetails = transactionDetails;
     this.useRefreshToken = useRefreshToken ?? false;
     this.userId = userId ?? "";
-    this.conditionalMediation = conditionalMediation;
+    this.conditionalMediation = conditionalMediation ?? true;
   }
 
   private async handlePasskeyLogin(): Promise<void> {
@@ -132,7 +130,7 @@ export class AuthenticationTransaction {
       challenge: fidoChallenge.challenge ?? "",
     };
 
-    const authenticationResponseJson = await this.startWebAuthn(authChallenge, this.conditionalMediation ?? true);
+    const authenticationResponseJson = await this.startWebAuthn(authChallenge, this.conditionalMediation);
 
     this.fidoResponse = {
       authenticatorData: authenticationResponseJson.response.authenticatorData,
@@ -181,7 +179,6 @@ export class AuthenticationTransaction {
       authRequestKey,
       applicationId,
       codeVerifier,
-      origin: window.location.origin,
     };
 
     // 2. Get authentication method and second factor method
@@ -274,7 +271,7 @@ export class AuthenticationTransaction {
         userId: this.userId,
         authRequestKey: this.requiredDetails.authRequestKey,
         applicationId: this.requiredDetails.applicationId,
-        origin: this.requiredDetails.origin,
+        origin: window.location.origin,
       },
       this.issuerOrigin,
     );
@@ -541,18 +538,16 @@ export class AuthenticationTransaction {
     }
 
     if (this.abortController) {
-      try {
-        this.abortController.abort("cancelled login ceremoney");
-      } catch {}
+      this.abortController.abort("cancelled login ceremony");
     }
-
-    const requestBody = this.constructUserAuthenticateParams("CANCEL");
 
     // end polling
     this.continuePolling = false;
-    try {
+    if (method !== "PASSKEY") {
+      const requestBody = this.constructUserAuthenticateParams("CANCEL");
+
       await submitAuthChallenge(requestBody, method, token, this.issuerOrigin);
-    } catch {}
+    }
   }
 
   private shouldPoll = (method: string) => {

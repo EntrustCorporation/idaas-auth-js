@@ -227,5 +227,7 @@ export const getAuthRequestId = async (endpoint: string) => {
 };
 
 const parseResponseError = (errorResponse: ErrorInfo) => {
-  return new Error(errorResponse.errorCode, { cause: errorResponse.errorMessage });
+  return new Error(errorResponse.errorCode, {
+    cause: errorResponse.errorMessage,
+  });
 };
