@@ -11,10 +11,8 @@ pipeline {
   }
   environment {
     CI = "true"
-
     RUN_TESTS = "${params.RUN_TESTS}"
-    NPM_CONFIG__AUTH = credentials("246abfdf-d036-4ed3-ada8-c24975556e65")
-    NPM_CONFIG_EMAIL = "builder@entrustdatacard.com"
+    NODE_AUTH_TOKEN = credentials("npm_publish_token")
     PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.bun/bin"
   }
   stages {
@@ -54,7 +52,7 @@ pipeline {
         expression { params.publish == true }
       }
       steps {
-        sh "npm publish --registry https://binary.entrust.com:8443/artifactory/api/npm/npm-snapshot-local/"
+        sh "npm publish --provenance --access public"
       }
       post {
         failure {
