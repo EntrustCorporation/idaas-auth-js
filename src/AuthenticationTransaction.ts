@@ -159,32 +159,6 @@ export class AuthenticationTransaction {
     return publicKey;
   }
 
-  private async handleFidoLogin(): Promise<void> {
-    const { method } = this.authenticationDetails;
-    const token = this.token;
-    const fidoChallenge = this.fidoChallenge;
-
-    if (!(token && method && fidoChallenge)) {
-      throw new Error("Failed to retrieve required values");
-    }
-
-    const authChallenge: PublicKeyCredentialRequestOptionsJSON = {
-      challenge: fidoChallenge.challenge ?? "",
-      allowCredentials: fidoChallenge.allowCredentials?.map((val) => {
-        return { id: val, type: "public-key" };
-      }),
-    };
-
-    const authenticationResponseJson = await this.startWebAuthn(authChallenge);
-
-    this.fidoResponse = {
-      authenticatorData: authenticationResponseJson.response.authenticatorData,
-      clientDataJSON: authenticationResponseJson.response.clientDataJSON,
-      credentialId: authenticationResponseJson.id,
-      signature: authenticationResponseJson.response.signature,
-    };
-  }
-
   /**
    * Requests an authentication challenge from the IDaaS Authentication API.
    */
@@ -223,7 +197,7 @@ export class AuthenticationTransaction {
     this.faceChallenge = faceChallenge;
     this.kbaChallenge = kbaChallenge;
 
-    if (method === "PASSKEY") {
+    if (method === "PASSKEY" || method === "FIDO") {
       await this.handlePasskeyLogin();
     }
 
@@ -397,10 +371,6 @@ export class AuthenticationTransaction {
       throw new Error("Error parsing authentication params");
     }
 
-    if (method === "FIDO") {
-      await this.handleFidoLogin();
-    }
-
     this.parseKbaChallengeAnswers(kbaChallengeAnswers);
 
     const requestBody = this.constructUserAuthenticateParams("SUBMIT", response);
@@ -481,7 +451,7 @@ export class AuthenticationTransaction {
     this.token = secondFactorToken;
 
     if (secondFactor === "FIDO") {
-      await this.handleFidoLogin();
+      await this.handlePasskeyLogin();
     }
 
     const pollForCompletion = this.shouldPoll(secondFactor);
@@ -673,41 +643,6 @@ export class AuthenticationTransaction {
       }
     }
     return requestBody;
-  };
-
-  private startWebAuthn = async (optionsJSON: PublicKeyCredentialRequestOptionsJSON) => {
-    const abortController = new AbortController();
-    this.abortController = abortController;
-
-    const getOptions = this.getCredentialRequestOptions(optionsJSON);
-
-    // Wait for the user to complete assertion
-    const credential = (await navigator.credentials.get({
-      publicKey: getOptions,
-      signal: abortController.signal,
-    })) as AuthenticationCredential;
-    if (!credential) {
-      throw new Error("Authentication was not completed");
-    }
-
-    const { id, response } = credential;
-
-    let userHandle = undefined;
-
-    if (response.userHandle) {
-      userHandle = bufferToBase64URLString(response.userHandle);
-    }
-
-    // Convert values to base64 to make it easier to send back to the server
-    return {
-      id,
-      response: {
-        authenticatorData: bufferToBase64URLString(response.authenticatorData),
-        clientDataJSON: bufferToBase64URLString(response.clientDataJSON),
-        signature: bufferToBase64URLString(response.signature),
-        userHandle,
-      },
-    };
   };
 
   public submitPasskey = async (credential: AuthenticationCredential) => {
