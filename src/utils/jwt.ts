@@ -1,4 +1,4 @@
-import { type JWTPayload, createRemoteJWKSet, decodeJwt, decodeProtectedHeader, jwtVerify } from "jose";
+import { createRemoteJWKSet, decodeJwt, decodeProtectedHeader, type JWTPayload, jwtVerify } from "jose";
 import type { UserClaims } from "../models";
 
 export interface ValidateIdTokenParams {

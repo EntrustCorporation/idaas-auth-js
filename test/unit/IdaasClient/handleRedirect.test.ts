@@ -13,7 +13,6 @@ import {
   TEST_ID_TOKEN_OBJECT,
   TEST_STATE,
   TEST_TOKEN_PARAMS,
-  TEST_USER_ID,
 } from "../constants";
 import { mockFetch, storeData } from "../helpers";
 

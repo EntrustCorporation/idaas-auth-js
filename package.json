@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.17.3",
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.0.6",
     "@happy-dom/global-registrator": "18.0.1",
     "@hey-api/client-fetch": "0.5.2",
     "@hey-api/openapi-ts": "0.59.1",

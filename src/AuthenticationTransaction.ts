@@ -1,7 +1,7 @@
 import {
+  getAuthRequestId,
   type JwtIdaasTokenRequest,
   type OidcConfig,
-  getAuthRequestId,
   queryUserAuthOptions,
   requestAuthChallenge,
   requestToken,
@@ -19,9 +19,9 @@ import type {
 } from "./models";
 import type {
   AuthenticatedResponse,
+  FaceChallenge,
   FIDOChallenge,
   FIDOResponse,
-  FaceChallenge,
   KbaChallenge,
   TransactionDetail,
   UserAuthenticateParameters,
@@ -143,7 +143,7 @@ export class AuthenticationTransaction {
   private getCredentialRequestOptions(
     optionsJSON: PublicKeyCredentialRequestOptionsJSON,
   ): PublicKeyCredentialRequestOptions {
-    let allowCredentials = undefined;
+    let allowCredentials: PublicKeyCredentialDescriptor[] | undefined;
 
     if (optionsJSON.allowCredentials?.length !== 0) {
       allowCredentials = optionsJSON.allowCredentials?.map(toPublicKeyCredentialDescriptor);
@@ -648,7 +648,7 @@ export class AuthenticationTransaction {
   public submitPasskey = async (credential: AuthenticationCredential) => {
     const { id, response } = credential;
 
-    let userHandle = undefined;
+    let userHandle: string | undefined;
 
     if (response.userHandle) {
       userHandle = bufferToBase64URLString(response.userHandle);

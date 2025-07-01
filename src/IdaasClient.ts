@@ -1,13 +1,13 @@
-import { type JWTPayload, decodeJwt } from "jose";
+import { decodeJwt, type JWTPayload } from "jose";
 import { AuthenticationTransaction } from "./AuthenticationTransaction";
 import {
   type AccessTokenRequest,
-  type OidcConfig,
-  type RefreshTokenRequest,
-  type TokenResponse,
   fetchOpenidConfiguration,
   getUserInfo,
+  type OidcConfig,
+  type RefreshTokenRequest,
   requestToken,
+  type TokenResponse,
 } from "./api";
 import type {
   AuthenticationCredential,
