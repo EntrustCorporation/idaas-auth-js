@@ -683,6 +683,51 @@ export class IdaasClient {
     return await this.authenticationTransaction.requestAuthChallenge();
   }
 
+  public async authenticateSingle() {
+    // 1. Prepare transaction
+    await this.initializeAuthenticationTransaction({});
+
+    if (!this.authenticationTransaction) {
+      throw new Error();
+    }
+
+    // 2. Request authentication challenge, return response
+    const { pollForCompletion } = await this.authenticationTransaction.requestAuthChallenge();
+
+    if (pollForCompletion) {
+      return this.pollAuth();
+    }
+    throw new Error(
+      "Authentication method not supported by authenticateSingle, use requestChallenge & submitChallenge instead",
+    );
+  }
+
+  public async authenticateMulti({ password }: { password: string }): Promise<AuthenticationResponse> {
+    // 1. Prepare transaction
+    await this.initializeAuthenticationTransaction({});
+
+    if (!this.authenticationTransaction) {
+      throw new Error();
+    }
+
+    // 2. Request authentication challenge, return response
+    await this.authenticationTransaction.requestAuthChallenge();
+
+    const authResult = await this.authenticationTransaction.submitAuthChallenge({ response: password });
+
+    if (authResult.authenticationCompleted) {
+      const { pollForCompletion } = await this.authenticationTransaction.requestAuthChallenge();
+      if (pollForCompletion) {
+        return this.pollAuth();
+      }
+      throw new Error(
+        "Authentication method not supported by authenticateMulti, use requestChallenge & submitChallenge instead",
+      );
+    }
+
+    return authResult;
+  }
+
   public authenticatePassword = async ({
     options,
     password,
