@@ -2,6 +2,7 @@ pipeline {
   parameters {
     booleanParam(name: "RUN_TESTS", defaultValue: true, description: "If enabled, all tests will be run")
     booleanParam(name: "publish", defaultValue: false, description: "Publish to Artifactory")
+    booleanParam(name: "publishBeta", defaultValue: false, description: "Publish as beta version")
   }
   agent {
     label "DK_UBCOMMON2404"
@@ -43,6 +44,21 @@ pipeline {
       post {
         always {
           junit "junit.xml"
+        }
+      }
+    }
+    stage("📦  Publish Beta") {
+      when {
+        expression { params.publishBeta == true }
+      }
+      steps {
+        sh 'echo \"//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN\" >> .npmrc'
+        sh "npm publish --tag beta --access public"
+      }
+      post {
+        failure {
+          sh "npm config ls"
+          sh "cat /root/.npm/_logs/*.log"
         }
       }
     }

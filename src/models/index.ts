@@ -368,7 +368,8 @@ export type IdaasAuthenticationMethod =
   | "SMARTCREDENTIALPUSH"
   | "PASSWORD_AND_SECONDFACTOR"
   | "PASSKEY"
-  | "FACE"; // TODO onfido sdk integration for web auth
+  | "FACE" // TODO onfido sdk integration for web auth
+  | "EXTERNAL";
 
 export interface PublicKeyCredentialRequestOptionsJSON
   extends Omit<PublicKeyCredentialRequestOptions, "challenge" | "allowCredentials"> {

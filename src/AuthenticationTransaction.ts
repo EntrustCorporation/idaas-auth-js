@@ -570,6 +570,7 @@ export class AuthenticationTransaction {
       transactionDetails: this.transactionDetails,
       applicationId: this.requiredDetails.applicationId,
       userId: this.userId,
+      authRequestKey: this.requiredDetails.authRequestKey,
     };
 
     if (method === "FIDO") {
