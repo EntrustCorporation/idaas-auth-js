@@ -556,7 +556,7 @@ export class IdaasClient {
   /**
    * Authenticate a user using password-based authentication.
    * Initiates an authentication transaction with the PASSWORD method and submits the provided password.
-   * 
+   *
    * @param options Authentication request parameters and the password to authenticate with
    * @returns The authentication response indicating success or requiring additional steps
    */
@@ -594,7 +594,7 @@ export class IdaasClient {
   /**
    * Initiates an authentication challenge request.
    * Prepares a new authentication transaction and requests a challenge from the authentication provider.
-   * 
+   *
    * @param options Optional authentication request parameters
    * @returns The authentication response containing challenge details
    */
@@ -613,7 +613,7 @@ export class IdaasClient {
   /**
    * Submits a response to an authentication challenge.
    * Processes authentication responses and completes the authentication if successful.
-   * 
+   *
    * @param options Authentication submission parameters including credentials or response data
    * @returns The authentication response indicating completion status or next steps
    */
@@ -638,7 +638,7 @@ export class IdaasClient {
   /**
    * Polls the authentication provider to check for completion of an ongoing authentication process.
    * Useful for authentication flows that may complete asynchronously (e.g., mobile push notifications).
-   * 
+   *
    * @returns The authentication response indicating completion status
    */
   public async pollAuth(): Promise<AuthenticationResponse> {
@@ -681,7 +681,7 @@ export class IdaasClient {
 
   /**
    * Checks if the user is currently authenticated by verifying the presence of a valid ID token.
-   * 
+   *
    * @returns True if the user is authenticated, false otherwise
    */
   public isAuthenticated(): boolean {
