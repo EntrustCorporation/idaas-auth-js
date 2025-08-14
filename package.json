@@ -41,7 +41,8 @@
     "format": "biome format .",
     "lint": "biome check .",
     "lint:types": "attw .",
-    "test:e2e": "bunx playwright test"
+    "test:e2e": "bunx playwright test",
+    "test:manual": "bun run test/test-manual/app.ts"
   },
   "dependencies": {
     "jose": "6.0.11"
