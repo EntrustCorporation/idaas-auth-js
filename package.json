@@ -45,24 +45,24 @@
     "test:manual": "bun run test/test-manual/app.ts"
   },
   "dependencies": {
-    "jose": "6.0.11"
+    "jose": "6.0.12"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@biomejs/biome": "2.0.6",
+    "@biomejs/biome": "2.2.0",
     "@happy-dom/global-registrator": "18.0.1",
     "@hey-api/client-fetch": "0.13.1",
-    "@hey-api/openapi-ts": "0.77.0",
-    "@microsoft/api-extractor": "7.52.8",
-    "@playwright/test": "1.53.2",
-    "@rsbuild/plugin-type-check": "1.2.3",
-    "@rslib/core": "0.10.4",
+    "@hey-api/openapi-ts": "0.80.11",
+    "@microsoft/api-extractor": "7.52.10",
+    "@playwright/test": "1.54.2",
+    "@rsbuild/plugin-type-check": "1.2.4",
+    "@rslib/core": "0.12.1",
     "@tsconfig/bun": "1.0.8",
-    "@types/bun": "1.2.18",
-    "@types/oidc-provider": "9.1.1",
-    "@types/web": "0.0.245",
-    "oidc-provider": "9.2.0",
-    "rsbuild-plugin-publint": "0.3.2",
-    "typescript": "5.8.3"
+    "@types/bun": "1.2.20",
+    "@types/oidc-provider": "9.1.2",
+    "@types/web": "0.0.262",
+    "oidc-provider": "9.4.1",
+    "rsbuild-plugin-publint": "0.3.3",
+    "typescript": "5.9.2"
   }
 }
