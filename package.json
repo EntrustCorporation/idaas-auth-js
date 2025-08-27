@@ -49,10 +49,10 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@biomejs/biome": "2.2.0",
+    "@biomejs/biome": "2.2.2",
     "@happy-dom/global-registrator": "18.0.1",
     "@hey-api/client-fetch": "0.13.1",
-    "@hey-api/openapi-ts": "0.81.0",
+    "@hey-api/openapi-ts": "0.81.1",
     "@microsoft/api-extractor": "7.52.11",
     "@playwright/test": "1.55.0",
     "@rsbuild/plugin-type-check": "1.2.4",
@@ -61,7 +61,7 @@
     "@types/bun": "1.2.20",
     "@types/oidc-provider": "9.1.2",
     "@types/web": "0.0.263",
-    "oidc-provider": "9.4.1",
+    "oidc-provider": "9.4.2",
     "rsbuild-plugin-publint": "0.3.3",
     "typescript": "5.9.2"
   }
