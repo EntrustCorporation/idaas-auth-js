@@ -99,7 +99,8 @@ export interface OidcLoginOptions extends BaseLoginOptions {
   acrValues?: string[];
 
   /**
-   * Specifies the maximum age of a token, this value does not change on token refresh.
+   * Specifies the maximum age of a token in seconds. 
+   * When tokens are refreshed using a refresh token, the original authentication time is preserved and this maxAge value continues to apply to that original authentication timestamp, not the refresh time.
    */
   maxAge?: number;
 }
