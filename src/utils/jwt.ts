@@ -1,6 +1,5 @@
-import { type JWTPayload, createRemoteJWKSet, decodeJwt, decodeProtectedHeader, jwtVerify } from "jose";
+import { createRemoteJWKSet, decodeJwt, decodeProtectedHeader, type JWTPayload, jwtVerify } from "jose";
 import type { UserClaims } from "../models";
-export const joseObj = { jwtVerify };
 
 export interface ValidateIdTokenParams {
   idToken?: string | JWTPayload;
@@ -44,7 +43,6 @@ export const validateIdToken = ({
   nonce,
   idTokenSigningAlgValuesSupported,
   acrValuesSupported,
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: High number of simple checks
 }: ValidateIdTokenParams) => {
   if (!idToken) {
     throw new Error("No ID token supplied");
@@ -108,7 +106,7 @@ export const validateIdToken = ({
     }
 
     if (decodedJwt.aud.length > 1) {
-      const azp = decodedJwt.azp as string | undefined;
+      const azp = decodedJwt.azp;
       if (!azp) {
         throw new Error(
           "Authorized Party (azp) claim is missing from ID token and must be present when there are multiple audiences",
@@ -122,7 +120,6 @@ export const validateIdToken = ({
   }
 
   // Validate alg against default RS256
-  /* v8 ignore next 3 */
   if (!alg) {
     throw new Error("Algorithm (alg) claim is missing from ID token");
   }
@@ -154,7 +151,7 @@ export const validateIdToken = ({
   }
 
   // Validate the nonce claim is the one sent during Authorization request
-  const nonceClaim = decodedJwt.nonce as string | undefined;
+  const nonceClaim = decodedJwt.nonce;
   if (!nonceClaim) {
     throw new Error("Nonce (nonce) claim is missing from ID token");
   }
@@ -163,8 +160,8 @@ export const validateIdToken = ({
     throw new Error(`Nonce (nonce) claim ${nonceClaim} in the ID token does not match expected ${nonce}`);
   }
 
-  const acrClaim = decodedJwt.acr as string | undefined;
-  if (acrClaim && !acrValuesSupported?.includes(acrClaim)) {
+  const acrClaim = decodedJwt.acr;
+  if (acrClaim && !acrValuesSupported?.includes(acrClaim as string)) {
     throw new Error(
       `Authentication Context Class Reference (acr) claim ${acrClaim} is not one of the supported ${acrValuesSupported}`,
     );
@@ -200,12 +197,12 @@ export const validateUserInfoToken = async ({
    */
   const jwks = createRemoteJWKSet(new URL(jwksEndpoint));
 
-  const verifiedJwt = await joseObj.jwtVerify(userInfoToken, jwks, {
+  const verifiedJwt = await jwtVerify(userInfoToken, jwks, {
     audience: clientId,
     issuer,
   });
 
-  return verifiedJwt.payload as UserClaims;
+  return verifiedJwt.payload;
 };
 
 export const readAccessToken = (encodedToken: string): DecodedAccessToken | null => {

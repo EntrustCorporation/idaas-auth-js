@@ -173,7 +173,14 @@ dist
 
 # Finder (MacOS) folder config
 .DS_Store
+junit.xml
+dist
+node_modules
+.rslib
 
 # Playwright artefacts
 test-results
 playwright-report
+
+# open-api generated files
+**/openapi-ts

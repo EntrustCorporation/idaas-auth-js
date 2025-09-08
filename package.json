@@ -1,44 +1,68 @@
 {
-  "name": "@entrust/idaas-auth-spa",
+  "name": "@entrustcorp/idaas-auth-js",
+  "description": "IDaaS Authentication SDK for SPA applications",
+  "version": "0.1.42-beta.0",
+  "author": "Entrust",
+  "homepage": "https://github.com/EntrustCorporation/idaas-auth-spa",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": ["dist", "LICENSE", "README.md"],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/EntrustCorporation/idaas-auth-spa.git"
   },
-  "version": "0.1.15",
-  "description": "",
-  "license": "Apache-2.0",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/types/index.d.ts",
-  "files": ["dist", "README.md"],
-  "devDependencies": {
-    "@biomejs/biome": "1.7.1",
-    "@happy-dom/global-registrator": "14.12.0",
-    "@playwright/test": "1.45.1",
-    "@types/bun": "1.1.0",
-    "@types/oidc-provider": "8.4.4",
-    "@types/web": "0.0.143",
-    "@vitest/coverage-v8": "2.0.5",
-    "oidc-provider": "8.4.7",
-    "publint": "0.2.9",
-    "typescript": "5.4.5",
-    "vitest": "2.0.5"
+  "bugs": {
+    "url": "https://github.com/EntrustCorporation/idaas-auth-spa/issues"
+  },
+  "keywords": ["Entrust", "authentication", "authorization", "auth", "oidc", "spa", "pkce"],
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "bun": ">= 1",
+    "node": ">= 22"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "rslib build",
+    "api:download": "bun scripts/download.ts",
+    "api:generate": "openapi-ts",
+    "ci": "biome ci . && bun run build",
+    "ci:fix": "bun run format --write && bun run lint --write",
     "format": "biome format .",
     "lint": "biome check .",
-    "ci": "biome ci . && tsc",
-    "ci:fix": "bun run format --write && bun run lint --apply",
-    "clean": "rm -rf ./dist",
-    "test:vitest": "vitest run",
+    "lint:types": "attw .",
     "test:e2e": "bunx playwright test",
-    "test:clean": "rm -rf playwright/test-app/out",
-    "test:bundle": "bun run test:clean; bun build playwright/test-app/app.ts --outdir playwright/test-app/dist",
-    "test:client": "bun run test:bundle && bun playwright/test-app/index.ts",
-    "test:oidc-server": "bun run playwright/test-app/oidc-provider.ts"
+    "test:manual": "bun run test/test-manual/app.ts"
   },
   "dependencies": {
-    "jose": "5.2.4"
+    "jose": "6.1.0"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.2",
+    "@biomejs/biome": "2.2.2",
+    "@happy-dom/global-registrator": "18.0.1",
+    "@hey-api/client-fetch": "0.13.1",
+    "@hey-api/openapi-ts": "0.82.3",
+    "@microsoft/api-extractor": "7.52.11",
+    "@playwright/test": "1.55.0",
+    "@rsbuild/plugin-type-check": "1.2.4",
+    "@rslib/core": "0.12.4",
+    "@tsconfig/bun": "1.0.8",
+    "@types/bun": "1.2.21",
+    "@types/oidc-provider": "9.5.0",
+    "@types/web": "0.0.265",
+    "oidc-provider": "9.5.1",
+    "rsbuild-plugin-publint": "0.3.3",
+    "typescript": "5.9.2"
   }
 }

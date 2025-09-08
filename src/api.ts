@@ -1,4 +1,18 @@
 import type { JWTPayload } from "jose";
+import type { IdaasAuthenticationMethod } from "./models/";
+import type {
+  AuthenticatedResponse,
+  ErrorInfo,
+  UserAuthenticateParameters,
+  UserAuthenticateQueryParameters,
+  UserAuthenticateQueryResponse,
+  UserChallengeParameters,
+} from "./models/openapi-ts";
+import {
+  userAuthenticateUsingPost,
+  userAuthenticatorQueryUsingPost,
+  userChallengeUsingPost,
+} from "./models/openapi-ts";
 
 /**
  * Interface describing the OpenID provider metadata retrieved during OIDC discovery.
@@ -35,6 +49,14 @@ export interface AccessTokenRequest {
   redirect_uri: string;
   client_id: string;
   claims?: string;
+}
+
+export interface JwtIdaasTokenRequest {
+  grant_type: "jwt_idaas";
+  code: string;
+  code_verifier: string;
+  client_id: string;
+  jwt: string;
 }
 
 /**
@@ -88,7 +110,7 @@ export const fetchOpenidConfiguration = async (issuerUrl: string): Promise<OidcC
  */
 export const requestToken = async (
   tokenEndpoint: string,
-  tokenRequest: AccessTokenRequest | RefreshTokenRequest,
+  tokenRequest: AccessTokenRequest | RefreshTokenRequest | JwtIdaasTokenRequest,
 ): Promise<TokenResponse> => {
   const searchParams = new URLSearchParams({
     ...tokenRequest,
@@ -122,4 +144,90 @@ export const getUserInfo = async (userInfoEndpoint: string, accessToken: string)
   });
 
   return await response.text();
+};
+
+/**
+ * Queries the IDaaS Authentication API for authentication options available to the user.
+ *
+ * @param requestBody the body of the request to send
+ * @param baseUrl the origin of the url to send the request to
+ */
+export const queryUserAuthOptions = async (
+  requestBody: UserAuthenticateQueryParameters,
+  baseUrl: string,
+): Promise<UserAuthenticateQueryResponse> => {
+  const { data, error } = await userAuthenticatorQueryUsingPost({
+    baseUrl,
+    body: { ...requestBody },
+  });
+
+  if (error) {
+    throw parseResponseError(error);
+  }
+  return data;
+};
+
+/**
+ * Requests an authentication challenge from the IDaaS Authentication API.
+ *
+ * @param requestBody the body of the request to send
+ * @param authenticator the method of authentication to request a challenge for
+ * @param baseUrl the origin of the url to send the request to
+ */
+export const requestAuthChallenge = async (
+  requestBody: UserChallengeParameters,
+  authenticator: IdaasAuthenticationMethod,
+  baseUrl: string,
+): Promise<AuthenticatedResponse> => {
+  const { data, error } = await userChallengeUsingPost({
+    baseUrl,
+    body: { ...requestBody },
+    path: { authenticator },
+  });
+
+  if (error) {
+    throw parseResponseError(error);
+  }
+  return data;
+};
+
+/**
+ * Sends the user's response to an authentication challenge to the IDaaS Authentication API.
+ *
+ * @param requestBody the body of the request to send
+ * @param authenticator the method of authentication that was used
+ * @param authorization the token received when requesting the challenge
+ * @param baseUrl the origin of the url to send the request to
+ */
+export const submitAuthChallenge = async (
+  requestBody: UserAuthenticateParameters,
+  authenticator: IdaasAuthenticationMethod,
+  authorization: string,
+  baseUrl: string,
+): Promise<AuthenticatedResponse> => {
+  const { data, error } = await userAuthenticateUsingPost({
+    baseUrl,
+    headers: { Authorization: authorization },
+    body: { ...requestBody },
+    path: { authenticator },
+  });
+
+  if (error) {
+    throw parseResponseError(error);
+  }
+  return data;
+};
+
+export const getAuthRequestId = async (endpoint: string) => {
+  const response = await fetch(endpoint, {
+    method: "POST",
+  });
+
+  return await response.json();
+};
+
+const parseResponseError = (errorResponse: ErrorInfo) => {
+  return new Error(errorResponse.errorCode, {
+    cause: errorResponse.errorMessage,
+  });
 };

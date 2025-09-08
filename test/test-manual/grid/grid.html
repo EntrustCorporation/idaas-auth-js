@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IDaaS - Grid Testing</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../shared-styles.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <h1>IDaaS Auth - Grid Testing</h1>
+      <button id="back-button">Back</button>
+
+      <div class="button-group">
+        <h3>Grid Authentication Methods</h3>
+
+        <button id="request-challenge-grid" data-testid="challenge-grid">
+          🔢 Grid Challenge
+        </button>
+      </div>
+
+      <div id="submit-input-area" class="result" style="display: none">
+        <h3>Enter Grid Response:</h3>
+        <input
+          type="text"
+          id="submit-response-input"
+          style="width: 300px; padding: 8px; margin-right: 10px"
+        />
+        <button id="submit-response" style="background: #28a745">Submit</button>
+      </div>
+    </div>
+
+    <div class="results-container">
+      <div id="request-challenge-response" class="result" style="display: none">
+        <h3>Authentication Request Params:</h3>
+        <pre id="challenge-output"></pre>
+      </div>
+
+      <div id="submit-challenge-response" class="result" style="display: none">
+        <h3>Submit Challenge Response:</h3>
+        <pre id="submit-output"></pre>
+      </div>
+    </div>
+    <script type="module" src="../dist/grid/grid.js"></script>
+  </body>
+</html>

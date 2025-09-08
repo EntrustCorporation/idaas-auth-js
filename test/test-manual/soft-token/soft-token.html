@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IDaaS - Soft Token Testing</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../shared-styles.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <h1>IDaaS Auth - Soft Token Testing</h1>
+      <button id="back-button">Back</button>
+      <div class="button-group">
+        <h3>Soft Token Authentication Methods</h3>
+
+        <button id="request-challenge-token" data-testid="challenge-token">
+          🔢 Token Challenge
+        </button>
+
+        <button
+          id="request-challenge-token-push"
+          data-testid="challenge-token-push"
+        >
+          📱 Token Push
+        </button>
+
+        <button
+          id="request-challenge-token-push-mutual"
+          data-testid="challenge-token-push-mutual"
+        >
+          🔐 Token Push with Mutual Auth
+        </button>
+      </div>
+
+      <div class="button-group">
+        <h3>Authentication Actions</h3>
+        <button
+          id="cancel-auth"
+          data-testid="cancel-auth"
+          style="background: #dc3545"
+        >
+          ❌ Cancel Authentication
+        </button>
+      </div>
+
+      <div id="submit-input-area" class="result" style="display: none">
+        <h3>Enter Token Response:</h3>
+        <input
+          type="text"
+          id="submit-response-input"
+          style="width: 300px; padding: 8px; margin-right: 10px"
+        />
+        <button id="submit-response" style="background: #28a745">Submit</button>
+      </div>
+
+      <div id="mutual-auth-challenge" class="result" style="display: none">
+        <h3>Mutual Auth</h3>
+        <pre id="mutual-auth-code"></pre>
+      </div>
+    </div>
+
+    <div class="results-container">
+      <div id="request-challenge-response" class="result" style="display: none">
+        <h3>Authentication Request Params:</h3>
+        <pre id="challenge-output"></pre>
+      </div>
+
+      <div id="submit-challenge-response" class="result" style="display: none">
+        <h3>Submit Challenge Response:</h3>
+        <pre id="submit-output"></pre>
+      </div>
+    </div>
+    <script type="module" src="../dist/soft-token/soft-token.js"></script>
+  </body>
+</html>

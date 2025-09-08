@@ -4,7 +4,7 @@ const DEFAULT_POPUP_TIMEOUT_SECONDS = 300;
 
 export const openPopup = (popupUrl: string) => {
   const width = 500;
-  const height = 600;
+  const height = 700;
   const left = window.screenX + (window.innerWidth - width) / 2;
   const top = window.screenY + (window.innerHeight - height) / 2;
 
@@ -21,14 +21,17 @@ export const openPopup = (popupUrl: string) => {
   return popup;
 };
 
-export const listenToPopup = (popup: Window, url: string) => {
+export const listenToAuthorizePopup = (popup: Window, url: string) => {
   const expectedOrigin = new URL(url).origin;
 
   return new Promise<AuthorizeResponse>((resolve, reject) => {
     const popupListenerAbortController = new AbortController();
 
     const popupWebMessageEventHandler = (event: MessageEvent) => {
-      if (event.origin !== expectedOrigin || !event.data || event.data.type !== "authorization_response") {
+      const hasOriginAndData = event.origin === expectedOrigin && event.data;
+      const isAuthorizeEvent = hasOriginAndData && event.data.type === "authorization_response";
+
+      if (!isAuthorizeEvent) {
         return;
       }
 
@@ -37,9 +40,9 @@ export const listenToPopup = (popup: Window, url: string) => {
       const response = event.data.response;
       if (response.error) {
         reject(new Error(response.error));
-      } else {
-        resolve(response as AuthorizeResponse);
       }
+
+      resolve(response as AuthorizeResponse);
     };
 
     // Poll the popup window every second to see if it's closed. We cannot reliably use eventListeners here to support mobile.
@@ -67,4 +70,8 @@ export const listenToPopup = (popup: Window, url: string) => {
       signal: popupListenerAbortController.signal,
     });
   });
+};
+
+export const browserSupportsPasskey = async (): Promise<boolean> => {
+  return !!window.PublicKeyCredential;
 };

@@ -1,2 +1,21 @@
 export { IdaasClient } from "./IdaasClient";
-export type { IdaasClientOptions, UserClaims, LoginOptions, LogoutOptions, GetAccessTokenOptions } from "./models";
+
+export type {
+  AuthenticationRequestParams,
+  AuthenticationResponse,
+  AuthenticationSubmissionParams,
+  GetAccessTokenOptions,
+  IdaasAuthenticationMethod,
+  IdaasClientOptions,
+  LogoutOptions,
+  OidcLoginOptions,
+  UserClaims,
+} from "./models";
+
+export type {
+  FaceChallenge,
+  FidoChallenge,
+  GridChallenge,
+  KbaChallenge,
+  TempAccessCodeChallenge,
+} from "./models/openapi-ts";

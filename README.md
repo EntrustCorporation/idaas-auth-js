@@ -12,7 +12,9 @@ Get started with a [free trial](https://in.entrust.com/IDaaS/) account today.
 
 ## Installation
 
-TODO
+```sh
+npm i @entrustcorp/idaas-auth-spa
+```
 
 ## Configure Your IDaaS Application
 
@@ -104,15 +106,13 @@ To log in with popup, ensure the `popup` flag is `true`. Logging in with popup w
 ```
 
 ```typescript
-document
-  .getElementById("login-with-popup")
-  .addEventListener("click", async () => {
-    // open the IDaaS login popup
-    await idaasClient.login({ popup: true });
-    // you've now logged in with popup, you can get the stored ID token claims like this:
-    const idToken = idaasClient.getIdTokenClaims();
-    console.log(idToken);
-  });
+document.getElementById("login-with-popup").addEventListener("click", async () => {
+  // open the IDaaS login popup
+  await idaasClient.login({ popup: true });
+  // you've now logged in with popup, you can get the stored ID token claims like this:
+  const idToken = idaasClient.getIdTokenClaims();
+  console.log(idToken);
+});
 ```
 
 You can specify the context class(es) of authentication that are acceptable to be used to authenticate the user. Successful authentication via methods that do not fall under the specified authentication context class(es) will be treated as a failed authentication attempt.
@@ -120,14 +120,12 @@ You can specify the context class(es) of authentication that are acceptable to b
 **Note: To use this value later, the received access token must not be opaque.**
 
 ```typescript
-document
-  .getElementById("login-with-popup")
-  .addEventListener("click", async () => {
-    // authenticate using an authentication method that falls under the `knowledge` authentication context class
-    await idaasClient.login({ popup: true, acrValues: ["knowledge"] });
-    const idToken = idaasClient.getIdTokenClaims();
-    console.log(idToken);
-  });
+document.getElementById("login-with-popup").addEventListener("click", async () => {
+  // authenticate using an authentication method that falls under the `knowledge` authentication context class
+  await idaasClient.login({ popup: true, acrValues: ["knowledge"] });
+  const idToken = idaasClient.getIdTokenClaims();
+  console.log(idToken);
+});
 ```
 
 ## Access Tokens
@@ -141,23 +139,21 @@ Retrieve an access token to pass along in the `Authorization` header using `getA
 ```
 
 ```typescript
-document
-  .getElementById("access-resource")
-  .addEventListener("click", async () => {
-    // "<SCOPE>" and "<AUDIENCE>" specify the scope and audience of the token to be fetched
-    const token = idaasClient.getAccessToken({
-      audience: "<AUDIENCE>",
-      scope: "<SCOPE>",
-    });
-    const response = await fetch(`https://resource.com`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = await response.json();
-    console.log(data);
+document.getElementById("access-resource").addEventListener("click", async () => {
+  // "<SCOPE>" and "<AUDIENCE>" specify the scope and audience of the token to be fetched
+  const token = idaasClient.getAccessToken({
+    audience: "<AUDIENCE>",
+    scope: "<SCOPE>",
   });
+  const response = await fetch(`https://resource.com`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await response.json();
+  console.log(data);
+});
 ```
 
 ### Requesting a New Access Token
@@ -169,27 +165,25 @@ Request an access token that is not already stored by supplying `fallbackAuthori
 ```
 
 ```typescript
-document
-  .getElementById("access-resource")
-  .addEventListener("click", async () => {
-    // a login with popup will be attempted to fetch a token with "<SCOPE>" and "<AUDIENCE>" if there is not a token with "<SCOPE>" and "<AUDIENCE>" already stored.
-    const token = idaasClient.getAccessToken({
-      audience: "<AUDIENCE>",
-      scope: "<SCOPE>",
-      fallbackAuthorizationOptions: {
-        popup: true,
-      },
-    });
-
-    const response = await fetch(`https://resource.com`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = await response.json();
-    console.log(data);
+document.getElementById("access-resource").addEventListener("click", async () => {
+  // a login with popup will be attempted to fetch a token with "<SCOPE>" and "<AUDIENCE>" if there is not a token with "<SCOPE>" and "<AUDIENCE>" already stored.
+  const token = idaasClient.getAccessToken({
+    audience: "<AUDIENCE>",
+    scope: "<SCOPE>",
+    fallbackAuthorizationOptions: {
+      popup: true,
+    },
   });
+
+  const response = await fetch(`https://resource.com`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await response.json();
+  console.log(data);
+});
 ```
 
 ### Verify Context Class of Authentication
@@ -200,29 +194,27 @@ You are able to specify the context class(es) of authentication that must be/hav
 ```
 
 ```typescript
-document
-  .getElementById("access-resource")
-  .addEventListener("click", async () => {
-    const token = idaasClient.getAccessToken({
-      // Retrieve a token with <SCOPE> and <AUDIENCE> that was authenticated via a `knowledge` method of authentication
-      audience: "<AUDIENCE>",
-      scope: "<SCOPE>",
-      acrValues: ["knowledge"],
-      // If the token is not found, login via an authentication method that falls under the `knowledge` context class to receive this token
-      fallbackAuthorizationOptions: {
-        popup: true,
-      },
-    });
-
-    const response = await fetch(`https://resource.com`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = await response.json();
-    console.log(data);
+document.getElementById("access-resource").addEventListener("click", async () => {
+  const token = idaasClient.getAccessToken({
+    // Retrieve a token with <SCOPE> and <AUDIENCE> that was authenticated via a `knowledge` method of authentication
+    audience: "<AUDIENCE>",
+    scope: "<SCOPE>",
+    acrValues: ["knowledge"],
+    // If the token is not found, login via an authentication method that falls under the `knowledge` context class to receive this token
+    fallbackAuthorizationOptions: {
+      popup: true,
+    },
   });
+
+  const response = await fetch(`https://resource.com`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await response.json();
+  console.log(data);
+});
 ```
 
 ## User Authentication
@@ -234,17 +226,15 @@ Authentication status is determined by the presence of an ID token. If an ID tok
 ```
 
 ```typescript
-document
-  .getElementById("check-authentication")
-  .addEventListener("click", () => {
-    const isAuthenticated = idaasClient.isAuthenticated();
+document.getElementById("check-authentication").addEventListener("click", () => {
+  const isAuthenticated = idaasClient.isAuthenticated();
 
-    if (isAuthenticated) {
-      console.log("User is authenticated");
-    } else {
-      console.log("User is not authenticated");
-    }
-  });
+  if (isAuthenticated) {
+    console.log("User is authenticated");
+  } else {
+    console.log("User is not authenticated");
+  }
+});
 ```
 
 ### Getting Information About the Logged-in User
@@ -254,13 +244,11 @@ document
 ```
 
 ```typescript
-document
-  .getElementById("get-information")
-  .addEventListener("click", async () => {
-    // assumes the user is logged in and an access token is stored
-    const userInfo = await idaasClient.getUserInfo();
-    console.log("User Info", userInfo);
-  });
+document.getElementById("get-information").addEventListener("click", async () => {
+  // assumes the user is logged in and an access token is stored
+  const userInfo = await idaasClient.getUserInfo();
+  console.log("User Info", userInfo);
+});
 ```
 
 ### Fetching the Stored ID Token
@@ -275,4 +263,204 @@ document.getElementById("get-id-token").addEventListener("click", () => {
   const idToken = idaasClient.getIdTokenClaims();
   console.log("ID Token", idToken);
 });
+```
+
+# In-app User Authentication
+
+Rather than using the `login` method, you have the option to communicate with the IDaaS Authentication API via this SDK.
+
+## Authentication Using Password
+
+You can quickly authenticate using password.
+
+```typescript
+await idaasClient.authenticatePassword({
+  options: {
+    userId: "<USER_ID>",
+  },
+  password: "<USER_PASSWORD>",
+});
+```
+
+## Requesting an Authentication Challenge
+
+It is necessary to request a challenge prior to submitting a challenge.
+
+```typescript
+await idaasClient.requestChallenge({
+  userId: "<USER_ID>",
+});
+```
+
+Note: If the userId field is not provided, the authentication challenge received will be passkey authentication.
+
+### Additional Request Parameters
+
+You may specify additional parameters to customize the way the user is authenticated, and to control the access token parameters.
+
+```typescript
+// if OTP is available for the user, use OTP, else throw an error
+await idaasClient.requestChallenge({
+  userId: "<USER_ID>",
+  preferredAuthenticationMethod: "OTP",
+  strict: true,
+});
+
+// if OTP is available for the user, use OTP
+await idaasClient.requestChallenge({
+  userId: "<USER_ID>",
+  preferredAuthenticationMethod: "OTP",
+});
+
+// additional parameters that affect the access token received
+await idaasClient.requestChallenge({
+  userId: "<USER_ID>",
+  scope: "<SCOPE>",
+  audience: "<AUDIENCE>",
+  useRefreshToken: true | false,
+  maxAge: number,
+  transactionDetails: [
+    {
+      detail: "<DETAIL>",
+      usage: ["RBA", "TVS"],
+      value: "<VALUE>",
+    },
+  ],
+});
+
+// requires the user to complete a mutual challenge for the TOKENPUSH and FACE authenticators
+await idaasClient.requestChallenge({
+  userId: "<USER_ID>",
+  mutualChallengeEnabled: true | false,
+});
+```
+
+## Submitting an Authentication Challenge
+
+After requesting a challenge, some authentication methods require a user's input to be submitted. You will know if a submission is required by reading the `pollForCompletion` flag in the requestChallenge return value. If a submission is required, `pollForCompletion` will be false.
+
+```typescript
+// The response field is used by all authenticators except KBA
+await idaasClient.submitChallenge({
+  response: "<USER_RESPONSE>",
+});
+
+// For KBA authentication, it is necessary to submit the user's answers in the same order that the questions were provided
+await idaasClient.submitChallenge({
+  kbaChallengeAnswers: ["USER", "KBA", "ANSWERS"],
+});
+```
+
+## Poll for User Authentication
+
+For authentication methods where a user submission is not required or is external to your application, you may evaluate the user's authentication status by polling. You will know if polling is required by reading the `pollForCompletion` flag in the requestChallenge return value. If polling is required, `pollForCompletion` will be true.
+
+```typescript
+await idaasClient.pollAuth();
+```
+
+## Cancel User Authentication
+
+You can cancel polling for user authentication.
+
+```typescript
+await idaasClient.cancelAuth();
+```
+
+## Examples
+
+### Default Login Flows
+
+#### Password Authentication
+
+In most cases, the user's response to the authentication challenge will be submitted from your application.
+
+```typescript
+// get userId and password
+const { authenticationCompleted } = await idaasClient.authenticatePassword({
+  options: {
+    userId: "<USER_ID>",
+  },
+  password: "<USER_PASSWORD>",
+});
+
+return authenticationCompleted; // true
+```
+
+```typescript
+// get userId
+await idaasClient.requestChallenge({
+  userId: "<USER_ID>",
+});
+
+// get user response
+await idaasClient.submitChallenge({
+  response: "<USER_RESPONSE>",
+});
+```
+
+#### Token Push Authentication
+
+In some cases, the user's response to the authentication challenge will not be submitted from your application. In these cases it is necessary to poll for completion as shown below.
+
+Note: The `pollForCompletion` flag is used to indicate these cases.
+
+```typescript
+// get userId
+const {
+  method, // TOKENPUSH
+  pollForCompletion, // true
+} = await idaasClient.requestChallenge({ userId: `<USER_ID>` });
+// the `pollForCompletion` flag will be used to indicate when to poll
+if (pollForCompletion) {
+  const { authenticationCompleted } = await idaasClient.pollAuth();
+  // polling will continue until authentication is completed/cancelled by the user or the challenge has timed out
+}
+```
+
+#### Password and Second Factor Authentication
+
+Two-Factor authentication can be implemented as shown below.
+
+Example: password with OTP as a second factor
+
+```typescript
+// get userId
+const { method } = await idaasClient.requestChallenge({ userId: "<USER_ID>" }); // PASSWORD_AND_SECONDFACTOR
+// get password
+const { secondFactorMethod } = await idaasClient.submitChallenge({ response: "<USER_PASSWORD>" }); // OTP
+// `secondFactorMethod` is the method that will be used as the second factor
+// get user OTP
+const { authenticationCompleted } = await idaasClient.submitChallenge({ response: `<USER_OTP>` }); // true
+```
+
+### Additional Authentication Options
+
+#### preferredAuthenticationMethod
+
+You can specify a preferred authentication method when requesting an authentication challenge. If the preferred method is available, it will be used to authenticate the user.
+
+```typescript
+// get userId
+const { method, gridChallenge } = await idaasClient.requestChallenge({
+  userId: "<USER_ID>",
+  preferredAuthenticationMethod: "GRID",
+}); // GRID if available
+// gather the user's response to the `gridChallenge`
+const { authenticationCompleted } = await idaasClient.submitChallenge({ response: "user_grid" }); // true
+```
+
+#### strict authentication method
+
+You can force the authentication method to be the preferredAuthenticationMethod by setting the `strict` flag to true. If the preferred method is not available, an error will be thrown.
+
+```typescript
+// get userId
+const { method, kbaChallenge } = await idaasClient.requestChallenge({
+  userId: "<USER_ID>",
+  preferredAuthenticationMethod: "KBA",
+  strict: true,
+}); // KBA or error thrown
+// gather the user's answers to the `kbaChallenge`
+const { authenticationCompleted } = await idaasClient.submitChallenge({ kbaChallengeAnswers: [user_answers] }); // true
 ```
