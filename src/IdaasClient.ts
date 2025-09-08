@@ -15,6 +15,7 @@ import type {
   AuthenticationResponse,
   AuthenticationSubmissionParams,
   AuthorizeResponse,
+  BaseLoginOptions,
   GetAccessTokenOptions,
   IdaasClientOptions,
   LogoutOptions,
@@ -325,15 +326,19 @@ export class IdaasClient {
     return this.config ? this.config : await fetchOpenidConfiguration(this.issuerUrl);
   }
 
-  private initializeAuthenticationTransaction = async (options?: AuthenticationRequestParams) => {
+  private initializeAuthenticationTransaction = async (
+    options?: AuthenticationRequestParams,
+    oidcOptions?: BaseLoginOptions,
+  ) => {
     const oidcConfig = await this.getConfig();
 
     this.authenticationTransaction = new AuthenticationTransaction({
       oidcConfig,
       ...options,
-      useRefreshToken: options?.useRefreshToken ?? this.globalUseRefreshToken,
-      audience: options?.audience ?? this.globalAudience,
-      scope: options?.scope ?? this.globalScope,
+      maxAge: oidcOptions?.maxAge,
+      useRefreshToken: oidcOptions?.useRefreshToken ?? this.globalUseRefreshToken,
+      audience: oidcOptions?.audience ?? this.globalAudience,
+      scope: oidcOptions?.scope ?? this.globalScope,
       clientId: this.clientId,
     });
   };
@@ -598,9 +603,12 @@ export class IdaasClient {
    * @param options Optional authentication request parameters
    * @returns The authentication response containing challenge details
    */
-  public async requestChallenge(options: AuthenticationRequestParams = {}): Promise<AuthenticationResponse> {
+  public async requestChallenge(
+    options: AuthenticationRequestParams = {},
+    oidcOptions?: BaseLoginOptions,
+  ): Promise<AuthenticationResponse> {
     // 1. Prepare transaction
-    await this.initializeAuthenticationTransaction(options);
+    await this.initializeAuthenticationTransaction(options, oidcOptions);
 
     if (!this.authenticationTransaction) {
       throw new Error();

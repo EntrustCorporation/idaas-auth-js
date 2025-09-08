@@ -12,6 +12,7 @@ import type {
   AuthenticationResponse,
   AuthenticationSubmissionParams,
   AuthenticationTransactionOptions,
+  BaseLoginOptions,
   FaceBiometricOptions,
   IdaasAuthenticationMethod,
   PublicKeyCredentialRequestOptionsJSON,
@@ -70,7 +71,7 @@ export class AuthenticationTransaction {
   private readonly preferredAuthenticationMethod?: IdaasAuthenticationMethod;
   private readonly transactionDetails?: TransactionDetail[];
   private readonly acrValues?: string[];
-
+  private readonly password?: string;
   private authenticationDetails: AuthenticationDetails;
   private continuePolling = false;
   private isSecondFactor = false;
@@ -94,11 +95,12 @@ export class AuthenticationTransaction {
     strict,
     faceBiometricOptions,
     tokenPushOptions,
+    password,
     audience,
     maxAge,
     transactionDetails,
     acrValues,
-  }: AuthenticationTransactionOptions) {
+  }: AuthenticationTransactionOptions & BaseLoginOptions) {
     const { issuer } = oidcConfig;
 
     this.authenticationDetails = {
@@ -121,6 +123,7 @@ export class AuthenticationTransaction {
     this.useRefreshToken = useRefreshToken ?? false;
     this.userId = userId ?? "";
     this.acrValues = acrValues;
+    this.password = password;
   }
 
   private async handlePasskeyLogin(): Promise<void> {
@@ -199,6 +202,14 @@ export class AuthenticationTransaction {
     this.fidoChallenge = fidoChallenge;
     this.faceChallenge = faceChallenge;
     this.kbaChallenge = kbaChallenge;
+
+    if (method === "PASSWORD_AND_SECONDFACTOR" && this.password) {
+      await this.submitAuthChallenge({
+        response: this.password,
+      });
+
+      return await this.prepareForSecondFactorSubmission();
+    }
 
     if (method === "PASSKEY" || method === "FIDO") {
       await this.handlePasskeyLogin();

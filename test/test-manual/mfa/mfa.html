@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IDaaS - MFA Testing</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../shared-styles.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <h1>IDaaS - MFA Testing</h1>
+      <button id="back-button">Back</button>
+      <div id="submit-password-area" class="button-group" style="display: block">
+        <h3>MFA Authentication</h3>
+        <input
+          type="text"
+          id="submit-password-input"
+          style="width: 300px; padding: 8px; margin-right: 10px"
+        />
+        <button id="request-challenge" data-testid="challenge">
+          Submit Password
+        </button>
+        <button id="request-challenge-passwordless" data-testid="challenge-passwordless">
+          Start without Password
+        </button>
+      </div>
+
+      <div class="button-group">
+        <h3>Authentication Actions</h3>
+        <button
+          id="cancel-auth"
+          data-testid="cancel-auth"
+          style="background: #dc3545"
+        >
+          ❌ Cancel Authentication
+        </button>
+      </div>
+
+      <div id="submit-input-area" class="result" style="display: none">
+        <h3>Enter Response:</h3>
+        <input
+          type="text"
+          id="submit-response-input"
+          style="width: 300px; padding: 8px; margin-right: 10px"
+        />
+        <button id="submit-response" style="background: #28a745">Submit</button>
+      </div>
+
+      <div id="challenge-display-area" class="result" style="display: none">
+        <h3>Mutual Auth</h3>
+        <pre id="challenge-info"></pre>
+      </div>
+    </div>
+
+    <div class="results-container">
+      <div id="request-challenge-response" class="result" style="display: none">
+        <h3>Authentication Request Params:</h3>
+        <pre id="challenge-output"></pre>
+      </div>
+
+      <div id="submit-challenge-response" class="result" style="display: none">
+        <h3>Submit Challenge Response:</h3>
+        <pre id="submit-output"></pre>
+      </div>
+    </div>
+    <script type="module" src="../dist/mfa/mfa.js"></script>
+  </body>
+</html>

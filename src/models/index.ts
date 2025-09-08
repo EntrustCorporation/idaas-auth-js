@@ -54,7 +54,7 @@ export interface IdaasClientOptions {
 /**
  * The configurable options for the `login` and `requestChallenge` methods.
  */
-interface BaseLoginOptions {
+export interface BaseLoginOptions {
   /**
    * The audience to be used for requesting API access. This defaults to the `globalAudience` set in your `IdaasClientOptions` if not set.
    */
@@ -242,6 +242,11 @@ export interface AuthenticationRequestParams extends BaseLoginOptions {
    * The user ID of the user to request the challenge for.
    */
   userId?: string;
+
+  /**
+   * The user's password to submit for MFA flows.
+   */
+  password?: string;
 
   /**
    * The preferred method of authentication.
