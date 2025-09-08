@@ -73,9 +73,6 @@ document.getElementById("submit-response")?.addEventListener("click", async () =
   }
 
   try {
-    if (submitResponse?.pollForCompletion) {
-      submitResponse = await idaasClient.pollAuth();
-    }
     switch (submitResponse?.secondFactorMethod) {
       case "KBA":
         submitResponse = await idaasClient.submitChallenge({
@@ -84,7 +81,7 @@ document.getElementById("submit-response")?.addEventListener("click", async () =
         break;
       case "PASSKEY":
       case "FIDO":
-        //This is where we'd do passkey, IF THE SDK HANDLED WEBAUTHN
+        //skipping as we don't want to add the onfido sdk as a dependency just for this test
         break;
       default:
         console.log("password submit");
@@ -92,9 +89,10 @@ document.getElementById("submit-response")?.addEventListener("click", async () =
           response: code,
         });
         updateSubmitUI(submitResponse);
-        if (submitResponse.pollForCompletion) {
-          submitResponse = await idaasClient.pollAuth();
-        }
+    }
+
+    if (submitResponse?.pollForCompletion) {
+      submitResponse = await idaasClient.pollAuth();
     }
 
     console.log("Submit response:", submitResponse);
