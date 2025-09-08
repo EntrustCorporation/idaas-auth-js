@@ -92,7 +92,7 @@ document.getElementById("submit-response")?.addEventListener("click", async () =
           response: code,
         });
         updateSubmitUI(submitResponse);
-        if(submitResponse.pollForCompletion){
+        if (submitResponse.pollForCompletion) {
           submitResponse = await idaasClient.pollAuth();
         }
     }

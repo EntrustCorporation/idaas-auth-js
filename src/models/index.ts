@@ -75,11 +75,6 @@ export interface BaseLoginOptions {
    * Note: Use of refresh tokens must be enabled on your IDaaS client application.
    */
   useRefreshToken?: boolean;
-
-  /**
-   * Specifies the maximum age of a token, this value does not change on token refresh.
-   */
-  maxAge?: number;
 }
 
 /**
@@ -102,6 +97,11 @@ export interface OidcLoginOptions extends BaseLoginOptions {
    * Determines the strength/quality of the method used to authenticate the user.
    */
   acrValues?: string[];
+
+  /**
+   * Specifies the maximum age of a token, this value does not change on token refresh.
+   */
+  maxAge?: number;
 }
 
 /**
@@ -277,6 +277,11 @@ export interface AuthenticationRequestParams extends BaseLoginOptions {
    * The transaction details of the request.
    */
   transactionDetails?: TransactionDetail[];
+
+  /**
+   * Specifies the maximum age of a token, this value does not change on token refresh.
+   */
+  maxAge?: number;
 }
 
 /**

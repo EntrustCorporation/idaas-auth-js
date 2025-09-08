@@ -335,7 +335,6 @@ export class IdaasClient {
     this.authenticationTransaction = new AuthenticationTransaction({
       oidcConfig,
       ...options,
-      maxAge: oidcOptions?.maxAge,
       useRefreshToken: oidcOptions?.useRefreshToken ?? this.globalUseRefreshToken,
       audience: oidcOptions?.audience ?? this.globalAudience,
       scope: oidcOptions?.scope ?? this.globalScope,
