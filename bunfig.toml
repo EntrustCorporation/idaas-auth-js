@@ -2,4 +2,3 @@
 preload = "./happydom.ts"
 coverage = true
 root = "__tests__"
-root = "./test/unit"
