@@ -15,7 +15,7 @@ const buildProject = async () => {
     entrypoints: [
       join(baseDir, "./soft-token/soft-token.ts"),
       join(baseDir, "./grid/grid.ts"),
-      join(baseDir, "./mfa/mfa.ts"),
+      join(baseDir, "./rba-mfa/rba-mfa.ts"),
     ],
     outdir: outDir,
     root: baseDir,

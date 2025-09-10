@@ -84,6 +84,19 @@ export class IdaasClient {
   }
 
   /**
+   * Provides access to self hosted RBA OIDC methods.
+   * Contains requestChallenge, submitChallenge, poll, and cancel methods.
+   */
+  public get rba() {
+    return {
+      requestChallenge: this.requestChallenge.bind(this),
+      submitChallenge: this.submitChallenge.bind(this),
+      poll: this.poll.bind(this),
+      cancel: this.cancel.bind(this),
+    };
+  }
+
+  /**
    * Perform the authorization code flow by authenticating the user to obtain an access token and optionally refresh and
    * ID tokens.
    *
@@ -179,6 +192,85 @@ export class IdaasClient {
   }
 
   /**
+   * Initiates an authentication challenge request.
+   * Prepares a new authentication transaction and requests a challenge from the authentication provider.
+   *
+   * @param options Optional authentication request parameters
+   * @param tokenOptions Optional token parameters for the authentication request
+   * @returns The authentication response containing challenge details
+   */
+  private async requestChallenge(
+    options: AuthenticationRequestParams = {},
+    tokenOptions?: TokenOptions,
+  ): Promise<AuthenticationResponse> {
+    // 1. Prepare transaction
+    await this.initializeAuthenticationTransaction(options, tokenOptions);
+
+    if (!this.authenticationTransaction) {
+      throw new Error();
+    }
+
+    // 2. Request authentication challenge, return response
+    return await this.authenticationTransaction.requestAuthChallenge();
+  }
+
+  /**
+   * Submits a response to an authentication challenge.
+   * Processes authentication responses and completes the authentication if successful.
+   *
+   * @param options Authentication submission parameters including credentials or response data
+   * @returns The authentication response indicating completion status or next steps
+   */
+  private async submitChallenge(options: AuthenticationSubmissionParams = {}): Promise<AuthenticationResponse> {
+    if (!this.authenticationTransaction) {
+      throw new Error("No authentication transaction in progress!");
+    }
+
+    if (options.credential) {
+      this.authenticationTransaction.submitPasskey(options.credential as AuthenticationCredential);
+    }
+
+    const authenticationResponse = await this.authenticationTransaction.submitAuthChallenge({ ...options });
+
+    if (authenticationResponse.authenticationCompleted) {
+      this.handleAuthenticationTransactionSuccess();
+    }
+
+    return authenticationResponse;
+  }
+
+  /**
+   * Polls the authentication provider to check for completion of an ongoing authentication process.
+   * Useful for authentication flows that may complete asynchronously (e.g., mobile push notifications).
+   *
+   * @returns The authentication response indicating completion status
+   */
+  private async poll(): Promise<AuthenticationResponse> {
+    if (!this.authenticationTransaction) {
+      throw new Error("No authentication transaction in progress!");
+    }
+
+    const authenticationResponse = await this.authenticationTransaction.pollForAuthCompletion();
+
+    if (authenticationResponse.authenticationCompleted) {
+      this.handleAuthenticationTransactionSuccess();
+    }
+    return authenticationResponse;
+  }
+
+  /**
+   * Cancels an ongoing authentication challenge.
+   * Terminates the current authentication transaction and cleans up any pending state.
+   */
+  private async cancel(): Promise<void> {
+    if (!this.authenticationTransaction) {
+      throw new Error("No authentication transaction in progress!");
+    }
+
+    await this.authenticationTransaction.cancelAuthChallenge();
+  }
+
+  /**
    * Authenticate a user using password-based authentication.
    * Initiates an authentication transaction with the PASSWORD method and submits the provided password.
    *
@@ -215,84 +307,6 @@ export class IdaasClient {
 
     return authResult;
   };
-
-  /**
-   * Initiates an authentication challenge request.
-   * Prepares a new authentication transaction and requests a challenge from the authentication provider.
-   *
-   * @param options Optional authentication request parameters
-   * @returns The authentication response containing challenge details
-   */
-  public async requestChallenge(
-    options: AuthenticationRequestParams = {},
-    tokenOptions?: TokenOptions,
-  ): Promise<AuthenticationResponse> {
-    // 1. Prepare transaction
-    await this.initializeAuthenticationTransaction(options, tokenOptions);
-
-    if (!this.authenticationTransaction) {
-      throw new Error();
-    }
-
-    // 2. Request authentication challenge, return response
-    return await this.authenticationTransaction.requestAuthChallenge();
-  }
-
-  /**
-   * Submits a response to an authentication challenge.
-   * Processes authentication responses and completes the authentication if successful.
-   *
-   * @param options Authentication submission parameters including credentials or response data
-   * @returns The authentication response indicating completion status or next steps
-   */
-  public async submitChallenge(options: AuthenticationSubmissionParams = {}): Promise<AuthenticationResponse> {
-    if (!this.authenticationTransaction) {
-      throw new Error("No authentication transaction in progress!");
-    }
-
-    if (options.credential) {
-      this.authenticationTransaction.submitPasskey(options.credential as AuthenticationCredential);
-    }
-
-    const authenticationResponse = await this.authenticationTransaction.submitAuthChallenge({ ...options });
-
-    if (authenticationResponse.authenticationCompleted) {
-      this.handleAuthenticationTransactionSuccess();
-    }
-
-    return authenticationResponse;
-  }
-
-  /**
-   * Polls the authentication provider to check for completion of an ongoing authentication process.
-   * Useful for authentication flows that may complete asynchronously (e.g., mobile push notifications).
-   *
-   * @returns The authentication response indicating completion status
-   */
-  public async poll(): Promise<AuthenticationResponse> {
-    if (!this.authenticationTransaction) {
-      throw new Error("No authentication transaction in progress!");
-    }
-
-    const authenticationResponse = await this.authenticationTransaction.pollForAuthCompletion();
-
-    if (authenticationResponse.authenticationCompleted) {
-      this.handleAuthenticationTransactionSuccess();
-    }
-    return authenticationResponse;
-  }
-
-  /**
-   * Cancels an ongoing authentication challenge.
-   * Terminates the current authentication transaction and cleans up any pending state.
-   */
-  public async cancel(): Promise<void> {
-    if (!this.authenticationTransaction) {
-      throw new Error("No authentication transaction in progress!");
-    }
-
-    await this.authenticationTransaction.cancelAuthChallenge();
-  }
 
   /**
    * Fetch the user information stored in the id_token
