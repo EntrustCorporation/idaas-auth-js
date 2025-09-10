@@ -25,7 +25,7 @@ document.getElementById("request-challenge-password")?.addEventListener("click",
   hideRequestChallengeArea();
 
   try {
-    challengeResponse = await idaasClient.requestChallenge({
+    challengeResponse = await idaasClient.rba.requestChallenge({
       userId: USERNAME,
       password,
     });
@@ -33,14 +33,14 @@ document.getElementById("request-challenge-password")?.addEventListener("click",
     console.log("Challenge response:", challengeResponse);
     updateChallengeUI(challengeResponse);
     if (challengeResponse.pollForCompletion) {
-      submitResponse = await idaasClient.poll();
+      submitResponse = await idaasClient.rba.poll();
       updateSubmitUI(submitResponse);
     } else if (challengeResponse.secondFactorMethod === "PASSKEY" || challengeResponse.secondFactorMethod === "FIDO") {
       const credential = await navigator.credentials.get({
         publicKey: challengeResponse.publicKeyCredentialRequestOptions,
       });
       if (credential) {
-        submitResponse = await idaasClient.submitChallenge({
+        submitResponse = await idaasClient.rba.submitChallenge({
           credential,
         });
       }
@@ -61,7 +61,7 @@ document.getElementById("request-challenge-passwordless")?.addEventListener("cli
   console.info("Requesting challenge without password");
   showPassword();
   try {
-    challengeResponse = await idaasClient.requestChallenge({
+    challengeResponse = await idaasClient.rba.requestChallenge({
       userId: USERNAME,
     });
 
@@ -79,21 +79,31 @@ document.getElementById("submit-response")?.addEventListener("click", async () =
   console.info("Submitting response");
   const input = document.getElementById("submit-response-input") as HTMLInputElement;
   const code = input?.value?.trim();
-
+  let response: AuthenticationResponse;
   if (!code) {
     alert("Please enter a code");
     return;
   }
 
   hideInputArea();
+  if (submitResponse) {
+    response = submitResponse;
+  } else {
+    response = challengeResponse;
+  }
+
+  if (!response) {
+    alert("No challenge to respond to");
+    return;
+  }
 
   try {
-    if (submitResponse.secondFactorMethod === "KBA") {
-      submitResponse = await idaasClient.submitChallenge({
+    if (response.secondFactorMethod === "KBA") {
+      submitResponse = await idaasClient.rba.submitChallenge({
         kbaChallengeAnswers: [code],
       });
     } else {
-      submitResponse = await idaasClient.submitChallenge({
+      submitResponse = await idaasClient.rba.submitChallenge({
         response: code,
       });
     }
@@ -118,20 +128,20 @@ document.getElementById("submit-password-response")?.addEventListener("click", a
   hidePassword();
 
   try {
-    submitResponse = await idaasClient.submitChallenge({
+    submitResponse = await idaasClient.rba.submitChallenge({
       response: password,
     });
     console.log("Submit response:", submitResponse);
     updateSubmitUI(submitResponse);
     if (submitResponse.pollForCompletion) {
-      submitResponse = await idaasClient.poll();
+      submitResponse = await idaasClient.rba.poll();
       updateSubmitUI(submitResponse);
     } else if (submitResponse.secondFactorMethod === "PASSKEY" || submitResponse.secondFactorMethod === "FIDO") {
       const credential = await navigator.credentials.get({
         publicKey: submitResponse.publicKeyCredentialRequestOptions,
       });
       if (credential) {
-        submitResponse = await idaasClient.submitChallenge({
+        submitResponse = await idaasClient.rba.submitChallenge({
           credential,
         });
       }
@@ -185,5 +195,5 @@ document.getElementById("back-button")?.addEventListener("click", async () => {
 });
 
 window.addEventListener("load", async () => {
-  console.log("MFA page loaded");
+  console.log("RBA-MFA page loaded");
 });

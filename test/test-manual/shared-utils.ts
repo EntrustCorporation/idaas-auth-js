@@ -78,7 +78,7 @@ export const handleCancelAuth = async () => {
   hideInputArea();
 
   try {
-    await idaasClient.cancel();
+    await idaasClient.rba.cancel();
     console.log("Authentication cancelled");
     updateChallengeUI({ status: "cancelled" });
   } catch (error) {
