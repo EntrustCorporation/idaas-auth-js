@@ -52,7 +52,7 @@
     "@biomejs/biome": "2.2.3",
     "@happy-dom/global-registrator": "18.0.1",
     "@hey-api/client-fetch": "0.13.1",
-    "@hey-api/openapi-ts": "0.82.4",
+    "@hey-api/openapi-ts": "0.82.5",
     "@microsoft/api-extractor": "7.52.11",
     "@playwright/test": "1.55.0",
     "@rsbuild/plugin-type-check": "1.2.4",
@@ -60,7 +60,7 @@
     "@tsconfig/bun": "1.0.8",
     "@types/bun": "1.2.21",
     "@types/oidc-provider": "9.5.0",
-    "@types/web": "0.0.265",
+    "@types/web": "0.0.266",
     "oidc-provider": "9.5.1",
     "rsbuild-plugin-publint": "0.3.3",
     "typescript": "5.9.2"
