@@ -33,7 +33,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib build && api-extractor run --local",
     "api:download": "bun scripts/download.ts",
     "api:generate": "openapi-ts",
     "ci": "biome ci . && bun run build",

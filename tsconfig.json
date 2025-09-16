@@ -2,7 +2,6 @@
   "extends": "@tsconfig/bun/tsconfig.json",
   "compilerOptions": {
     "lib": ["DOM"],
-    "stripInternal": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
     "useDefineForClassFields": true,

@@ -19,7 +19,7 @@ export class OidcClient {
    *
    * If using redirect (i.e. popup=false), your application must also be configured to call handleRedirect at the redirectUri
    * to complete the flow.
-   * @param options Login options including audience, scope, redirectUri, useRefreshToken, acrValues, maxAge, and popup
+   * @param options - Login options including audience, scope, redirectUri, useRefreshToken, acrValues, maxAge, and popup
    * @returns The access token if using popup mode, otherwise null
    * */
   public async login({
@@ -64,7 +64,7 @@ export class OidcClient {
   /**
    * Clear the application session and navigate to the OpenID Provider's (OP) endsession endpoint.
    * If a redirectUri is provided, the user will be redirected to that URI after logout.
-   * @param options Logout options, configurable redirectUri
+   * @param options - Logout options, configurable redirectUri
    */
   public async logout({ redirectUri }: LogoutOptions = {}): Promise<void> {
     if (!this.services.isAuthenticated()) {

@@ -23,6 +23,11 @@ export interface ValidatedTokenResponse {
   decodedIdToken: JWTPayload;
   encodedIdToken: string;
 }
+/**
+ * The main client class for interacting with IDaaS authentication services.
+ * Provides methods for OIDC authentication flows and RBA challenge handling.
+ * @public
+ */
 
 export class IdaasClient implements IdaasServices {
   readonly storageManager: StorageManager;
@@ -39,7 +44,7 @@ export class IdaasClient implements IdaasServices {
   /**
    * Creates a new IdaasClient instance for handling OIDC authentication flows.
    *
-   * @param options Configuration options for the client including issuer URL, client ID, and global settings
+   * @param options - Configuration options for the client including issuer URL, client ID, and global settings
    */
   constructor({
     issuerUrl,
@@ -207,7 +212,7 @@ export class IdaasClient implements IdaasServices {
   /**
    * Get the user claims from the OpenId Provider using the userinfo endpoint.
    *
-   * @param accessToken when provided its scopes will be used to determine the claims returned from the userinfo endpoint.
+   * @param accessToken - when provided its scopes will be used to determine the claims returned from the userinfo endpoint.
    * If not provided, the access token with the default scopes and audience will be used if available.
    */
   public async getUserInfo(accessToken?: string): Promise<UserClaims | null> {
