@@ -34,7 +34,7 @@ export class RbaClient {
     await this.initializeAuthenticationTransaction(options, tokenOptions);
 
     if (!this.authenticationTransaction) {
-      throw new Error();
+      throw new Error("Failed to initialize authentication transaction");
     }
 
     // 2. Request authentication challenge, return response
@@ -113,7 +113,7 @@ export class RbaClient {
     });
 
     if (!this.authenticationTransaction) {
-      throw new Error();
+      throw new Error("Failed to initialize authentication transaction");
     }
 
     // 2. Request authentication challenge
