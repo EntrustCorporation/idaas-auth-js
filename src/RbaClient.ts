@@ -104,7 +104,13 @@ export class RbaClient {
    * @param options Authentication request parameters and the password to authenticate with
    * @returns The authentication response indicating success or requiring additional steps
    */
-  public async authenticatePassword({ options, password }: { options: AuthenticationRequestParams; password: string }) {
+  public async authenticatePassword({
+    options,
+    password,
+  }: {
+    options: AuthenticationRequestParams;
+    password: string;
+  }): Promise<AuthenticationResponse> {
     // 1. Prepare transaction with PASSWORD method
     await this.initializeAuthenticationTransaction({
       ...options,

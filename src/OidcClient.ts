@@ -89,25 +89,16 @@ export class OidcClient {
       return null;
     }
 
-    if (authorizeResponse) {
-      const clientParams = this.services.storageManager.getClientParams();
-      if (!clientParams) {
-        throw new Error("Failed to recover IDaaS client state from local storage");
-      }
-      const { codeVerifier, redirectUri, state, nonce } = clientParams;
-
-      const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
-
-      const validatedTokenResponse = await this.requestAndValidateTokens(
-        authorizeCode,
-        codeVerifier,
-        redirectUri,
-        nonce,
-      );
-      this.services.parseAndSaveTokenResponse(validatedTokenResponse);
-      return null;
+    const clientParams = this.services.storageManager.getClientParams();
+    if (!clientParams) {
+      throw new Error("Failed to recover IDaaS client state from local storage");
     }
+    const { codeVerifier, redirectUri, state, nonce } = clientParams;
 
+    const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
+
+    const validatedTokenResponse = await this.requestAndValidateTokens(authorizeCode, codeVerifier, redirectUri, nonce);
+    this.services.parseAndSaveTokenResponse(validatedTokenResponse);
     return null;
   }
 
