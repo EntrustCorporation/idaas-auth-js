@@ -1,6 +1,7 @@
 import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
 import type { OidcLoginOptions } from "../../../src";
 import type { TokenResponse } from "../../../src/api";
+import type { TokenOptions } from "../../../src/models";
 import type { AccessToken } from "../../../src/storage/StorageManager";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
@@ -48,7 +49,7 @@ describe("IdaasClient.getAccessToken", () => {
   });
 
   describe("fallback options", () => {
-    const spyOnLogin = spyOn(NO_DEFAULT_IDAAS_CLIENT, "login").mockImplementation(async () => "test");
+    const spyOnLogin = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "login").mockImplementation(async () => "test");
 
     describe("fallback login parameters", () => {
       test("scope specified in getAccessToken param is passed to login", async () => {
@@ -57,7 +58,7 @@ describe("IdaasClient.getAccessToken", () => {
           fallbackAuthorizationOptions: {},
         });
 
-        const loginRequest = spyOnLogin.mock.calls[0][0] as OidcLoginOptions;
+        const loginRequest = spyOnLogin.mock.calls[0][0] as TokenOptions;
         expect(loginRequest.scope).toStrictEqual(TEST_SCOPE);
       });
 
@@ -67,7 +68,7 @@ describe("IdaasClient.getAccessToken", () => {
           fallbackAuthorizationOptions: {},
         });
 
-        const loginRequest = spyOnLogin.mock.calls[0][0] as OidcLoginOptions;
+        const loginRequest = spyOnLogin.mock.calls[0][0] as TokenOptions;
         expect(loginRequest.audience).toStrictEqual(TEST_AUDIENCE);
       });
 
@@ -77,7 +78,7 @@ describe("IdaasClient.getAccessToken", () => {
           fallbackAuthorizationOptions: {},
         });
 
-        const loginRequest = spyOnLogin.mock.calls[0][0] as OidcLoginOptions;
+        const loginRequest = spyOnLogin.mock.calls[0][0] as TokenOptions;
         expect(loginRequest.acrValues).toStrictEqual([TEST_ACR_CLAIM]);
       });
     });

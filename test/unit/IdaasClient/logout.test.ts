@@ -2,7 +2,7 @@ import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:te
 import { NO_DEFAULT_IDAAS_CLIENT, TEST_BASE_URI, TEST_CLIENT_ID } from "../constants";
 import { getUrlParams, mockFetch, storeData } from "../helpers";
 
-describe("IdaasClient.logout", () => {
+describe("IdaasClient.oidc.logout", () => {
   // @ts-expect-error not full type
   const _spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
   // @ts-expect-error private method
@@ -25,7 +25,7 @@ describe("IdaasClient.logout", () => {
     const originalLocation = window.location.href;
     storeData({ tokenParams: true, clientParams: true, accessToken: true });
 
-    await NO_DEFAULT_IDAAS_CLIENT.logout();
+    await NO_DEFAULT_IDAAS_CLIENT.oidc.logout();
 
     expect(spyOnGenerateLogoutUrl).not.toBeCalled();
     expect(spyOnGetConfig).not.toBeCalled();
@@ -35,14 +35,14 @@ describe("IdaasClient.logout", () => {
 
   test("removes all stored data, if ID token stored", async () => {
     storeData({ idToken: true, tokenParams: true, clientParams: true, accessToken: true });
-    await NO_DEFAULT_IDAAS_CLIENT.logout();
+    await NO_DEFAULT_IDAAS_CLIENT.oidc.logout();
 
     expect(localStorage.length).toBe(0);
   });
 
   test("generates valid logout url with no redirectUri", async () => {
     storeData({ idToken: true, tokenParams: true, clientParams: true, accessToken: true });
-    await NO_DEFAULT_IDAAS_CLIENT.logout();
+    await NO_DEFAULT_IDAAS_CLIENT.oidc.logout();
 
     expect(spyOnGenerateLogoutUrl).toBeCalledTimes(1);
     const generateLogoutCall = spyOnGenerateLogoutUrl.mock.calls[0] as string[];
@@ -59,7 +59,7 @@ describe("IdaasClient.logout", () => {
     storeData({ idToken: true, tokenParams: true, clientParams: true, accessToken: true });
     const redirectUri = TEST_BASE_URI;
 
-    await NO_DEFAULT_IDAAS_CLIENT.logout({ redirectUri });
+    await NO_DEFAULT_IDAAS_CLIENT.oidc.logout({ redirectUri });
 
     expect(spyOnGenerateLogoutUrl).toBeCalledTimes(1);
     const generateLogoutCall = spyOnGenerateLogoutUrl.mock.calls[0] as string[];
@@ -74,7 +74,7 @@ describe("IdaasClient.logout", () => {
   test("fetches end session endpoint from config", async () => {
     storeData({ idToken: true, tokenParams: true, clientParams: true, accessToken: true });
 
-    await NO_DEFAULT_IDAAS_CLIENT.logout();
+    await NO_DEFAULT_IDAAS_CLIENT.oidc.logout();
     expect(spyOnGetConfig).toBeCalled();
   });
 });

@@ -16,10 +16,10 @@
   },
   "keywords": ["Entrust", "authentication", "authorization", "auth", "oidc", "spa", "pkce"],
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/idaas-auth-js.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/idaas-auth-js.d.ts",
       "import": "./dist/index.js"
     }
   },
