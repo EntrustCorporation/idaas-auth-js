@@ -10,6 +10,14 @@ import type {
 } from "./models";
 import { calculateEpochExpiry } from "./utils/format";
 
+/**
+ * This class handles RBA flows using challenge-response patterns.
+ * It manages the authentication transaction lifecycle including challenge requests,
+ * response submissions, and asynchronous completion polling.
+ *
+ * Contains five main methods: {@link requestChallenge}, {@link submitChallenge},
+ * {@link poll}, and {@link cancel}.
+ */
 export class RbaClient {
   private services: IdaasServices;
   private authenticationTransaction?: AuthenticationTransaction;

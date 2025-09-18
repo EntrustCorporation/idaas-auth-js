@@ -6,6 +6,15 @@ import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPai
 import { formatUrl, sanitizeUri } from "./utils/format";
 import { validateIdToken } from "./utils/jwt";
 
+/**
+ * This class handles authorization for OIDC flows using both popup
+ * and redirect authentication patterns. It manages the entire OIDC ceremony
+ * including authorization URL generation, token exchange, validation, and processing
+ * redirect callbacks.
+ *
+ * Contains three main methods: {@link login}, {@link logout}, and {@link handleRedirect}.
+ */
+
 export class OidcClient {
   private services: IdaasServices;
 
