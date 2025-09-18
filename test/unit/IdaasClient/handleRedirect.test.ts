@@ -20,15 +20,15 @@ describe("IdaasClient.handleRedirect", () => {
   // @ts-expect-error not full type
   const spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
   // @ts-expect-error private method
-  const spyOnParseRedirect = spyOn(NO_DEFAULT_IDAAS_CLIENT.rba, "parseRedirect");
+  const spyOnParseRedirect = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "parseRedirect");
   // @ts-expect-error private method
-  const spyOnParseLoginRedirect = spyOn(NO_DEFAULT_IDAAS_CLIENT.rba, "parseLoginRedirect");
+  const spyOnParseLoginRedirect = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "parseLoginRedirect");
   // @ts-expect-error private method
-  const spyOnRequestAndValidateTokens = spyOn(NO_DEFAULT_IDAAS_CLIENT.rba, "requestAndValidateTokens");
+  const spyOnRequestAndValidateTokens = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "requestAndValidateTokens");
   // @ts-expect-error private method
-  const spyOnValidateAuthorizeResponse = spyOn(NO_DEFAULT_IDAAS_CLIENT.rba, "validateAuthorizeResponse");
+  const spyOnValidateAuthorizeResponse = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "validateAuthorizeResponse");
   // @ts-expect-error private method
-  const spyOnParseAndSaveTokenResponse = spyOn(NO_DEFAULT_IDAAS_CLIENT.rba, "parseAndSaveTokenResponse");
+  const spyOnParseAndSaveTokenResponse = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "parseAndSaveTokenResponse");
   const spyOnCalculateEpochExpiry = spyOn(format, "calculateEpochExpiry");
   const spyOnValidateIdToken = spyOn(jwt, "validateIdToken").mockImplementation(() => {
     return { decodedJwt: TEST_ID_TOKEN_OBJECT.decoded, idToken: TEST_ID_TOKEN_OBJECT.encoded };
