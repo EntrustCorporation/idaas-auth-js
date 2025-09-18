@@ -8,6 +8,7 @@ import type { StorageManager } from "./storage/StorageManager";
  */
 export interface IdaasServices {
   // Core properties
+  /** @internal */
   readonly storageManager: StorageManager;
   readonly issuerUrl: string;
   readonly clientId: string;
@@ -16,11 +17,8 @@ export interface IdaasServices {
   readonly globalUseRefreshToken: boolean;
 
   // Common functionality
-  /** @internal */
   getConfig(): Promise<OidcConfig>;
-  /** @internal */
   parseAndSaveTokenResponse(validatedTokenResponse: ValidatedTokenResponse): void;
   isAuthenticated(): boolean;
-  /** @internal */
   removeUnusableTokens(): void;
 }

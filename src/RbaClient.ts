@@ -29,8 +29,8 @@ export class RbaClient {
    * Initiates an authentication challenge request.
    * Prepares a new authentication transaction and requests a challenge from the authentication provider.
    *
-   * @param options - Optional authentication request parameters
-   * @param tokenOptions - Optional token parameters for the authentication request
+   * @param options Optional authentication request parameters
+   * @param tokenOptions Optional token parameters for the authentication request
    * @returns The authentication response containing challenge details
    */
   public async requestChallenge(
@@ -52,7 +52,7 @@ export class RbaClient {
    * Submits a response to an authentication challenge.
    * Processes authentication responses and completes the authentication if successful.
    *
-   * @param options - Authentication submission parameters including credentials or response data
+   * @param options Authentication submission parameters including credentials or response data
    * @returns The authentication response indicating completion status or next steps
    */
   public async submitChallenge(options: AuthenticationSubmissionParams = {}): Promise<AuthenticationResponse> {
@@ -108,7 +108,7 @@ export class RbaClient {
    * Authenticate a user using password-based authentication.
    * Initiates an authentication transaction with the PASSWORD method and submits the provided password.
    *
-   * @param options - Authentication request parameters and the password to authenticate with
+   * @param options Authentication request parameters and the password to authenticate with
    * @returns The authentication response indicating success or requiring additional steps
    */
   public async authenticatePassword({

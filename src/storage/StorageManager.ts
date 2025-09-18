@@ -5,11 +5,11 @@ import type { IStore } from "./shared";
 
 /**
  * The parameters that are created during the creation of the authorization URL.
- * interface ClientParams
- * member nonce A random generated string used to validate the OIDC flow
- * member codeVerifier A random generated string that is hashed and encoded for use as a code_challenge
- * member redirectUri The URI to redirect to upon successful login to the IDP server
- * member state A random generated string used to validate the OIDC flow
+ * @interface ClientParams
+ * @member nonce A random generated string used to validate the OIDC flow
+ * @member codeVerifier A random generated string that is hashed and encoded for use as a code_challenge
+ * @member redirectUri The URI to redirect to upon successful login to the IDP server
+ * @member state A random generated string used to validate the OIDC flow
  */
 export interface ClientParams {
   nonce: string;
@@ -54,10 +54,10 @@ export interface AccessToken {
 
 export class StorageManager {
   /**
-   * clientParamsStorageKey stores the params generated during the creation of the authorization url.
-   * accessTokensStorageKey stores all access tokens as an array of access tokens.
-   * idTokenStorageKey stores the encoded and decoded versions of a single id token.
-   * tokenParamsStorageKey used to move a token's audience and scope from the authorization url when handling a login redirect.
+   * @clientParamsStorageKey stores the params generated during the creation of the authorization url.
+   * @accessTokensStorageKey stores all access tokens as an array of access tokens.
+   * @idTokenStorageKey stores the encoded and decoded versions of a single id token.
+   * @tokenParamsStorageKey used to move a token's audience and scope from the authorization url when handling a login redirect.
    */
   private readonly clientParamsStorageKey: string;
   private readonly accessTokenStorageKey: string;
@@ -74,8 +74,8 @@ export class StorageManager {
   }
   /**
    * Saves values in local storage that are required for the OIDC auth flow.
-   * @param data - The data to be stored in local storage.
-   * @param storageKey - The key used to store the data.
+   * @param data The data to be stored in local storage.
+   * @param storageKey The key used to store the data.
    */
   private save(storageKey: string, data: string) {
     this.storage.save(storageKey, data);
@@ -83,7 +83,7 @@ export class StorageManager {
 
   /**
    * Save ClientParams in local storage that are required to continue the OIDC auth flow on redirect from IDP login.
-   * @param data - The ClientParams that were generated during the generate the Authorization URL.
+   * @param data The ClientParams that were generated during the generate the Authorization URL.
    */
   public saveClientParams(data: ClientParams) {
     const stringifiedData = JSON.stringify(data);
@@ -92,7 +92,7 @@ export class StorageManager {
 
   /**
    * Save information about the id token in storage.
-   * @param data - The encoded and decoded id token.
+   * @param data The encoded and decoded id token.
    */
   public saveIdToken(data: IdToken) {
     const stringifiedData = JSON.stringify(data);
@@ -101,7 +101,7 @@ export class StorageManager {
 
   /**
    * Save the token params in local storage.
-   * @param data - the token params to be saved.
+   * @param data the token params to be saved.
    */
   public saveTokenParams(data: TokenParams) {
     const stringifiedDate = JSON.stringify(data);
@@ -110,7 +110,7 @@ export class StorageManager {
 
   /**
    * Save access tokens in local storage.
-   * @param data - the access token to be saved.
+   * @param data the access token to be saved.
    */
   public saveAccessToken(data: AccessToken) {
     const accessTokens = this.getAccessTokens();
@@ -128,7 +128,7 @@ export class StorageManager {
 
   /**
    * Remove an access token from storage.
-   * @param removedToken - the token to be removed.
+   * @param removedToken the token to be removed.
    */
   public removeAccessToken(removedToken: AccessToken) {
     const accessTokens = this.getAccessTokens();
@@ -156,7 +156,7 @@ export class StorageManager {
 
   /**
    * Retrieve the requested object stored in local storage.
-   * @param storageKey - The type of data to retrieve from local storage.
+   * @param storageKey The type of data to retrieve from local storage.
    * @returns The parsed data or undefined if there is no key.
    */
   private get<T>(storageKey: string): T | undefined {

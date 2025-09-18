@@ -9,7 +9,6 @@ import type {
 
 /**
  * The configurable options of the IdaasClient.
- * @public
  */
 export interface IdaasClientOptions {
   /**
@@ -91,7 +90,6 @@ export interface TokenOptions {
 
 /**
  * The configurable options specific to the OIDC `login` method.
- * @public
  */
 export interface OidcLoginOptions {
   /**
@@ -109,7 +107,6 @@ export interface OidcLoginOptions {
 
 /**
  * The configurable options for the Logout method.
- * @public
  */
 export interface LogoutOptions {
   /**
@@ -120,7 +117,6 @@ export interface LogoutOptions {
 
 /**
  * The configurable options for a fallback login.
- * @public
  */
 export interface FallbackAuthorizationOptions {
   /**
@@ -150,7 +146,6 @@ export interface FallbackAuthorizationOptions {
 
 /**
  * The configurable options when requesting an AccessToken.
- * @public
  */
 export interface GetAccessTokenOptions {
   /**
@@ -186,7 +181,6 @@ export interface AuthorizeResponse {
 
 /**
  * The standard user claims of OIDC.
- * @public
  */
 export interface UserClaims {
   sub?: string;
@@ -233,19 +227,16 @@ export interface MutualChallenge {
 
 /**
  * The configurable options when requesting a FACE authentication challenge.
- * @public
  */
 export interface FaceBiometricOptions extends MutualChallenge {}
 
 /**
  * The configurable options when requesting a TOKENPUSH authentication challenge.
- * @public
  */
 export interface TokenPushOptions extends MutualChallenge {}
 
 /**
  * The configurable options when requesting an authentication challenge.
- * @public
  */
 export interface AuthenticationRequestParams {
   /**
@@ -286,7 +277,6 @@ export interface AuthenticationRequestParams {
 
 /**
  * The configurable options when submitting a response to an authentication challenge.
- * @public
  */
 export interface AuthenticationSubmissionParams {
   /**
@@ -307,7 +297,6 @@ export interface AuthenticationSubmissionParams {
   credential?: Credential;
 }
 
-/** @public */
 export interface AuthenticationResponse {
   token?: string;
   /**
@@ -367,7 +356,7 @@ export interface AuthenticationResponse {
    */
   publicKeyCredentialRequestOptions?: PublicKeyCredentialRequestOptions;
 }
-/** @public */
+
 export type IdaasAuthenticationMethod =
   | "PASSWORD"
   | "KBA"

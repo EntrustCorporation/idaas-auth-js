@@ -16,10 +16,10 @@
   },
   "keywords": ["Entrust", "authentication", "authorization", "auth", "oidc", "spa", "pkce"],
   "module": "./dist/index.js",
-  "types": "./dist/idaas-auth-js.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/idaas-auth-js.d.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
@@ -33,7 +33,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "rslib build && api-extractor run --local && bunx publint",
+    "build": "rslib build",
     "api:download": "bun scripts/download.ts",
     "api:generate": "openapi-ts",
     "ci": "biome ci . && bun run build",
@@ -62,6 +62,7 @@
     "@types/oidc-provider": "9.5.0",
     "@types/web": "0.0.269",
     "oidc-provider": "9.5.1",
+    "rsbuild-plugin-publint": "0.3.3",
     "typescript": "5.9.2"
   }
 }
