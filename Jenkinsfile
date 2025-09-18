@@ -37,7 +37,6 @@ pipeline {
         environment name: "RUN_TESTS", value: "true"
       }
       steps {
-          sh "bun test --reporter=junit --reporter-outfile=junit.xml"
           sh "bunx playwright install --with-deps"
           sh "bun run test:e2e"
       }
