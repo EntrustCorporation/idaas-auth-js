@@ -12,7 +12,7 @@ import { validateIdToken } from "./utils/jwt";
  * including authorization URL generation, token exchange, validation, and processing
  * redirect callbacks.
  *
- * Contains three main methods: {@link login}, {@link logout}, and {@link handleRedirect}.
+ * Contains three main methods: login, logout, and handleRedirect.
  */
 
 export class OidcClient {

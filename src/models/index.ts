@@ -120,6 +120,7 @@ export interface LogoutOptions {
 
 /**
  * The configurable options for a fallback login.
+ * @public
  */
 export interface FallbackAuthorizationOptions {
   /**
@@ -232,11 +233,13 @@ export interface MutualChallenge {
 
 /**
  * The configurable options when requesting a FACE authentication challenge.
+ * @public
  */
 export interface FaceBiometricOptions extends MutualChallenge {}
 
 /**
  * The configurable options when requesting a TOKENPUSH authentication challenge.
+ * @public
  */
 export interface TokenPushOptions extends MutualChallenge {}
 

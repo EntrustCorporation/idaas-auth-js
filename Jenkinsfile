@@ -40,11 +40,6 @@ pipeline {
           sh "bunx playwright install --with-deps"
           sh "bun run test:e2e"
       }
-      post {
-        always {
-          junit "junit.xml"
-        }
-      }
     }
     stage("📦  Publish Beta") {
       when {

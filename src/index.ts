@@ -10,6 +10,9 @@ export type {
   LogoutOptions,
   OidcLoginOptions,
   UserClaims,
+  TokenPushOptions,
+  FaceBiometricOptions,
+  FallbackAuthorizationOptions
 } from "./models";
 
 export type {
