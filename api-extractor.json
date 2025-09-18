@@ -6,8 +6,7 @@
     "tsconfigFilePath": "<projectFolder>/tsconfig.json"
   },
   "apiReport": {
-    "enabled": true,
-    "reportFolder": "<projectFolder>/api-reports/"
+    "enabled": false
   },
   "docModel": {
     "enabled": false
