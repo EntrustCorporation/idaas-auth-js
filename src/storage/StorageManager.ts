@@ -148,6 +148,33 @@ export class StorageManager {
   }
 
   /**
+   * Removes expired token from storage.
+   */
+  public removeExpiredTokens(): void {
+    const tokens = this.getAccessTokens();
+    if (!tokens) {
+      return;
+    }
+    const now = Math.floor(Date.now() / 1000);
+    // buffer (in seconds) to refresh/delete early, ensures an expired token is not returned
+    const buffer = 15;
+
+    for (const token of tokens) {
+      if (token.maxAgeExpiry) {
+        if (now > token.maxAgeExpiry - buffer) {
+          this.removeAccessToken(token);
+        }
+      }
+
+      if (now > token.expiresAt - buffer) {
+        if (!token.refreshToken) {
+          this.removeAccessToken(token);
+        }
+      }
+    }
+  }
+
+  /**
    * Clears the stored token params.
    */
   public removeTokenParams() {

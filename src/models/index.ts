@@ -24,7 +24,7 @@ export interface IdaasClientOptions {
   /**
    * The storage mechanism to use for ID and access tokens.
    *
-   * @defaultValue "memory"
+   * @default "memory"
    */
   storageType?: "memory" | "localstorage";
 

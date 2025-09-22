@@ -1,6 +1,6 @@
 import { decodeJwt } from "jose";
 import { AuthenticationTransaction } from "./AuthenticationTransaction";
-import type { IdaasServices } from "./IdaasServices";
+import type { IdaasContext } from "./IdaasContext";
 import type {
   AuthenticationCredential,
   AuthenticationRequestParams,
@@ -18,11 +18,11 @@ import { calculateEpochExpiry } from "./utils/format";
  * Contains five main methods: requestChallenge, submitChallenge, poll, and cancel.
  */
 export class RbaClient {
-  private services: IdaasServices;
+  private context: IdaasContext;
   private authenticationTransaction?: AuthenticationTransaction;
 
-  constructor(services: IdaasServices) {
-    this.services = services;
+  constructor(context: IdaasContext) {
+    this.context = context;
   }
 
   /**
@@ -148,15 +148,15 @@ export class RbaClient {
     options?: AuthenticationRequestParams,
     tokenOptions?: TokenOptions,
   ) => {
-    const oidcConfig = await this.services.getConfig();
+    const oidcConfig = await this.context.getConfig();
 
     this.authenticationTransaction = new AuthenticationTransaction({
       oidcConfig,
       ...options,
-      useRefreshToken: tokenOptions?.useRefreshToken ?? this.services.globalUseRefreshToken,
-      audience: tokenOptions?.audience ?? this.services.globalAudience,
-      scope: tokenOptions?.scope ?? this.services.globalScope,
-      clientId: this.services.clientId,
+      useRefreshToken: tokenOptions?.useRefreshToken ?? this.context.globalUseRefreshToken,
+      audience: tokenOptions?.audience ?? this.context.globalAudience,
+      scope: tokenOptions?.scope ?? this.context.globalScope,
+      clientId: this.context.clientId,
     });
   };
 
@@ -174,11 +174,11 @@ export class RbaClient {
     }
 
     // Saving tokens
-    this.services.storageManager.saveIdToken({
+    this.context.storageManager.saveIdToken({
       encoded: idToken,
       decoded: decodeJwt(idToken),
     });
-    this.services.storageManager.saveAccessToken({
+    this.context.storageManager.saveAccessToken({
       accessToken,
       expiresAt,
       scope,

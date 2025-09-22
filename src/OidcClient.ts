@@ -1,10 +1,12 @@
 import { type AccessTokenRequest, requestToken } from "./api";
-import type { IdaasServices } from "./IdaasServices";
+import type { ValidatedTokenResponse } from "./IdaasClient";
+import type { IdaasContext } from "./IdaasContext";
 import type { AuthorizeResponse, LogoutOptions, OidcLoginOptions, TokenOptions } from "./models";
+import type { AccessToken } from "./storage/StorageManager";
 import { listenToAuthorizePopup, openPopup } from "./utils/browser";
 import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPair } from "./utils/crypto";
-import { formatUrl, sanitizeUri } from "./utils/format";
-import { validateIdToken } from "./utils/jwt";
+import { calculateEpochExpiry, formatUrl, sanitizeUri } from "./utils/format";
+import { readAccessToken, validateIdToken } from "./utils/jwt";
 
 /**
  * This class handles authorization for OIDC flows using both popup
@@ -16,10 +18,10 @@ import { validateIdToken } from "./utils/jwt";
  */
 
 export class OidcClient {
-  private services: IdaasServices;
+  private context: IdaasContext;
 
-  constructor(services: IdaasServices) {
-    this.services = services;
+  constructor(context: IdaasContext) {
+    this.context = context;
   }
 
   /**
@@ -42,7 +44,7 @@ export class OidcClient {
   }: OidcLoginOptions & TokenOptions = {}): Promise<string | null> {
     if (popup) {
       const popupWindow = openPopup("");
-      const { response_modes_supported } = await this.services.getConfig();
+      const { response_modes_supported } = await this.context.getConfig();
       const popupSupported = response_modes_supported?.includes("web_message");
       if (!popupSupported) {
         popupWindow.close();
@@ -76,12 +78,7 @@ export class OidcClient {
    * @param options - Logout options, configurable redirectUri
    */
   public async logout({ redirectUri }: LogoutOptions = {}): Promise<void> {
-    if (!this.services.isAuthenticated()) {
-      // Discontinue logout, the user is not authenticated
-      return;
-    }
-
-    this.services.storageManager.remove();
+    this.context.storageManager.remove();
 
     window.location.href = await this.generateLogoutUrl(redirectUri);
   }
@@ -98,7 +95,7 @@ export class OidcClient {
       return null;
     }
 
-    const clientParams = this.services.storageManager.getClientParams();
+    const clientParams = this.context.storageManager.getClientParams();
     if (!clientParams) {
       throw new Error("Failed to recover IDaaS client state from local storage");
     }
@@ -107,7 +104,7 @@ export class OidcClient {
     const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
 
     const validatedTokenResponse = await this.requestAndValidateTokens(authorizeCode, codeVerifier, redirectUri, nonce);
-    this.services.parseAndSaveTokenResponse(validatedTokenResponse);
+    this.parseAndSaveTokenResponse(validatedTokenResponse);
     return null;
   }
 
@@ -183,10 +180,10 @@ export class OidcClient {
 
   private async requestAndValidateTokens(code: string, codeVerifier: string, redirectUri: string, nonce: string) {
     const { token_endpoint, id_token_signing_alg_values_supported, acr_values_supported } =
-      await this.services.getConfig();
+      await this.context.getConfig();
 
     const tokenRequest: AccessTokenRequest = {
-      client_id: this.services.clientId,
+      client_id: this.context.clientId,
       code,
       code_verifier: codeVerifier,
       grant_type: "authorization_code",
@@ -196,9 +193,9 @@ export class OidcClient {
     const tokenResponse = await requestToken(token_endpoint, tokenRequest);
 
     const { decodedJwt: decodedIdToken, idToken } = validateIdToken({
-      clientId: this.services.clientId,
+      clientId: this.context.clientId,
       idToken: tokenResponse.id_token,
-      issuer: this.services.issuerUrl,
+      issuer: this.context.issuerUrl,
       nonce,
       idTokenSigningAlgValuesSupported: id_token_signing_alg_values_supported,
       acrValuesSupported: acr_values_supported,
@@ -211,14 +208,55 @@ export class OidcClient {
    * Generate the endsession url with the required query params to log out the user from the OpenID Provider
    */
   private async generateLogoutUrl(redirectUri?: string): Promise<string> {
-    const { end_session_endpoint } = await this.services.getConfig();
+    const { end_session_endpoint } = await this.context.getConfig();
 
     const url = new URL(end_session_endpoint);
-    url.searchParams.append("client_id", this.services.clientId);
+    url.searchParams.append("client_id", this.context.clientId);
     if (redirectUri) {
       url.searchParams.append("post_logout_redirect_uri", redirectUri);
     }
     return url.toString();
+  }
+
+  /**
+   * Parses the token response from the OIDC provider and saves tokens to storage.
+   * Extracts access token, ID token, and refresh token (if available).
+   * @param validatedTokenResponse The validated response from the token endpoint
+   */
+  private parseAndSaveTokenResponse(validatedTokenResponse: ValidatedTokenResponse): void {
+    const { tokenResponse, decodedIdToken, encodedIdToken } = validatedTokenResponse;
+    const { refresh_token, access_token, expires_in } = tokenResponse;
+    const authTime = readAccessToken(access_token)?.auth_time;
+    const expiresAt = calculateEpochExpiry(expires_in, authTime);
+    const tokenParams = this.context.storageManager.getTokenParams();
+
+    if (!tokenParams) {
+      throw new Error("No token params stored, unable to parse");
+    }
+
+    const { audience, scope, maxAge } = tokenParams;
+    const maxAgeExpiry = maxAge ? calculateEpochExpiry(maxAge.toString(), authTime) : undefined;
+
+    this.context.storageManager.removeTokenParams();
+
+    const token = readAccessToken(access_token);
+    const acr = token?.acr ?? undefined;
+
+    const newAccessToken: AccessToken = {
+      refreshToken: refresh_token,
+      accessToken: access_token,
+      expiresAt,
+      audience,
+      scope,
+      maxAgeExpiry,
+      acr,
+    };
+
+    this.context.storageManager.saveIdToken({
+      encoded: encodedIdToken,
+      decoded: decodedIdToken,
+    });
+    this.context.storageManager.saveAccessToken(newAccessToken);
   }
 
   /**
@@ -227,9 +265,9 @@ export class OidcClient {
   private async generateAuthorizationUrl(
     responseMode: "query" | "web_message",
     redirectUri: string = window.location.href,
-    refreshToken: boolean = this.services.globalUseRefreshToken,
-    scope: string = this.services.globalScope,
-    audience: string | undefined = this.services.globalAudience,
+    refreshToken: boolean = this.context.globalUseRefreshToken,
+    scope: string = this.context.globalScope,
+    audience: string | undefined = this.context.globalAudience,
     acrValues: string[] = [],
     maxAge = -1,
   ): Promise<{
@@ -238,7 +276,7 @@ export class OidcClient {
     state: string;
     codeVerifier: string;
   }> {
-    const { authorization_endpoint } = await this.services.getConfig();
+    const { authorization_endpoint } = await this.context.getConfig();
     const scopeAsArray = scope.split(" ");
 
     scopeAsArray.push("openid");
@@ -254,7 +292,7 @@ export class OidcClient {
     const { codeVerifier, codeChallenge } = await generateChallengeVerifierPair();
     const url = new URL(authorization_endpoint);
     url.searchParams.append("response_type", "code");
-    url.searchParams.append("client_id", this.services.clientId);
+    url.searchParams.append("client_id", this.context.clientId);
     url.searchParams.append("redirect_uri", redirectUri);
     if (audience) {
       url.searchParams.append("audience", audience);
@@ -270,13 +308,13 @@ export class OidcClient {
 
     if (maxAge >= 0) {
       url.searchParams.append("max_age", maxAge.toString());
-      this.services.storageManager.saveTokenParams({
+      this.context.storageManager.saveTokenParams({
         audience,
         scope: usedScope,
         maxAge,
       });
     } else {
-      this.services.storageManager.saveTokenParams({ audience, scope: usedScope });
+      this.context.storageManager.saveTokenParams({ audience, scope: usedScope });
     }
 
     if (acrValues.length > 0) {
@@ -320,7 +358,7 @@ export class OidcClient {
       nonce,
     );
 
-    this.services.parseAndSaveTokenResponse(validatedTokenResponse);
+    this.parseAndSaveTokenResponse(validatedTokenResponse);
 
     // redirect only if the redirectUri is not the current uri
     if (formatUrl(window.location.href) !== formatUrl(finalRedirectUri)) {
@@ -353,7 +391,7 @@ export class OidcClient {
       maxAge,
     );
 
-    this.services.storageManager.saveClientParams({
+    this.context.storageManager.saveClientParams({
       nonce,
       state,
       codeVerifier,
