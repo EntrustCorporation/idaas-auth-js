@@ -4,7 +4,7 @@ import { IdaasContext } from "./IdaasContext";
 import type { GetAccessTokenOptions, IdaasClientOptions, UserClaims } from "./models";
 import { OidcClient } from "./OidcClient";
 import { RbaClient } from "./RbaClient";
-import type { AccessToken } from "./storage/StorageManager";
+import { type AccessToken, StorageManager } from "./storage/StorageManager";
 import { calculateEpochExpiry } from "./utils/format";
 import { readAccessToken, validateUserInfoToken } from "./utils/jwt";
 
@@ -23,6 +23,8 @@ export interface ValidatedTokenResponse {
  */
 
 export class IdaasClient {
+  private readonly storageManager: StorageManager;
+
   private context: IdaasContext;
   private _oidcClient: OidcClient;
   private _rbaClient: RbaClient;
@@ -40,17 +42,18 @@ export class IdaasClient {
     globalUseRefreshToken,
     storageType = "memory",
   }: IdaasClientOptions) {
+    this.storageManager = new StorageManager(clientId, storageType);
     this.context = new IdaasContext({
       issuerUrl,
       clientId,
       globalAudience,
       globalScope,
       globalUseRefreshToken,
-      storageType,
     });
+
     // Initialize clients with this.context instance as the context provider
-    this._oidcClient = new OidcClient(this.context);
-    this._rbaClient = new RbaClient(this.context);
+    this._oidcClient = new OidcClient(this.context, this.storageManager);
+    this._rbaClient = new RbaClient(this.context, this.storageManager);
   }
 
   // Public API exposing the client instances
@@ -77,7 +80,7 @@ export class IdaasClient {
    * @returns True if the user is authenticated, false otherwise
    */
   public isAuthenticated(): boolean {
-    return !!this.context.storageManager.getIdToken();
+    return !!this.storageManager.getIdToken();
   }
 
   /**
@@ -85,7 +88,7 @@ export class IdaasClient {
    * @returns returns the decodedIdToken containing the user info.
    */
   public getIdTokenClaims(): UserClaims | null {
-    const idToken = this.context.storageManager.getIdToken();
+    const idToken = this.storageManager.getIdToken();
     if (!idToken?.decoded) {
       return null;
     }
@@ -104,8 +107,8 @@ export class IdaasClient {
     fallbackAuthorizationOptions,
   }: GetAccessTokenOptions = {}): Promise<string | null> {
     // 1. Remove tokens that are no longer valid
-    this.context.storageManager.removeExpiredTokens();
-    let accessTokens = this.context.storageManager.getAccessTokens();
+    this.storageManager.removeExpiredTokens();
+    let accessTokens = this.storageManager.getAccessTokens();
     const requestedScopes = scope.split(" ");
     const now = Date.now();
     // buffer (in seconds) to refresh/delete early, ensures an expired token is not returned
@@ -172,8 +175,8 @@ export class IdaasClient {
           acr,
         };
 
-        this.context.storageManager.removeAccessToken(requestedToken);
-        this.context.storageManager.saveAccessToken(newAccessToken);
+        this.storageManager.removeAccessToken(requestedToken);
+        this.storageManager.saveAccessToken(newAccessToken);
         return newEncodedAccessToken;
       }
     }
@@ -229,7 +232,7 @@ export class IdaasClient {
     }
 
     // 3. Finally, validate that the sub claim in the UserInfo response exactly matches the sub claim in the ID token
-    const idToken = this.context.storageManager.getIdToken();
+    const idToken = this.storageManager.getIdToken();
     if (idToken?.decoded.sub !== claims.sub) {
       return null;
     }

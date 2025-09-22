@@ -2,7 +2,7 @@ import { type AccessTokenRequest, requestToken } from "./api";
 import type { ValidatedTokenResponse } from "./IdaasClient";
 import type { IdaasContext } from "./IdaasContext";
 import type { AuthorizeResponse, LogoutOptions, OidcLoginOptions, TokenOptions } from "./models";
-import type { AccessToken } from "./storage/StorageManager";
+import type { AccessToken, StorageManager } from "./storage/StorageManager";
 import { listenToAuthorizePopup, openPopup } from "./utils/browser";
 import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPair } from "./utils/crypto";
 import { calculateEpochExpiry, formatUrl, sanitizeUri } from "./utils/format";
@@ -19,9 +19,11 @@ import { readAccessToken, validateIdToken } from "./utils/jwt";
 
 export class OidcClient {
   private context: IdaasContext;
+  private storageManager: StorageManager;
 
-  constructor(context: IdaasContext) {
+  constructor(context: IdaasContext, storageManager: StorageManager) {
     this.context = context;
+    this.storageManager = storageManager;
   }
 
   /**
@@ -78,7 +80,7 @@ export class OidcClient {
    * @param options - Logout options, configurable redirectUri
    */
   public async logout({ redirectUri }: LogoutOptions = {}): Promise<void> {
-    this.context.storageManager.remove();
+    this.storageManager.remove();
 
     window.location.href = await this.generateLogoutUrl(redirectUri);
   }
@@ -95,7 +97,7 @@ export class OidcClient {
       return null;
     }
 
-    const clientParams = this.context.storageManager.getClientParams();
+    const clientParams = this.storageManager.getClientParams();
     if (!clientParams) {
       throw new Error("Failed to recover IDaaS client state from local storage");
     }
@@ -228,7 +230,7 @@ export class OidcClient {
     const { refresh_token, access_token, expires_in } = tokenResponse;
     const authTime = readAccessToken(access_token)?.auth_time;
     const expiresAt = calculateEpochExpiry(expires_in, authTime);
-    const tokenParams = this.context.storageManager.getTokenParams();
+    const tokenParams = this.storageManager.getTokenParams();
 
     if (!tokenParams) {
       throw new Error("No token params stored, unable to parse");
@@ -237,7 +239,7 @@ export class OidcClient {
     const { audience, scope, maxAge } = tokenParams;
     const maxAgeExpiry = maxAge ? calculateEpochExpiry(maxAge.toString(), authTime) : undefined;
 
-    this.context.storageManager.removeTokenParams();
+    this.storageManager.removeTokenParams();
 
     const token = readAccessToken(access_token);
     const acr = token?.acr ?? undefined;
@@ -252,11 +254,11 @@ export class OidcClient {
       acr,
     };
 
-    this.context.storageManager.saveIdToken({
+    this.storageManager.saveIdToken({
       encoded: encodedIdToken,
       decoded: decodedIdToken,
     });
-    this.context.storageManager.saveAccessToken(newAccessToken);
+    this.storageManager.saveAccessToken(newAccessToken);
   }
 
   /**
@@ -308,13 +310,13 @@ export class OidcClient {
 
     if (maxAge >= 0) {
       url.searchParams.append("max_age", maxAge.toString());
-      this.context.storageManager.saveTokenParams({
+      this.storageManager.saveTokenParams({
         audience,
         scope: usedScope,
         maxAge,
       });
     } else {
-      this.context.storageManager.saveTokenParams({ audience, scope: usedScope });
+      this.storageManager.saveTokenParams({ audience, scope: usedScope });
     }
 
     if (acrValues.length > 0) {
@@ -391,7 +393,7 @@ export class OidcClient {
       maxAge,
     );
 
-    this.context.storageManager.saveClientParams({
+    this.storageManager.saveClientParams({
       nonce,
       state,
       codeVerifier,

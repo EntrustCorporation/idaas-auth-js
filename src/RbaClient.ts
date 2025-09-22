@@ -8,6 +8,7 @@ import type {
   AuthenticationSubmissionParams,
   TokenOptions,
 } from "./models";
+import type { StorageManager } from "./storage/StorageManager";
 import { calculateEpochExpiry } from "./utils/format";
 
 /**
@@ -19,10 +20,12 @@ import { calculateEpochExpiry } from "./utils/format";
  */
 export class RbaClient {
   private context: IdaasContext;
+  private storageManager: StorageManager;
   private authenticationTransaction?: AuthenticationTransaction;
 
-  constructor(context: IdaasContext) {
+  constructor(context: IdaasContext, storageManager: StorageManager) {
     this.context = context;
+    this.storageManager = storageManager;
   }
 
   /**
@@ -174,11 +177,11 @@ export class RbaClient {
     }
 
     // Saving tokens
-    this.context.storageManager.saveIdToken({
+    this.storageManager.saveIdToken({
       encoded: idToken,
       decoded: decodeJwt(idToken),
     });
-    this.context.storageManager.saveAccessToken({
+    this.storageManager.saveAccessToken({
       accessToken,
       expiresAt,
       scope,
