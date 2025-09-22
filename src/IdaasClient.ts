@@ -49,11 +49,12 @@ export class IdaasClient {
       globalAudience,
       globalScope,
       globalUseRefreshToken,
+      storageManager: this.storageManager,
     });
 
     // Initialize clients with this.context instance as the context provider
     this._oidcClient = new OidcClient(this.context, this.storageManager);
-    this._rbaClient = new RbaClient(this.context, this.storageManager);
+    this._rbaClient = new RbaClient(this.context);
   }
 
   // Public API exposing the client instances

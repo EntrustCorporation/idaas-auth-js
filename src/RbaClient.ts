@@ -1,5 +1,3 @@
-import { decodeJwt } from "jose";
-import { AuthenticationTransaction } from "./AuthenticationTransaction";
 import type { IdaasContext } from "./IdaasContext";
 import type {
   AuthenticationCredential,
@@ -8,8 +6,6 @@ import type {
   AuthenticationSubmissionParams,
   TokenOptions,
 } from "./models";
-import type { StorageManager } from "./storage/StorageManager";
-import { calculateEpochExpiry } from "./utils/format";
 
 /**
  * This class handles RBA flows using challenge-response patterns.
@@ -20,12 +16,9 @@ import { calculateEpochExpiry } from "./utils/format";
  */
 export class RbaClient {
   private context: IdaasContext;
-  private storageManager: StorageManager;
-  private authenticationTransaction?: AuthenticationTransaction;
 
-  constructor(context: IdaasContext, storageManager: StorageManager) {
+  constructor(context: IdaasContext) {
     this.context = context;
-    this.storageManager = storageManager;
   }
 
   /**
@@ -41,14 +34,14 @@ export class RbaClient {
     tokenOptions?: TokenOptions,
   ): Promise<AuthenticationResponse> {
     // 1. Prepare transaction
-    await this.initializeAuthenticationTransaction(options, tokenOptions);
+    await this.context.initializeAuthenticationTransaction(options, tokenOptions);
 
-    if (!this.authenticationTransaction) {
+    if (!this.context.authenticationTransaction) {
       throw new Error("Failed to initialize authentication transaction");
     }
 
     // 2. Request authentication challenge, return response
-    return await this.authenticationTransaction.requestAuthChallenge();
+    return await this.context.authenticationTransaction.requestAuthChallenge();
   }
 
   /**
@@ -59,18 +52,18 @@ export class RbaClient {
    * @returns The authentication response indicating completion status or next steps
    */
   public async submitChallenge(options: AuthenticationSubmissionParams = {}): Promise<AuthenticationResponse> {
-    if (!this.authenticationTransaction) {
+    if (!this.context.authenticationTransaction) {
       throw new Error("No authentication transaction in progress!");
     }
 
     if (options.credential) {
-      this.authenticationTransaction.submitPasskey(options.credential as AuthenticationCredential);
+      this.context.authenticationTransaction.submitPasskey(options.credential as AuthenticationCredential);
     }
 
-    const authenticationResponse = await this.authenticationTransaction.submitAuthChallenge({ ...options });
+    const authenticationResponse = await this.context.authenticationTransaction.submitAuthChallenge({ ...options });
 
     if (authenticationResponse.authenticationCompleted) {
-      this.handleAuthenticationTransactionSuccess();
+      this.context.handleAuthenticationTransactionSuccess();
     }
 
     return authenticationResponse;
@@ -83,14 +76,14 @@ export class RbaClient {
    * @returns The authentication response indicating completion status
    */
   public async poll(): Promise<AuthenticationResponse> {
-    if (!this.authenticationTransaction) {
+    if (!this.context.authenticationTransaction) {
       throw new Error("No authentication transaction in progress!");
     }
 
-    const authenticationResponse = await this.authenticationTransaction.pollForAuthCompletion();
+    const authenticationResponse = await this.context.authenticationTransaction.pollForAuthCompletion();
 
     if (authenticationResponse.authenticationCompleted) {
-      this.handleAuthenticationTransactionSuccess();
+      this.context.handleAuthenticationTransactionSuccess();
     }
     return authenticationResponse;
   }
@@ -100,11 +93,11 @@ export class RbaClient {
    * Terminates the current authentication transaction and cleans up any pending state.
    */
   public async cancel(): Promise<void> {
-    if (!this.authenticationTransaction) {
+    if (!this.context.authenticationTransaction) {
       throw new Error("No authentication transaction in progress!");
     }
 
-    await this.authenticationTransaction.cancelAuthChallenge();
+    await this.context.authenticationTransaction.cancelAuthChallenge();
   }
 
   /**
@@ -122,74 +115,26 @@ export class RbaClient {
     password: string;
   }): Promise<AuthenticationResponse> {
     // 1. Prepare transaction with PASSWORD method
-    await this.initializeAuthenticationTransaction({
+    await this.context.initializeAuthenticationTransaction({
       ...options,
       strict: true,
       preferredAuthenticationMethod: "PASSWORD",
     });
 
-    if (!this.authenticationTransaction) {
+    if (!this.context.authenticationTransaction) {
       throw new Error("Failed to initialize authentication transaction");
     }
 
     // 2. Request authentication challenge
-    await this.authenticationTransaction.requestAuthChallenge();
+    await this.context.authenticationTransaction.requestAuthChallenge();
 
     // 3. Submit authentication challenge response
-    const authResult = await this.authenticationTransaction.submitAuthChallenge({ response: password });
+    const authResult = await this.context.authenticationTransaction.submitAuthChallenge({ response: password });
 
     if (authResult.authenticationCompleted) {
-      this.handleAuthenticationTransactionSuccess();
+      this.context.handleAuthenticationTransactionSuccess();
     }
 
     return authResult;
   }
-
-  // PRIVATE METHODS
-
-  private initializeAuthenticationTransaction = async (
-    options?: AuthenticationRequestParams,
-    tokenOptions?: TokenOptions,
-  ) => {
-    const oidcConfig = await this.context.getConfig();
-
-    this.authenticationTransaction = new AuthenticationTransaction({
-      oidcConfig,
-      ...options,
-      useRefreshToken: tokenOptions?.useRefreshToken ?? this.context.globalUseRefreshToken,
-      audience: tokenOptions?.audience ?? this.context.globalAudience,
-      scope: tokenOptions?.scope ?? this.context.globalScope,
-      clientId: this.context.clientId,
-    });
-  };
-
-  private handleAuthenticationTransactionSuccess = () => {
-    if (!this.authenticationTransaction) {
-      throw new Error("No authentication transaction in progress!");
-    }
-
-    const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience } =
-      this.authenticationTransaction.getAuthenticationDetails();
-
-    // Require the access token, id token, and necessary claims
-    if (!(idToken && accessToken && expiresAt && scope)) {
-      throw new Error("Error retrieving tokens from transaction");
-    }
-
-    // Saving tokens
-    this.storageManager.saveIdToken({
-      encoded: idToken,
-      decoded: decodeJwt(idToken),
-    });
-    this.storageManager.saveAccessToken({
-      accessToken,
-      expiresAt,
-      scope,
-      refreshToken,
-      audience,
-      maxAgeExpiry: maxAge ? calculateEpochExpiry(maxAge.toString()) : undefined,
-    });
-
-    this.authenticationTransaction = undefined;
-  };
 }
