@@ -16,7 +16,7 @@ document.getElementById("submit-response")?.addEventListener("click", async () =
 
   try {
     const submitResponse = await idaasClient.auth.authenticatePassword({
-      options: { userId, password },
+      options: { userId },
       password,
     });
 
@@ -38,5 +38,5 @@ document.getElementById("back-button")?.addEventListener("click", async () => {
 });
 
 window.addEventListener("load", async () => {
-  console.log("Soft token page loaded");
+  console.log("Password page loaded");
 });
