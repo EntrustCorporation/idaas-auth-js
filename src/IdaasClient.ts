@@ -1,6 +1,6 @@
 import type { JWTPayload } from "jose";
+import { AuthClient } from "./AutClient";
 import { getUserInfo, type RefreshTokenRequest, requestToken, type TokenResponse } from "./api";
-import { AuthClient } from "./authClient";
 import { IdaasContext } from "./IdaasContext";
 import type { GetAccessTokenOptions, IdaasClientOptions, UserClaims } from "./models";
 import { OidcClient } from "./OidcClient";
