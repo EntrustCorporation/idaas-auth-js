@@ -1,5 +1,6 @@
 import type { JWTPayload } from "jose";
 import { getUserInfo, type RefreshTokenRequest, requestToken, type TokenResponse } from "./api";
+import { AuthClient } from "./authClient";
 import { IdaasContext } from "./IdaasContext";
 import type { GetAccessTokenOptions, IdaasClientOptions, UserClaims } from "./models";
 import { OidcClient } from "./OidcClient";
@@ -28,6 +29,7 @@ export class IdaasClient {
   private context: IdaasContext;
   private _oidcClient: OidcClient;
   private _rbaClient: RbaClient;
+  private _authClient: AuthClient;
 
   /**
    * Creates a new IdaasClient instance for handling OIDC authentication flows.
@@ -49,12 +51,12 @@ export class IdaasClient {
       globalAudience,
       globalScope,
       globalUseRefreshToken,
-      storageManager: this.storageManager,
     });
 
     // Initialize clients with this.context instance as the context provider
     this._oidcClient = new OidcClient(this.context, this.storageManager);
-    this._rbaClient = new RbaClient(this.context);
+    this._rbaClient = new RbaClient(this.context, this.storageManager);
+    this._authClient = new AuthClient(this._rbaClient);
   }
 
   // Public API exposing the client instances
@@ -73,6 +75,14 @@ export class IdaasClient {
    */
   public get rba() {
     return this._rbaClient;
+  }
+
+  /**
+   * Provides access to self hosted auth convenience methods.
+   * Contains authenticatePassword.
+   */
+  public get auth() {
+    return this._authClient;
   }
 
   /**

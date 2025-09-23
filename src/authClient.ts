@@ -1,5 +1,5 @@
-import type { IdaasContext } from "./IdaasContext";
 import type { AuthenticationRequestParams, AuthenticationResponse } from "./models";
+import type { RbaClient } from "./RbaClient";
 
 /**
  * This class handles authorization for OIDC flows using both popup
@@ -11,10 +11,10 @@ import type { AuthenticationRequestParams, AuthenticationResponse } from "./mode
  */
 
 export class AuthClient {
-  private context: IdaasContext;
+  private rbaClient: RbaClient;
 
-  constructor(context: IdaasContext) {
-    this.context = context;
+  constructor(rbaClient: RbaClient) {
+    this.rbaClient = rbaClient;
   }
 
   /**
@@ -32,24 +32,24 @@ export class AuthClient {
     password: string;
   }): Promise<AuthenticationResponse> {
     // 1. Prepare transaction with PASSWORD method
-    await this.context.initializeAuthenticationTransaction({
+    await this.rbaClient.initializeAuthenticationTransaction({
       ...options,
       strict: true,
       preferredAuthenticationMethod: "PASSWORD",
     });
 
-    if (!this.context.authenticationTransaction) {
+    if (!this.rbaClient.authenticationTransaction) {
       throw new Error("Failed to initialize authentication transaction");
     }
 
     // 2. Request authentication challenge
-    await this.context.authenticationTransaction.requestAuthChallenge();
+    await this.rbaClient.authenticationTransaction.requestAuthChallenge();
 
     // 3. Submit authentication challenge response
-    const authResult = await this.context.authenticationTransaction.submitAuthChallenge({ response: password });
+    const authResult = await this.rbaClient.authenticationTransaction.submitAuthChallenge({ response: password });
 
     if (authResult.authenticationCompleted) {
-      this.context.handleAuthenticationTransactionSuccess();
+      this.rbaClient.handleAuthenticationTransactionSuccess();
     }
 
     return authResult;
