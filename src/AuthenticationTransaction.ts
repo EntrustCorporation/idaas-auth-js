@@ -7,6 +7,7 @@ import {
   requestToken,
   submitAuthChallenge,
 } from "./api";
+import { generateAuthorizationUrl } from "./helpers/url";
 import type {
   AuthenticationCredential,
   AuthenticationResponse,
@@ -30,7 +31,6 @@ import type {
   UserChallengeParameters,
 } from "./models/openapi-ts";
 import { browserSupportsPasskey } from "./utils/browser";
-import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPair } from "./utils/crypto";
 import {
   base64URLStringToBuffer,
   bufferToBase64URLString,
@@ -227,42 +227,16 @@ export class AuthenticationTransaction {
   }
 
   private async generateJwtAuthorizeUrl() {
-    const url = new URL(`${this.oidcConfig.issuer}/authorizejwt`);
-    const { codeVerifier, codeChallenge } = await generateChallengeVerifierPair();
-    const state = base64UrlStringEncode(createRandomString());
-    const nonce = base64UrlStringEncode(createRandomString());
-    const scope = this.authenticationDetails.scope ?? "";
-    const scopeAsArray = scope.split(" ");
-    scopeAsArray.push("openid");
-
-    if (this.useRefreshToken) {
-      scopeAsArray.push("offline_access");
-    }
-
-    // removes duplicate values
-    const usedScope = [...new Set(scopeAsArray)].join(" ");
-
-    if (this.audience) {
-      url.searchParams.append("audience", this.audience);
-    }
-
-    if (this.maxAge) {
-      url.searchParams.append("max_age", this.maxAge.toString());
-    }
-
-    url.searchParams.append("state", state);
-    url.searchParams.append("nonce", nonce);
-    url.searchParams.append("scope", usedScope);
-    url.searchParams.append("client_id", this.clientId);
-    url.searchParams.append("code_challenge", codeChallenge);
-    // Note: The PKCE spec defines an additional code_challenge_method 'plain', but it is explicitly NOT recommended
-    // https://datatracker.ietf.org/doc/html/rfc7636#section-7.2
-    url.searchParams.append("code_challenge_method", "S256");
-
-    if (this.acrValues && this.acrValues.length > 0) {
-      const acrString = this.acrValues.join(" ");
-      url.searchParams.append("acr_values", acrString);
-    }
+    const { url, usedScope, codeVerifier } = await generateAuthorizationUrl(this.oidcConfig, {
+      type: "jwt",
+      issuer: this.oidcConfig.issuer,
+      clientId: this.clientId,
+      useRefreshToken: this.useRefreshToken,
+      scope: this.authenticationDetails.scope,
+      audience: this.audience,
+      maxAge: this.maxAge,
+      acrValues: this.acrValues,
+    });
 
     this.authenticationDetails.scope = usedScope;
 
