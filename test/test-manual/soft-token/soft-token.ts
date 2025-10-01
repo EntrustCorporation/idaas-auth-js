@@ -14,10 +14,8 @@ document.getElementById("request-challenge-token")?.addEventListener("click", as
   hideAll();
 
   try {
-    const challengeResponse = await idaasClient.rba.requestChallenge({
+    const challengeResponse = await idaasClient.auth.authenticateSoftToken({
       userId: USERNAME,
-      preferredAuthenticationMethod: "TOKEN",
-      strict: true,
     });
 
     console.log("Challenge response:", challengeResponse);
@@ -34,10 +32,9 @@ document.getElementById("request-challenge-token")?.addEventListener("click", as
 document.getElementById("request-challenge-token-push")?.addEventListener("click", async () => {
   hideAll();
   try {
-    const challengeResponse = await idaasClient.rba.requestChallenge({
+    const challengeResponse = await idaasClient.auth.authenticateSoftToken({
       userId: USERNAME,
-      preferredAuthenticationMethod: "TOKENPUSH",
-      strict: true,
+      tokenPushOptions: { mutualChallengeEnabled: false },
     });
 
     console.log("Challenge response:", challengeResponse);
@@ -46,13 +43,6 @@ document.getElementById("request-challenge-token-push")?.addEventListener("click
     console.error("Request challenge failed:", error);
     updateChallengeUI(null, error);
   }
-  try {
-    const submitResponse = await idaasClient.rba.poll();
-    updateSubmitUI(submitResponse);
-  } catch (error) {
-    console.error("Polling failed:", error);
-    updateSubmitUI(null, error);
-  }
 });
 
 // Token Push with Mutual Auth
@@ -60,10 +50,8 @@ document.getElementById("request-challenge-token-push-mutual")?.addEventListener
   console.info("Requesting token push with mutual auth challenge");
   hideAll();
   try {
-    const challengeResponse = await idaasClient.rba.requestChallenge({
+    const challengeResponse = await idaasClient.auth.authenticateSoftToken({
       userId: USERNAME,
-      preferredAuthenticationMethod: "TOKENPUSH",
-      strict: true,
       tokenPushOptions: { mutualChallengeEnabled: true },
     });
 

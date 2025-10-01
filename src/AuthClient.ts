@@ -1,6 +1,12 @@
 import type { AuthenticationRequestParams, AuthenticationResponse } from "./models";
 import type { RbaClient } from "./RbaClient";
 
+interface SoftTokenOptions {
+  userId: string;
+  tokenPushOptions?: {
+    mutualChallengeEnabled: boolean;
+  };
+}
 /**
  * This class handles convenience authorization methods such as password-based authentication.
  *
@@ -35,5 +41,32 @@ export class AuthClient {
 
     const authResult = await this.rbaClient.submitChallenge({ response: password });
     return authResult;
+  }
+
+  public async authenticateSoftToken(softTokenOptions: SoftTokenOptions): Promise<AuthenticationResponse> {
+    if (softTokenOptions.tokenPushOptions?.mutualChallengeEnabled === false) {
+      await this.rbaClient.requestChallenge({
+        userId: softTokenOptions.userId,
+        strict: true,
+        preferredAuthenticationMethod: "TOKENPUSH",
+      });
+
+      return await this.rbaClient.poll();
+    }
+
+    if (softTokenOptions.tokenPushOptions?.mutualChallengeEnabled) {
+      return await this.rbaClient.requestChallenge({
+        userId: softTokenOptions.userId,
+        strict: true,
+        preferredAuthenticationMethod: "TOKENPUSH",
+        tokenPushOptions: { mutualChallengeEnabled: true },
+      });
+    }
+
+    return await this.rbaClient.requestChallenge({
+      userId: softTokenOptions.userId,
+      strict: true,
+      preferredAuthenticationMethod: "TOKEN",
+    });
   }
 }
