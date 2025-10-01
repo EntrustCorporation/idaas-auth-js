@@ -2,6 +2,26 @@ import type { AuthenticationRequestParams, AuthenticationResponse } from "./mode
 import type { RbaClient } from "./RbaClient";
 
 /**
+ * Options for soft token authentication
+ */
+interface SoftTokenOptions {
+  /**
+   * The user ID of the user to authenticate.
+   */
+  userId: string;
+
+  /**
+   * Determines if push authentication (true) or standard token authentication (false) should be used. Default false.
+   */
+  push?: boolean;
+
+  /**
+   * Enables mutual challenge for push. Only valid if push is true. Default false.
+   */
+  mutualChallenge?: boolean;
+}
+
+/**
  * This class handles convenience authorization methods such as password-based authentication.
  *
  */
@@ -16,8 +36,8 @@ export class AuthClient {
    * Authenticate a user using password-based authentication.
    * Initiates an authentication transaction with the PASSWORD method and submits the provided password.
    *
-   * @param options Authentication request parameters and the password to authenticate with
-   * @returns The authentication response indicating success or requiring additional steps
+   * @param options Authentication request parameters and the password to authenticate with.
+   * @returns The authentication response indicating success or requiring additional steps.
    */
   public async authenticatePassword({
     options,
@@ -35,5 +55,55 @@ export class AuthClient {
 
     const authResult = await this.rbaClient.submitChallenge({ response: password });
     return authResult;
+  }
+
+  /**
+   * Authenticate using Entrust Soft Token.
+   *
+   * Modes:
+   * - push === false: Issues a TOKEN challenge (OTP). Caller must later call submitChallenge with the user’s code.
+   * - push === true && mutualChallenge === false: Starts a TOKENPUSH challenge and immediately polls until completion; returns the final AuthenticationResponse.
+   * - push === true && mutualChallenge === true: Starts a TOKENPUSH challenge with mutual challenge enabled; returns the initial response containing the mutual challenge. Caller must then call poll() to await completion.
+   *
+   * mutualChallenge is ignored unless push is true.
+   *
+   * @param userId The user to authenticate.
+   * @param push Determines if push authentication (true) or standard token authentication (false) should be used. Default false.
+   * @param mutualChallenge Enables mutual challenge for push. Only valid if push is true. Default false.
+   * @returns AuthenticationResponse:
+   *   - Final result (success/failure) for plain TOKENPUSH (no mutual challenge).
+   *   - Initial challenge response for TOKENPUSH with mutual challenge (requires poll).
+   *   - Initial challenge response for TOKEN (requires submitChallenge with OTP).
+   * @throws On request/poll errors.
+   */
+  public async authenticateSoftToken({
+    userId,
+    mutualChallenge = false,
+    push = false,
+  }: SoftTokenOptions): Promise<AuthenticationResponse> {
+    if (push && !mutualChallenge) {
+      await this.rbaClient.requestChallenge({
+        userId,
+        strict: true,
+        preferredAuthenticationMethod: "TOKENPUSH",
+      });
+
+      return await this.rbaClient.poll();
+    }
+
+    if (push && mutualChallenge) {
+      return await this.rbaClient.requestChallenge({
+        userId,
+        strict: true,
+        preferredAuthenticationMethod: "TOKENPUSH",
+        tokenPushOptions: { mutualChallengeEnabled: true },
+      });
+    }
+
+    return await this.rbaClient.requestChallenge({
+      userId,
+      strict: true,
+      preferredAuthenticationMethod: "TOKEN",
+    });
   }
 }
