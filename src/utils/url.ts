@@ -77,7 +77,7 @@ export const generateAuthorizationUrl = async (
   }
 
   // Add maxAge if provided and >= 0
-  if (options.maxAge !== undefined && options.maxAge >= 0) {
+  if (options.maxAge && options.maxAge >= 0) {
     url.searchParams.append("max_age", options.maxAge.toString());
   }
 
