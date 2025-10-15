@@ -1,12 +1,15 @@
 import type { AuthenticationRequestParams, AuthenticationResponse } from "./models";
 import type { RbaClient } from "./RbaClient";
 
+/** Options for soft token authentication */
 interface SoftTokenOptions {
   userId: string;
-  tokenPushOptions?: {
-    mutualChallengeEnabled: boolean;
-  };
+  /** Indicates if push notifications are enabled for the soft token. Defaults false */
+  pushNotification?: boolean;
+  /** Indicates if mutual challenge is enabled for push notifications if true must set pushNotifications to true. Defaults false */
+  mutualChallengeEnabled?: boolean;
 }
+
 /**
  * This class handles convenience authorization methods such as password-based authentication.
  *
@@ -43,10 +46,14 @@ export class AuthClient {
     return authResult;
   }
 
-  public async authenticateSoftToken(softTokenOptions: SoftTokenOptions): Promise<AuthenticationResponse> {
-    if (softTokenOptions.tokenPushOptions?.mutualChallengeEnabled === false) {
+  public async authenticateSoftToken({
+    userId,
+    mutualChallengeEnabled = false,
+    pushNotification = false,
+  }: SoftTokenOptions): Promise<AuthenticationResponse> {
+    if (pushNotification && !mutualChallengeEnabled) {
       await this.rbaClient.requestChallenge({
-        userId: softTokenOptions.userId,
+        userId: userId,
         strict: true,
         preferredAuthenticationMethod: "TOKENPUSH",
       });
@@ -54,9 +61,9 @@ export class AuthClient {
       return await this.rbaClient.poll();
     }
 
-    if (softTokenOptions.tokenPushOptions?.mutualChallengeEnabled) {
+    if (pushNotification && mutualChallengeEnabled) {
       return await this.rbaClient.requestChallenge({
-        userId: softTokenOptions.userId,
+        userId: userId,
         strict: true,
         preferredAuthenticationMethod: "TOKENPUSH",
         tokenPushOptions: { mutualChallengeEnabled: true },
@@ -64,7 +71,7 @@ export class AuthClient {
     }
 
     return await this.rbaClient.requestChallenge({
-      userId: softTokenOptions.userId,
+      userId: userId,
       strict: true,
       preferredAuthenticationMethod: "TOKEN",
     });

@@ -34,7 +34,7 @@ document.getElementById("request-challenge-token-push")?.addEventListener("click
   try {
     const challengeResponse = await idaasClient.auth.authenticateSoftToken({
       userId: USERNAME,
-      tokenPushOptions: { mutualChallengeEnabled: false },
+      pushNotification: true,
     });
 
     console.log("Challenge response:", challengeResponse);
@@ -52,7 +52,8 @@ document.getElementById("request-challenge-token-push-mutual")?.addEventListener
   try {
     const challengeResponse = await idaasClient.auth.authenticateSoftToken({
       userId: USERNAME,
-      tokenPushOptions: { mutualChallengeEnabled: true },
+      pushNotification: true,
+      mutualChallengeEnabled: true,
     });
 
     console.log("Challenge response:", challengeResponse);
