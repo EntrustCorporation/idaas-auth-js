@@ -1,4 +1,4 @@
-import type { AuthenticationRequestParams, AuthenticationResponse } from "./models";
+import type { AuthenticationRequestParams, AuthenticationResponse, AuthenticationSubmissionParams } from "./models";
 import type { RbaClient } from "./RbaClient";
 
 /** Options for soft token authentication */
@@ -91,5 +91,29 @@ export class AuthClient {
       strict: true,
       preferredAuthenticationMethod: "TOKEN",
     });
+  }
+
+  public async authenticateGrid(userId: string): Promise<AuthenticationResponse> {
+    return await this.rbaClient.requestChallenge({
+      userId,
+      strict: true,
+      preferredAuthenticationMethod: "GRID",
+    });
+  }
+
+  public async submit({
+    response,
+    credential,
+    kbaChallengeAnswers,
+  }: AuthenticationSubmissionParams): Promise<AuthenticationResponse> {
+    return await this.rbaClient.submitChallenge({ response, credential, kbaChallengeAnswers });
+  }
+
+  public async poll(): Promise<AuthenticationResponse> {
+    return await this.rbaClient.poll();
+  }
+
+  public async cancel(): Promise<void> {
+    return await this.rbaClient.cancel();
   }
 }

@@ -15,11 +15,7 @@ document.getElementById("request-challenge-grid")?.addEventListener("click", asy
   hideResponse();
 
   try {
-    const challengeResponse = await idaasClient.requestChallenge({
-      userId: USERNAME,
-      preferredAuthenticationMethod: "GRID",
-      strict: true,
-    });
+    const challengeResponse = await idaasClient.auth.authenticateGrid(USERNAME);
 
     console.log("Challenge response:", challengeResponse);
     updateChallengeUI(challengeResponse);
@@ -43,7 +39,7 @@ document.getElementById("submit-response")?.addEventListener("click", async () =
   }
 
   try {
-    const submitResponse = await idaasClient.submitChallenge({
+    const submitResponse = await idaasClient.auth.submit({
       response: code,
     });
 
