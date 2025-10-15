@@ -34,7 +34,7 @@ document.getElementById("request-challenge-token-push")?.addEventListener("click
   try {
     const challengeResponse = await idaasClient.auth.authenticateSoftToken({
       userId: USERNAME,
-      pushNotification: true,
+      push: true,
     });
 
     console.log("Challenge response:", challengeResponse);
@@ -52,12 +52,12 @@ document.getElementById("request-challenge-token-push-mutual")?.addEventListener
   try {
     const challengeResponse = await idaasClient.auth.authenticateSoftToken({
       userId: USERNAME,
-      pushNotification: true,
-      mutualChallengeEnabled: true,
+      push: true,
+      mutualChallenge: true,
     });
 
     console.log("Challenge response:", challengeResponse);
-    showMutualAuthChallenge(challengeResponse.pushMutualChallenge);
+    showMutualAuthChallenge(challengeResponse.pushMutualChallenge || "");
     updateChallengeUI(challengeResponse);
   } catch (error) {
     console.error("Request challenge failed:", error);
@@ -108,7 +108,7 @@ document.getElementById("cancel-auth")?.addEventListener("click", async () => {
   await handleCancelAuth();
 });
 
-const showMutualAuthChallenge = (mutualAuthCode) => {
+const showMutualAuthChallenge = (mutualAuthCode: string) => {
   const codeArea = document.getElementById("mutual-auth-challenge");
   const codeElement = document.getElementById("mutual-auth-code");
   if (codeArea) {

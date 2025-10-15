@@ -1,3 +1,4 @@
+import type { GridChallengeCell } from "../../../src/models/openapi-ts";
 import {
   hideInputArea,
   hideResponse,
@@ -15,13 +16,10 @@ document.getElementById("request-challenge-grid")?.addEventListener("click", asy
   hideResponse();
 
   try {
-    const challengeResponse = await idaasClient.requestChallenge({
-      userId: USERNAME,
-      preferredAuthenticationMethod: "GRID",
-      strict: true,
-    });
+    const challengeResponse = await idaasClient.auth.authenticateGrid(USERNAME);
 
     console.log("Challenge response:", challengeResponse);
+    updateGridUI(challengeResponse.gridChallenge?.challenge || []);
     updateChallengeUI(challengeResponse);
     showInputArea();
   } catch (error) {
@@ -43,7 +41,7 @@ document.getElementById("submit-response")?.addEventListener("click", async () =
   }
 
   try {
-    const submitResponse = await idaasClient.submitChallenge({
+    const submitResponse = await idaasClient.auth.submit({
       response: code,
     });
 
@@ -65,3 +63,13 @@ document.getElementById("back-button")?.addEventListener("click", async () => {
 window.addEventListener("load", async () => {
   console.log("Grid page loaded");
 });
+
+const updateGridUI = (challenge: Array<GridChallengeCell>) => {
+  const container = document.getElementById("grid-container");
+  const challengePre = document.getElementById("grid-challenge");
+
+  if (container && challengePre) {
+    container.style.display = "block";
+    challengePre.textContent = challenge.map((cell) => `row:${cell.row} col:${cell.column}`).join("\n");
+  }
+};

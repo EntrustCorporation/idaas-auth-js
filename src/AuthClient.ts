@@ -1,4 +1,4 @@
-import type { AuthenticationRequestParams, AuthenticationResponse } from "./models";
+import type { AuthenticationRequestParams, AuthenticationResponse, AuthenticationSubmissionParams } from "./models";
 import type { RbaClient } from "./RbaClient";
 
 /**
@@ -105,5 +105,54 @@ export class AuthClient {
       strict: true,
       preferredAuthenticationMethod: "TOKEN",
     });
+  }
+
+  /**
+   * Authenticate a user using grid authentication.
+   * Initiates an authentication transaction with the GRID method.
+   *
+   * @param userId The user ID of the user to authenticate.
+   * @returns The authentication response containing the grid challenge.
+   */
+  public async authenticateGrid(userId: string): Promise<AuthenticationResponse> {
+    return await this.rbaClient.requestChallenge({
+      userId,
+      strict: true,
+      preferredAuthenticationMethod: "GRID",
+    });
+  }
+
+  /**
+   * Submits a response to an authentication challenge.
+   * Processes authentication responses and completes the authentication if successful.
+   * @param response The user's response to the authentication challenge.
+   * @param credential The credential returned from navigator.credentials.get(credentialRequestOptions).
+   * @param kbaChallengeAnswers The user's answers to the KBA challenge questions. Answers must be in the order of the questions returned when requesting the challenge.
+   * @returns The authentication response indicating completion status or next steps
+   */
+  public async submit({
+    response,
+    credential,
+    kbaChallengeAnswers,
+  }: AuthenticationSubmissionParams): Promise<AuthenticationResponse> {
+    return await this.rbaClient.submitChallenge({ response, credential, kbaChallengeAnswers });
+  }
+
+  /**
+   * Polls the authentication provider to check for completion of an ongoing authentication process.
+   * Useful for authentication flows that may complete asynchronously (e.g., token push authentication).
+   *
+   * @returns The authentication response indicating completion status
+   */
+  public async poll(): Promise<AuthenticationResponse> {
+    return await this.rbaClient.poll();
+  }
+
+  /**
+   * Cancels an ongoing authentication challenge.
+   * Terminates the current authentication transaction and cleans up any pending state.
+   */
+  public async cancel(): Promise<void> {
+    return await this.rbaClient.cancel();
   }
 }
