@@ -41,7 +41,7 @@
     "format": "biome format .",
     "lint": "biome check .",
     "lint:types": "attw .",
-    "test:unit": "bun test test/unit/generateAuthorizationUrl.test.ts",
+    "test:unit": "bun test test/unit/url.test.ts",
     "test:e2e": "bunx playwright test",
     "test:manual": "bun run test/test-manual/app.ts"
   },
