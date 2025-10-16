@@ -38,8 +38,8 @@ pipeline {
       }
       steps {
           sh "bunx playwright install --with-deps"
-          sh "bun run test:e2e"
           sh "bun run test:unit"
+          sh "bun run test:e2e"
       }
     }
     stage("📦  Publish Beta") {
