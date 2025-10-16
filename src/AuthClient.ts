@@ -3,11 +3,20 @@ import type { RbaClient } from "./RbaClient";
 
 /** Options for soft token authentication */
 interface SoftTokenOptions {
+  /**
+   * The user ID of the user to authenticate.
+   * */
   userId: string;
-  /** Indicates if push notifications are enabled for the soft token. Defaults false */
-  pushNotification?: boolean;
-  /** Indicates if mutual challenge is enabled for push notifications if true must set pushNotifications to true. Defaults false */
-  mutualChallengeEnabled?: boolean;
+  /**
+   * Indicates if a push notification should be sent. Defaults false.
+   * */
+  push?: boolean;
+  /**
+   * Enables mutual challenge for push. Only valid when push === true.
+   * If true while push is false, the flag is ignored.
+   * Default: false.
+   */
+  mutualChallenge?: boolean;
 }
 
 /**
@@ -25,8 +34,8 @@ export class AuthClient {
    * Authenticate a user using password-based authentication.
    * Initiates an authentication transaction with the PASSWORD method and submits the provided password.
    *
-   * @param options Authentication request parameters and the password to authenticate with
-   * @returns The authentication response indicating success or requiring additional steps
+   * @param options Authentication request parameters and the password to authenticate with.
+   * @returns The authentication response indicating success or requiring additional steps.
    */
   public async authenticatePassword({
     options,
@@ -46,12 +55,19 @@ export class AuthClient {
     return authResult;
   }
 
+  /**
+   * Authenticate a user using soft token authentication.
+   * Initiates an authentication transaction with the TOKEN/TOKENPUSH method and submits the provided token.
+   *
+   * @param options Authentication request parameters and the token to authenticate with.
+   * @returns The authentication response indicating success or requiring additional steps.
+   */
   public async authenticateSoftToken({
     userId,
-    mutualChallengeEnabled = false,
-    pushNotification = false,
+    mutualChallenge = false,
+    push = false,
   }: SoftTokenOptions): Promise<AuthenticationResponse> {
-    if (pushNotification && !mutualChallengeEnabled) {
+    if (push && !mutualChallenge) {
       await this.rbaClient.requestChallenge({
         userId: userId,
         strict: true,
@@ -61,7 +77,7 @@ export class AuthClient {
       return await this.rbaClient.poll();
     }
 
-    if (pushNotification && mutualChallengeEnabled) {
+    if (push && mutualChallenge) {
       return await this.rbaClient.requestChallenge({
         userId: userId,
         strict: true,
