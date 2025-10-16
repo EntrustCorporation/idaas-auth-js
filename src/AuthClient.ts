@@ -93,6 +93,13 @@ export class AuthClient {
     });
   }
 
+  /**
+   * Authenticate a user using grid authentication.
+   * Initiates an authentication transaction with the GRID method and submits the provided grid code.
+   *
+   * @param userId The user ID of the user to authenticate.
+   * @returns The authentication response containing the grid challenge.
+   */
   public async authenticateGrid(userId: string): Promise<AuthenticationResponse> {
     return await this.rbaClient.requestChallenge({
       userId,
