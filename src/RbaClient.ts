@@ -2,7 +2,6 @@ import { decodeJwt } from "jose";
 import { AuthenticationTransaction } from "./AuthenticationTransaction";
 import type { IdaasContext } from "./IdaasContext";
 import type {
-  AuthenticationCredential,
   AuthenticationRequestParams,
   AuthenticationResponse,
   AuthenticationSubmissionParams,
@@ -64,8 +63,8 @@ export class RbaClient {
       throw new Error("No authentication transaction in progress!");
     }
 
-    if (options.credential) {
-      this.authenticationTransaction.submitPasskey(options.credential as AuthenticationCredential);
+    if (options.publicKeyCredential) {
+      this.authenticationTransaction.submitPasskey(options.publicKeyCredential);
     }
 
     const authenticationResponse = await this.authenticationTransaction.submitAuthChallenge({ ...options });

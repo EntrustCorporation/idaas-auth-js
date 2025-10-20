@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IDaaS - Passkey Testing</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../shared-styles.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <h1>IDaaS Auth - Passkey Testing</h1>
+      <button id="back-button">Back</button>
+
+      <div id="passkey-enrollment-area" class="button-group">
+        <h3>Passkey Enrollment</h3>
+        <p>Use this to quickly enroll a passkey to localhost for local testing.</p>
+        <input
+          type="text"
+          id="enrollment-base-url-input"
+          style="width: 300px; padding: 8px; margin-right: 10px"
+          placeholder="Base URL (e.g. https://entrust.us.trustedauth.com)"
+        />
+        <input
+          type="text"
+          id="enrollment-authorization-input"
+          style="width: 300px; padding: 8px; margin-right: 10px"
+          placeholder="Authorization token"
+        />
+        <input
+          type="text"
+          id="enrollment-user-id-input"
+          style="width: 300px; padding: 8px; margin-right: 10px"
+          placeholder="User ID"
+        />
+        <button id="enroll-passkey" data-testid="enroll-passkey">
+          Enroll Passkey
+        </button>
+      </div>
+
+      <div id="request-challenge-area" class="button-group">
+        <h3>Passkey Authentication Methods</h3>
+        <input
+          type="text"
+          id="request-challenge-userid-input"
+          style="width: 300px; padding: 8px; margin-right: 10px"
+          placeholder="Enter user ID (optional)"
+        />
+        <button id="request-challenge-passkey" data-testid="challenge-">
+          🔐 Passkey Challenge
+        </button>
+      </div>
+
+      <div id="passkey-container" style="display: none">
+        <h3>Passkey Challenge</h3>
+        <pre id="passkey-challenge"></pre>
+      </div>
+    </div>
+
+    <div class="results-container">
+      <div id="submit-challenge-response" class="result" style="display: none">
+        <h3>Submit Challenge Response:</h3>
+        <pre id="submit-output"></pre>
+      </div>
+    </div>
+    <script type="module" src="../dist/passkey/passkey.js"></script>
+  </body>
+</html>

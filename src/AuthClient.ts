@@ -123,19 +123,61 @@ export class AuthClient {
   }
 
   /**
+   * Authenticate using a passkey (WebAuthn).
+   *
+   * Modes:
+   * - userId provided: Uses FIDO (targets that user’s credential).
+   * - userId omitted: Uses PASSKEY (usernameless / discoverable credential).
+   *
+   * Flow:
+   * 1. Requests a challenge with the appropriate method.
+   * 2. If WebAuthn request options are returned, invokes navigator.credentials.get().
+   * 3. Submits the credential automatically.
+   *
+   * @param userId Optional user identifier.
+   * @returns AuthenticationResponse on success.
+   * @throws On unexpected WebAuthn (navigator.credentials.get) errors or if user cancels passkey ceremony.
+   */
+  public async authenticatePasskey(userId?: string): Promise<AuthenticationResponse | undefined> {
+    const authenticationRequestParams: AuthenticationRequestParams = {
+      strict: true,
+      preferredAuthenticationMethod: userId ? "FIDO" : "PASSKEY",
+      userId,
+    };
+
+    const response = await this.rbaClient.requestChallenge(authenticationRequestParams);
+
+    if (response.publicKeyCredentialRequestOptions) {
+      try {
+        const publicKeyCredential = await window.navigator.credentials.get({
+          publicKey: response.publicKeyCredentialRequestOptions,
+        });
+
+        if (publicKeyCredential && publicKeyCredential instanceof PublicKeyCredential) {
+          return await this.rbaClient.submitChallenge({ publicKeyCredential });
+        }
+        throw new Error("no credential was returned.");
+      } catch (error) {
+        throw new Error(`Passkey authentication failed: ${error}`);
+      }
+    }
+    throw new Error("No publicKeyCredentialRequestOptions returned for passkey authentication.");
+  }
+
+  /**
    * Submits a response to an authentication challenge.
    * Processes authentication responses and completes the authentication if successful.
    * @param response The user's response to the authentication challenge.
-   * @param credential The credential returned from navigator.credentials.get(credentialRequestOptions).
+   * @param publicKeyCredential The publicKeyCredential returned from navigator.credentials.get(credentialRequestOptions).
    * @param kbaChallengeAnswers The user's answers to the KBA challenge questions. Answers must be in the order of the questions returned when requesting the challenge.
    * @returns The authentication response indicating completion status or next steps
    */
   public async submit({
     response,
-    credential,
+    publicKeyCredential,
     kbaChallengeAnswers,
   }: AuthenticationSubmissionParams): Promise<AuthenticationResponse> {
-    return await this.rbaClient.submitChallenge({ response, credential, kbaChallengeAnswers });
+    return await this.rbaClient.submitChallenge({ response, publicKeyCredential, kbaChallengeAnswers });
   }
 
   /**

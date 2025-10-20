@@ -36,12 +36,12 @@ document.getElementById("request-challenge-password")?.addEventListener("click",
       submitResponse = await idaasClient.rba.poll();
       updateSubmitUI(submitResponse);
     } else if (challengeResponse.secondFactorMethod === "PASSKEY" || challengeResponse.secondFactorMethod === "FIDO") {
-      const credential = await navigator.credentials.get({
+      const publicKeyCredential = (await navigator.credentials.get({
         publicKey: challengeResponse.publicKeyCredentialRequestOptions,
-      });
-      if (credential) {
+      })) as PublicKeyCredential;
+      if (publicKeyCredential) {
         submitResponse = await idaasClient.rba.submitChallenge({
-          credential,
+          publicKeyCredential,
         });
       }
       updateSubmitUI(submitResponse);
@@ -137,12 +137,12 @@ document.getElementById("submit-password-response")?.addEventListener("click", a
       submitResponse = await idaasClient.rba.poll();
       updateSubmitUI(submitResponse);
     } else if (submitResponse.secondFactorMethod === "PASSKEY" || submitResponse.secondFactorMethod === "FIDO") {
-      const credential = await navigator.credentials.get({
+      const publicKeyCredential = (await navigator.credentials.get({
         publicKey: submitResponse.publicKeyCredentialRequestOptions,
-      });
-      if (credential) {
+      })) as PublicKeyCredential;
+      if (publicKeyCredential) {
         submitResponse = await idaasClient.rba.submitChallenge({
-          credential,
+          publicKeyCredential,
         });
       }
       updateSubmitUI(submitResponse);

@@ -8,7 +8,6 @@ import {
   submitAuthChallenge,
 } from "./api";
 import type {
-  AuthenticationCredential,
   AuthenticationRequestParams,
   AuthenticationResponse,
   AuthenticationSubmissionParams,
@@ -28,12 +27,7 @@ import type {
   UserChallengeParameters,
 } from "./models/openapi-ts";
 import { browserSupportsPasskey } from "./utils/browser";
-import {
-  base64URLStringToBuffer,
-  bufferToBase64URLString,
-  calculateEpochExpiry,
-  toPublicKeyCredentialDescriptor,
-} from "./utils/format";
+import { base64URLStringToBuffer, calculateEpochExpiry, toPublicKeyCredentialDescriptor } from "./utils/format";
 import { generateAuthorizationUrl } from "./utils/url";
 
 export interface AuthenticationDetails {
@@ -611,22 +605,16 @@ export class AuthenticationTransaction {
     return requestBody;
   };
 
-  public submitPasskey = async (credential: AuthenticationCredential) => {
-    const { id, response } = credential;
+  public submitPasskey = async (credential: PublicKeyCredential) => {
+    const credentialJSON = credential.toJSON();
+    const { id } = credential;
 
-    let userHandle: string | undefined;
-
-    if (response.userHandle) {
-      userHandle = bufferToBase64URLString(response.userHandle);
-    }
-
-    // Convert values to base64 to make it easier to send back to the server
     this.fidoResponse = {
-      authenticatorData: bufferToBase64URLString(response.authenticatorData),
-      clientDataJSON: bufferToBase64URLString(response.clientDataJSON),
+      authenticatorData: credentialJSON.response.authenticatorData,
+      clientDataJSON: credentialJSON.response.clientDataJSON,
       credentialId: id,
-      signature: bufferToBase64URLString(response.signature),
-      userHandle,
+      signature: credentialJSON.response.signature,
+      userHandle: credentialJSON.response.userHandle,
     };
   };
 }

@@ -311,7 +311,7 @@ export interface AuthenticationSubmissionParams {
   /**
    * The credential returned from navigator.credentials.get(credentialRequestOptions).
    */
-  credential?: Credential;
+  publicKeyCredential?: PublicKeyCredential;
 }
 
 export interface AuthenticationResponse {
@@ -397,15 +397,4 @@ export interface PublicKeyCredentialRequestOptionsJSON
 
 export interface PublicKeyCredentialDescriptorJSON extends Omit<PublicKeyCredentialDescriptor, "id"> {
   id: string;
-}
-
-interface AuthenticationCredentialResponse {
-  userHandle: ArrayBuffer;
-  authenticatorData: ArrayBuffer;
-  clientDataJSON: ArrayBuffer;
-  signature: ArrayBuffer;
-}
-
-export interface AuthenticationCredential extends Credential {
-  response: AuthenticationCredentialResponse;
 }
