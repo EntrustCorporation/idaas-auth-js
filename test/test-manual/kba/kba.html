@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IDaaS - KBA Testing</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../shared-styles.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <h1>IDaaS Auth - KBA Testing</h1>
+      <button id="back-button">Back</button>
+
+      <div class="button-group">
+        <h3>KBA Authentication Methods</h3>
+
+        <button id="request-challenge-kba" data-testid="challenge-kba">
+          🔢 KBA Challenge
+        </button>
+      </div>
+
+      <div id="kba-container" style="display: none">
+        <h3>KBA Challenge</h3>
+        <pre id="kba-challenge"></pre>
+      </div>
+
+      <div id="submit-input-area" class="result" style="display: none">
+        <h3>Enter KBA Response:</h3>
+        <input
+          type="text"
+          id="submit-response-input"
+          style="width: 300px; padding: 8px; margin-right: 10px"
+        />
+        <p>
+          Answer each question in order with answers comma separated.
+        </p>
+        <button id="submit-response" style="background: #28a745">Submit</button>
+      </div>
+    </div>
+
+    <div class="results-container">
+      <div id="request-challenge-response" class="result" style="display: none">
+        <h3>Authentication Request Params:</h3>
+        <pre id="challenge-output"></pre>
+      </div>
+
+      <div id="submit-challenge-response" class="result" style="display: none">
+        <h3>Submit Challenge Response:</h3>
+        <pre id="submit-output"></pre>
+      </div>
+    </div>
+    <script type="module" src="../dist/kba/kba.js"></script>
+  </body>
+</html>

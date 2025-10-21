@@ -18,6 +18,7 @@ const buildProject = async () => {
       join(baseDir, "./rba-mfa/rba-mfa.ts"),
       join(baseDir, "./password/password.ts"),
       join(baseDir, "./passkey/passkey.ts"),
+      join(baseDir, "./kba/kba.ts"),
     ],
     outdir: outDir,
     root: baseDir,

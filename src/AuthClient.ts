@@ -108,11 +108,12 @@ export class AuthClient {
   }
 
   /**
-   * Authenticate a user using grid authentication.
-   * Initiates an authentication transaction with the GRID method.
+   * Starts a GRID challenge.
+   * Response includes gridChallenge.challenge: [{ row: 0, column: 1 }, ...] (one entry per required cell).
+   * Ask user for the character at each coordinate (in order) to build the code, then call submit({ response: '<code>' }).
    *
-   * @param userId The user ID of the user to authenticate.
-   * @returns The authentication response containing the grid challenge.
+   * @param userId The user ID to authenticate.
+   * @returns AuthenticationResponse with gridChallenge.
    */
   public async authenticateGrid(userId: string): Promise<AuthenticationResponse> {
     return await this.rbaClient.requestChallenge({
@@ -158,6 +159,23 @@ export class AuthClient {
       throw new Error("No credential was returned.");
     }
     throw new Error("No publicKeyCredentialRequestOptions returned for passkey authentication.");
+  }
+
+  /**
+   * Starts a KBA (knowledge-based) challenge.
+   * Response includes kbaChallenge.userQuestions: [{ question: string }, ...].
+   * Gather answers and call submit({ kbaChallengeAnswers: ['answer1', 'answer2', ...]}).
+   * Order of answers must match order of questions received.
+   *
+   * @param userId The user ID to authenticate.
+   * @returns AuthenticationResponse with kbaChallenge.
+   */
+  public async authenticateKba(userId: string): Promise<AuthenticationResponse> {
+    return await this.rbaClient.requestChallenge({
+      userId,
+      strict: true,
+      preferredAuthenticationMethod: "KBA",
+    });
   }
 
   /**
