@@ -311,7 +311,7 @@ export interface AuthenticationSubmissionParams {
   /**
    * The credential returned from navigator.credentials.get(credentialRequestOptions).
    */
-  publicKeyCredential?: PublicKeyCredential;
+  passkeyResponse?: PublicKeyCredential;
 }
 
 export interface AuthenticationResponse {

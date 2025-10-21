@@ -41,7 +41,7 @@ document.getElementById("request-challenge-password")?.addEventListener("click",
       })) as PublicKeyCredential;
       if (publicKeyCredential) {
         submitResponse = await idaasClient.rba.submitChallenge({
-          publicKeyCredential,
+          passkeyResponse: publicKeyCredential,
         });
       }
       updateSubmitUI(submitResponse);
@@ -142,7 +142,7 @@ document.getElementById("submit-password-response")?.addEventListener("click", a
       })) as PublicKeyCredential;
       if (publicKeyCredential) {
         submitResponse = await idaasClient.rba.submitChallenge({
-          publicKeyCredential,
+          passkeyResponse: publicKeyCredential,
         });
       }
       updateSubmitUI(submitResponse);

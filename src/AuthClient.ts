@@ -148,18 +148,14 @@ export class AuthClient {
     const response = await this.rbaClient.requestChallenge(authenticationRequestParams);
 
     if (response.publicKeyCredentialRequestOptions) {
-      try {
         const publicKeyCredential = await window.navigator.credentials.get({
           publicKey: response.publicKeyCredentialRequestOptions,
         });
 
         if (publicKeyCredential && publicKeyCredential instanceof PublicKeyCredential) {
-          return await this.rbaClient.submitChallenge({ publicKeyCredential });
+          return await this.rbaClient.submitChallenge({ passkeyResponse: publicKeyCredential });
         }
-        throw new Error("no credential was returned.");
-      } catch (error) {
-        throw new Error(`Passkey authentication failed: ${error}`);
-      }
+        throw new Error("No credential was returned.");
     }
     throw new Error("No publicKeyCredentialRequestOptions returned for passkey authentication.");
   }
@@ -174,10 +170,10 @@ export class AuthClient {
    */
   public async submit({
     response,
-    publicKeyCredential,
+    passkeyResponse: publicKeyCredential,
     kbaChallengeAnswers,
   }: AuthenticationSubmissionParams): Promise<AuthenticationResponse> {
-    return await this.rbaClient.submitChallenge({ response, publicKeyCredential, kbaChallengeAnswers });
+    return await this.rbaClient.submitChallenge({ response, passkeyResponse: publicKeyCredential, kbaChallengeAnswers });
   }
 
   /**
