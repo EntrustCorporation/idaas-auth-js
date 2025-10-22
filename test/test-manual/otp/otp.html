@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IDaaS - OTP Testing</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../shared-styles.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <h1>IDaaS Auth - OTP Testing</h1>
+      <button id="back-button">Back</button>
+
+      <div class="button-group">
+        <h3>OTP Authentication Methods</h3>
+
+        <button id="request-challenge-otp" data-testid="challenge-otp">
+          🔢 OTP Challenge
+        </button>
+        <button id="request-challenge-otp-email" data-testid="challenge-otp-email">
+          🔢 OTP Challenge Email
+        </button>
+        <button id="request-challenge-otp-sms" data-testid="challenge-otp-sms">
+          🔢 OTP Challenge SMS
+        </button>
+        <button id="request-challenge-otp-voice" data-testid="challenge-otp-voice">
+          🔢 OTP Challenge Voice
+        </button>
+      </div>
+
+      <div id="otp-container" style="display: none">
+        <h3>OTP Challenge</h3>
+        <pre id="otp-challenge"></pre>
+      </div>
+
+      <div id="submit-input-area" class="result" style="display: none">
+        <h3>Enter OTP Response:</h3>
+        <input
+          type="text"
+          id="submit-response-input"
+          style="width: 300px; padding: 8px; margin-right: 10px"
+        />
+        <button id="submit-response" style="background: #28a745">Submit</button>
+      </div>
+    </div>
+
+    <div class="results-container">
+      <div id="request-challenge-response" class="result" style="display: none">
+        <h3>Authentication Request Params:</h3>
+        <pre id="challenge-output"></pre>
+      </div>
+
+      <div id="submit-challenge-response" class="result" style="display: none">
+        <h3>Submit Challenge Response:</h3>
+        <pre id="submit-output"></pre>
+      </div>
+    </div>
+    <script type="module" src="../dist/otp/otp.js"></script>
+  </body>
+</html>

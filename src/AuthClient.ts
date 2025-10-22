@@ -36,19 +36,13 @@ export class AuthClient {
    * Authenticate a user using password-based authentication.
    * Initiates an authentication transaction with the PASSWORD method and submits the provided password.
    *
-   * @param options Authentication request parameters and the password to authenticate with.
-   * @returns The authentication response indicating success or requiring additional steps.
+   * @param userId The user ID to authenticate.
+   * @param password The user's password.
+   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
-  public async authenticatePassword({
-    options,
-    password,
-  }: {
-    options: AuthenticationRequestParams;
-    password: string;
-  }): Promise<AuthenticationResponse> {
-    // 1. Prepare transaction with PASSWORD method
+  public async authenticatePassword(userId: string, password: string): Promise<AuthenticationResponse> {
     await this.rbaClient.requestChallenge({
-      ...options,
+      userId,
       strict: true,
       preferredAuthenticationMethod: "PASSWORD",
     });
@@ -67,7 +61,7 @@ export class AuthClient {
    *
    * mutualChallenge is ignored unless push is true.
    *
-   * @param userId The user to authenticate.
+   * @param userId The user ID to authenticate.
    * @param push Determines if push authentication (true) or standard token authentication (false) should be used. Default false.
    * @param mutualChallenge Enables mutual challenge for push. Only valid if push is true. Default false.
    * @returns AuthenticationResponse:
@@ -110,10 +104,10 @@ export class AuthClient {
   /**
    * Starts a GRID challenge.
    * Response includes gridChallenge.challenge: [{ row: 0, column: 1 }, ...] (one entry per required cell).
-   * Prompt the user for the contents of the cell at each coordinate (in order) to build the code, then call submit({ response: 'A6N3D5' }).
+   * Prompt the user for the contents of the cell at each coordinate (in order) to build the code, then call the submit method with their code (e.g idaasClient.auth.submit({ response: 'A6N3D5' })).
    *
    * @param userId The user ID to authenticate.
-   * @returns AuthenticationResponse with gridChallenge.
+   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the gridChallenge to display to the user.
    */
   public async authenticateGrid(userId: string): Promise<AuthenticationResponse> {
     return await this.rbaClient.requestChallenge({
@@ -136,7 +130,7 @@ export class AuthClient {
    * 3. Submits the credential automatically.
    *
    * @param userId Optional user identifier.
-   * @returns AuthenticationResponse on success.
+   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    * @throws On unexpected WebAuthn (navigator.credentials.get) errors or if user cancels passkey ceremony.
    */
   public async authenticatePasskey(userId?: string): Promise<AuthenticationResponse | undefined> {
@@ -168,7 +162,7 @@ export class AuthClient {
    * Order of answers must match order of questions received.
    *
    * @param userId The user ID to authenticate.
-   * @returns AuthenticationResponse with kbaChallenge.
+   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the KBA challenge questions to display to the user.
    */
   public async authenticateKba(userId: string): Promise<AuthenticationResponse> {
     return await this.rbaClient.requestChallenge({
@@ -184,7 +178,7 @@ export class AuthClient {
    *
    * @param userId The user ID to authenticate.
    * @param tempAccessCode The temporary access code to submit.
-   * @returns AuthenticationResponse containing authenticationCompleted to indicate successful authentication.
+   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
   public async authenticateTempAccessCode(userId: string, tempAccessCode: string): Promise<AuthenticationResponse> {
     await this.rbaClient.requestChallenge({
@@ -197,21 +191,42 @@ export class AuthClient {
   }
 
   /**
+   * Starts an OTP challenge.
+   * Requests an OTP challenge with optional delivery type.
+   * Prompt the user for the OTP that was delivered to them, then call the submit method with their OTP (e.g idaasClient.auth.submit({ response: '123456' })).
+   *
+   * @param userId The user ID to authenticate.
+   * @param otpDeliveryType The delivery type for the OTP (e.g., "SMS", "EMAIL", "VOICE"). If not set will use the default delivery method.
+   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
+   */
+  public async authenticateOtp(
+    userId: string,
+    otpDeliveryType?: "EMAIL" | "SMS" | "VOICE" | "WECHAT" | "WHATSAPP",
+  ): Promise<AuthenticationResponse> {
+    return await this.rbaClient.requestChallenge({
+      userId,
+      strict: true,
+      preferredAuthenticationMethod: "OTP",
+      otpDeliveryType,
+    });
+  }
+
+  /**
    * Submits a response to an authentication challenge.
    * Processes authentication responses and completes the authentication if successful.
    * @param response The user's response to the authentication challenge.
-   * @param publicKeyCredential The publicKeyCredential returned from navigator.credentials.get(credentialRequestOptions).
+   * @param passkeyResponse The publicKeyCredential returned from navigator.credentials.get(credentialRequestOptions).
    * @param kbaChallengeAnswers The user's answers to the KBA challenge questions. Answers must be in the order of the questions returned when requesting the challenge.
-   * @returns The authentication response indicating completion status or next steps
+   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
   public async submit({
     response,
-    passkeyResponse: publicKeyCredential,
+    passkeyResponse,
     kbaChallengeAnswers,
   }: AuthenticationSubmissionParams): Promise<AuthenticationResponse> {
     return await this.rbaClient.submitChallenge({
       response,
-      passkeyResponse: publicKeyCredential,
+      passkeyResponse,
       kbaChallengeAnswers,
     });
   }
@@ -220,7 +235,7 @@ export class AuthClient {
    * Polls the authentication provider to check for completion of an ongoing authentication process.
    * Useful for authentication flows that may complete asynchronously (e.g., token push authentication).
    *
-   * @returns The authentication response indicating completion status
+   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
   public async poll(): Promise<AuthenticationResponse> {
     return await this.rbaClient.poll();

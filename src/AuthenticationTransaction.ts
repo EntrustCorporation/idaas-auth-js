@@ -534,6 +534,10 @@ export class AuthenticationTransaction {
         this.authenticationRequestParams?.faceBiometricOptions?.mutualChallengeEnabled;
     }
 
+    if (method === "OTP") {
+      requestBody.otpDeliveryType = this.authenticationRequestParams?.otpDeliveryType;
+    }
+
     if (this.isSecondFactor) {
       if (!(secondFactor && token)) {
         throw new Error("Error parsing authentication params");

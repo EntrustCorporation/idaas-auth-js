@@ -253,6 +253,11 @@ export interface FaceBiometricOptions extends MutualChallenge {}
 export interface TokenPushOptions extends MutualChallenge {}
 
 /**
+ * The OTP delivery types available when requesting an OTP authentication challenge.
+ */
+export type OtpDeliveryType = "EMAIL" | "SMS" | "VOICE" | "WECHAT" | "WHATSAPP";
+
+/**
  * The configurable options when requesting an authentication challenge.
  */
 export interface AuthenticationRequestParams {
@@ -275,6 +280,11 @@ export interface AuthenticationRequestParams {
    * Determines if the preferred authentication method must be used.
    */
   strict?: boolean;
+
+  /**
+   * The OTP delivery type to be used during OTP authentication.
+   */
+  otpDeliveryType?: OtpDeliveryType;
 
   /**
    * Options available during TOKENPUSH authentication
