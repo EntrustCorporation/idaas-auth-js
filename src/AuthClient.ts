@@ -179,6 +179,24 @@ export class AuthClient {
   }
 
   /**
+   * Authenticate using a temporary access code.
+   * Requests a TEMP_ACCESS_CODE challenge, then immediately submits the provided code.
+   *
+   * @param userId The user ID to authenticate.
+   * @param tempAccessCode The temporary access code to submit.
+   * @returns AuthenticationResponse containing authenticationCompleted to indicate successful authentication.
+   */
+  public async authenticateTempAccessCode(userId: string, tempAccessCode: string): Promise<AuthenticationResponse> {
+    await this.rbaClient.requestChallenge({
+      userId,
+      strict: true,
+      preferredAuthenticationMethod: "TEMP_ACCESS_CODE",
+    });
+
+    return await this.rbaClient.submitChallenge({ response: tempAccessCode });
+  }
+
+  /**
    * Submits a response to an authentication challenge.
    * Processes authentication responses and completes the authentication if successful.
    * @param response The user's response to the authentication challenge.
