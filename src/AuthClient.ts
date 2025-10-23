@@ -212,6 +212,23 @@ export class AuthClient {
   }
 
   /**
+   * Authenticate using Magic Link.
+   * Requests a MAGICLINK challenge, then immediately starts polling for completion.
+   *
+   * @param userId The user ID to authenticate.
+   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
+   */
+  public async authenticateMagiclink(userId: string): Promise<AuthenticationResponse> {
+    await this.rbaClient.requestChallenge({
+      userId,
+      strict: true,
+      preferredAuthenticationMethod: "MAGICLINK",
+    });
+
+    return await this.rbaClient.poll();
+  }
+
+  /**
    * Submits a response to an authentication challenge.
    * Processes authentication responses and completes the authentication if successful.
    * @param response The user's response to the authentication challenge.

@@ -395,6 +395,7 @@ export type IdaasAuthenticationMethod =
   | "FIDO"
   | "SMARTCREDENTIALPUSH"
   | "PASSWORD_AND_SECONDFACTOR"
+  | "MAGICLINK"
   | "PASSKEY"
   | "FACE" // TODO onfido sdk integration for web auth
   | "EXTERNAL";

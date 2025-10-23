@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IDaaS - Magic Link Testing</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../shared-styles.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <h1>IDaaS Auth - Magic Link Testing</h1>
+      <button id="back-button">Back</button>
+      <div class="button-group">
+        <h3>Magic Link Authentication Methods</h3>
+
+        <button id="request-challenge-token" data-testid="challenge-token">
+          🔗 Magic Link
+        </button>
+
+      </div>
+
+      <div class="button-group">
+        <h3>Authentication Actions</h3>
+        <button
+          id="cancel-auth"
+          data-testid="cancel-auth"
+          style="background: #dc3545"
+        >
+          ❌ Cancel Authentication
+        </button>
+      </div>
+    </div>
+
+    <div class="results-container">
+      <div id="request-challenge-response" class="result" style="display: none">
+        <h3>Authentication Request Params:</h3>
+        <pre id="challenge-output"></pre>
+      </div>
+
+      <div id="submit-challenge-response" class="result" style="display: none">
+        <h3>Submit Challenge Response:</h3>
+        <pre id="submit-output"></pre>
+      </div>
+    </div>
+    <script type="module" src="../dist/magic-link/magic-link.js"></script>
+  </body>
+</html>

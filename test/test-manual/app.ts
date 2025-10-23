@@ -21,6 +21,7 @@ const buildProject = async () => {
       join(baseDir, "./kba/kba.ts"),
       join(baseDir, "./temp-access-code/temp-access-code.ts"),
       join(baseDir, "./otp/otp.ts"),
+      join(baseDir, "./magic-link/magic-link.ts"),
     ],
     outdir: outDir,
     root: baseDir,
