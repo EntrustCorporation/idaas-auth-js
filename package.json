@@ -51,9 +51,9 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
     "@biomejs/biome": "2.2.6",
-    "@happy-dom/global-registrator": "20.0.5",
+    "@happy-dom/global-registrator": "20.0.7",
     "@hey-api/client-fetch": "0.13.1",
-    "@hey-api/openapi-ts": "0.85.2",
+    "@hey-api/openapi-ts": "0.86.0",
     "@microsoft/api-extractor": "7.53.1",
     "@playwright/test": "1.56.1",
     "@rsbuild/plugin-type-check": "1.2.4",
