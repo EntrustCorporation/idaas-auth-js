@@ -37,7 +37,7 @@ document.getElementById("request-challenge-password")?.addEventListener("click",
       updateSubmitUI(submitResponse);
     } else if (challengeResponse.secondFactorMethod === "PASSKEY" || challengeResponse.secondFactorMethod === "FIDO") {
       const publicKeyCredential = (await navigator.credentials.get({
-        publicKey: challengeResponse.publicKeyCredentialRequestOptions,
+        publicKey: challengeResponse.passkeyChallenge,
       })) as PublicKeyCredential;
       if (publicKeyCredential) {
         submitResponse = await idaasClient.rba.submitChallenge({
@@ -138,7 +138,7 @@ document.getElementById("submit-password-response")?.addEventListener("click", a
       updateSubmitUI(submitResponse);
     } else if (submitResponse.secondFactorMethod === "PASSKEY" || submitResponse.secondFactorMethod === "FIDO") {
       const publicKeyCredential = (await navigator.credentials.get({
-        publicKey: submitResponse.publicKeyCredentialRequestOptions,
+        publicKey: submitResponse.passkeyChallenge,
       })) as PublicKeyCredential;
       if (publicKeyCredential) {
         submitResponse = await idaasClient.rba.submitChallenge({

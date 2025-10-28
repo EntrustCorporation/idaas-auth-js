@@ -421,7 +421,7 @@ export interface AuthenticationResponse {
   /**
    * The PublicKeyCredentialRequestOptions to be passed in the publicKey field to the navigator.credential.get() call.
    */
-  publicKeyCredentialRequestOptions?: PublicKeyCredentialRequestOptions;
+  passkeyChallenge?: PublicKeyCredentialRequestOptions;
 }
 
 export type IdaasAuthenticationMethod =
@@ -439,13 +439,3 @@ export type IdaasAuthenticationMethod =
   | "PASSKEY"
   | "FACE" // TODO onfido sdk integration for web auth
   | "EXTERNAL";
-
-export interface PublicKeyCredentialRequestOptionsJSON
-  extends Omit<PublicKeyCredentialRequestOptions, "challenge" | "allowCredentials"> {
-  challenge: string;
-  allowCredentials?: { id: string; type: PublicKeyCredentialType }[];
-}
-
-export interface PublicKeyCredentialDescriptorJSON extends Omit<PublicKeyCredentialDescriptor, "id"> {
-  id: string;
-}

@@ -13,7 +13,6 @@ import type {
   AuthenticationSubmissionParams,
   AuthenticationTransactionOptions,
   IdaasAuthenticationMethod,
-  PublicKeyCredentialRequestOptionsJSON,
   TokenOptions,
 } from "./models";
 import type {
@@ -27,7 +26,7 @@ import type {
   UserChallengeParameters,
 } from "./models/openapi-ts";
 import { browserSupportsPasskey } from "./utils/browser";
-import { base64URLStringToBuffer, calculateEpochExpiry, toPublicKeyCredentialDescriptor } from "./utils/format";
+import { calculateEpochExpiry } from "./utils/format";
 import { generateAuthorizationUrl } from "./utils/url";
 
 export interface AuthenticationDetails {
@@ -102,30 +101,13 @@ export class AuthenticationTransaction {
       throw new Error("Failed to retrieve required values");
     }
 
-    const authChallenge: PublicKeyCredentialRequestOptionsJSON = {
-      challenge: fidoChallenge.challenge ?? "",
-    };
-
-    this.publicKeyCredentialRequestOptions = this.getCredentialRequestOptions(authChallenge);
-  }
-
-  private getCredentialRequestOptions(
-    optionsJSON: PublicKeyCredentialRequestOptionsJSON,
-  ): PublicKeyCredentialRequestOptions {
-    let allowCredentials: PublicKeyCredentialDescriptor[] | undefined;
-
-    if (optionsJSON.allowCredentials?.length !== 0) {
-      allowCredentials = optionsJSON.allowCredentials?.map(toPublicKeyCredentialDescriptor);
-    }
-
-    // We need to convert some values to Uint8Arrays before passing the credentials to the navigator
-    const publicKey: PublicKeyCredentialRequestOptions = {
-      ...optionsJSON,
-      challenge: base64URLStringToBuffer(optionsJSON.challenge),
-      allowCredentials,
-    };
-
-    return publicKey;
+    this.publicKeyCredentialRequestOptions = PublicKeyCredential.parseRequestOptionsFromJSON({
+      challenge: fidoChallenge.challenge,
+      allowCredentials: fidoChallenge.allowCredentials?.map((allowCredential) => ({
+        id: allowCredential,
+        type: "public-key",
+      })),
+    });
   }
 
   /**
@@ -191,7 +173,7 @@ export class AuthenticationTransaction {
 
     return {
       ...requestAuthChallengeResponse,
-      publicKeyCredentialRequestOptions: this.publicKeyCredentialRequestOptions,
+      passkeyChallenge: this.publicKeyCredentialRequestOptions,
       pollForCompletion,
       method,
       userId: this.authenticationRequestParams?.userId,
@@ -412,7 +394,7 @@ export class AuthenticationTransaction {
     return {
       ...secondFactorRequest,
       secondFactorMethod: secondFactor,
-      publicKeyCredentialRequestOptions: this.publicKeyCredentialRequestOptions,
+      passkeyChallenge: this.publicKeyCredentialRequestOptions,
       pollForCompletion,
       method,
     };

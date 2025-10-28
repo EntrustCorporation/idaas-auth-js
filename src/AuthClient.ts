@@ -128,9 +128,9 @@ export class AuthClient {
 
     const response = await this.rbaClient.requestChallenge(authenticationRequestParams);
 
-    if (response.publicKeyCredentialRequestOptions) {
+    if (response.passkeyChallenge) {
       const publicKeyCredential = await window.navigator.credentials.get({
-        publicKey: response.publicKeyCredentialRequestOptions,
+        publicKey: response.passkeyChallenge,
       });
 
       if (publicKeyCredential && publicKeyCredential instanceof PublicKeyCredential) {
