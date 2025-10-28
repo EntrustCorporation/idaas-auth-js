@@ -264,17 +264,23 @@ export interface FaceBiometricOptions {
 /**
  * The configurable options when requesting a TOKEN/TOKENPUSH authentication challenge.
  */
-export interface SoftTokenOptions {
+export interface SoftTokenOptions extends SoftTokenPushOptions {
   /**
    * Determines if push authentication (true) or standard token authentication (false) should be used. Default false.
    */
   push?: boolean;
+}
 
+/**
+ * The configurable options when requesting a TOKENPUSH authentication challenge.
+ */
+export interface SoftTokenPushOptions {
   /**
-   * Determines if the user must answer a mutual challenge for the TOKENPUSH authenticators. Ignored if push is false.
+   * Determines if the user must answer a mutual challenge for the TOKENPUSH authenticators.
    */
   mutualChallenge?: boolean;
 }
+
 export interface OtpOptions {
   /**
    * The delivery type for the OTP challenge.
@@ -319,10 +325,10 @@ export interface AuthenticationRequestParams {
   /**
    * Options available during TOKENPUSH authentication
    */
-  softTokenOptions?: SoftTokenOptions;
+  softTokenPushOptions?: SoftTokenPushOptions;
 
   /**
-   * Options available during SMART_CREDENTIAL authentication
+   * Options available during SMARTCREDENTIALPUSH authentication
    */
   smartCredentialOptions?: SmartCredentialOptions;
 

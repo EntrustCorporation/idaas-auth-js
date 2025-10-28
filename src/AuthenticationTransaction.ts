@@ -507,7 +507,7 @@ export class AuthenticationTransaction {
     }
 
     if (method === "TOKENPUSH") {
-      requestBody.pushMutualChallengeEnabled = this.authenticationRequestParams?.softTokenOptions?.mutualChallenge;
+      requestBody.pushMutualChallengeEnabled = this.authenticationRequestParams?.softTokenPushOptions?.mutualChallenge;
     }
 
     if (method === "FACE") {
@@ -531,7 +531,8 @@ export class AuthenticationTransaction {
       }
 
       if (secondFactor === "TOKENPUSH") {
-        requestBody.pushMutualChallengeEnabled = this.authenticationRequestParams?.softTokenOptions?.mutualChallenge;
+        requestBody.pushMutualChallengeEnabled =
+          this.authenticationRequestParams?.softTokenPushOptions?.mutualChallenge;
       }
 
       if (secondFactor === "FACE") {

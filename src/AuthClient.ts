@@ -92,7 +92,7 @@ export class AuthClient {
         userId,
         strict: true,
         preferredAuthenticationMethod: "TOKENPUSH",
-        softTokenOptions: { mutualChallenge: true },
+        softTokenPushOptions: { mutualChallenge: true },
       });
     }
 
