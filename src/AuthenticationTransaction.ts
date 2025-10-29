@@ -502,61 +502,38 @@ export class AuthenticationTransaction {
       authRequestKey: this.requiredDetails.authRequestKey,
     };
 
-    if (method === "FIDO") {
-      requestBody.origin = window.location.origin;
-    }
-
-    if (method === "TOKENPUSH") {
-      requestBody.pushMutualChallengeEnabled = this.authenticationRequestParams?.softTokenPushOptions?.mutualChallenge;
-    }
-
-    if (method === "FACE") {
-      requestBody.pushMutualChallengeEnabled = this.authenticationRequestParams?.faceBiometricOptions?.mutualChallenge;
-    }
-
-    if (method === "OTP") {
-      requestBody.otpDeliveryType = this.authenticationRequestParams?.otpOptions?.otpDeliveryType;
-      requestBody.otpDeliveryAttribute = this.authenticationRequestParams?.otpOptions?.otpDeliveryAttribute;
-    }
-
-    if (method === "SMARTCREDENTIALPUSH") {
-      requestBody.summary = this.authenticationRequestParams?.smartCredentialOptions?.summary;
-      requestBody.pushMessageIdentifier =
-        this.authenticationRequestParams?.smartCredentialOptions?.pushMessageIdentifier;
-    }
-
     if (this.isSecondFactor) {
       if (!(secondFactor && token)) {
         throw new Error("Error parsing authentication params");
       }
 
-      if (secondFactor === "TOKENPUSH") {
-        requestBody.pushMutualChallengeEnabled =
-          this.authenticationRequestParams?.softTokenPushOptions?.mutualChallenge;
-      }
+      requestBody.secondFactorAuthenticator = secondFactor;
+      requestBody.authToken = token;
+    }
 
-      if (secondFactor === "FACE") {
+    const authenticator = this.isSecondFactor ? secondFactor : method;
+
+    switch (authenticator) {
+      case "FACE":
         requestBody.pushMutualChallengeEnabled =
           this.authenticationRequestParams?.faceBiometricOptions?.mutualChallenge;
-      }
-
-      if (secondFactor === "FIDO") {
+        break;
+      case "FIDO":
         requestBody.origin = window.location.origin;
-      }
-
-      if (secondFactor === "OTP") {
-        requestBody.otpDeliveryType = this.authenticationRequestParams?.otpOptions?.otpDeliveryType;
-        requestBody.otpDeliveryAttribute = this.authenticationRequestParams?.otpOptions?.otpDeliveryAttribute;
-      }
-
-      if (secondFactor === "SMARTCREDENTIALPUSH") {
+        break;
+      case "TOKENPUSH":
+        requestBody.pushMutualChallengeEnabled =
+          this.authenticationRequestParams?.softTokenPushOptions?.mutualChallenge;
+        break;
+      case "SMARTCREDENTIALPUSH":
         requestBody.summary = this.authenticationRequestParams?.smartCredentialOptions?.summary;
         requestBody.pushMessageIdentifier =
           this.authenticationRequestParams?.smartCredentialOptions?.pushMessageIdentifier;
-      }
-
-      requestBody.secondFactorAuthenticator = secondFactor;
-      requestBody.authToken = token;
+        break;
+      case "OTP":
+        requestBody.otpDeliveryType = this.authenticationRequestParams?.otpOptions?.otpDeliveryType;
+        requestBody.otpDeliveryAttribute = this.authenticationRequestParams?.otpOptions?.otpDeliveryAttribute;
+        break;
     }
 
     return requestBody;
