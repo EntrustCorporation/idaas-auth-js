@@ -223,7 +223,15 @@ export const getAuthRequestId = async (endpoint: string) => {
     method: "POST",
   });
 
-  return await response.json();
+  const responseJson = await response.json();
+
+  if (!response.ok) {
+    throw new Error(responseJson.error_description, {
+      cause: responseJson.error,
+    });
+  }
+
+  return responseJson;
 };
 
 const parseResponseError = (errorResponse: ErrorInfo) => {
