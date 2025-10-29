@@ -276,7 +276,7 @@ export interface SoftTokenOptions extends SoftTokenPushOptions {
  */
 export interface SoftTokenPushOptions {
   /**
-   * Determines if the user must answer a mutual challenge for the TOKENPUSH authenticators.
+   * Determines if the user must answer a mutual challenge for the TOKENPUSH authenticator.
    */
   mutualChallenge?: boolean;
 }
