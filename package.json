@@ -1,7 +1,7 @@
 {
   "name": "@entrustcorp/idaas-auth-js",
   "description": "IDaaS Authentication SDK for SPA applications",
-  "version": "0.1.42-beta.0",
+  "version": "0.1.43",
   "author": "Entrust",
   "homepage": "https://github.com/EntrustCorporation/idaas-auth-spa",
   "license": "Apache-2.0",
