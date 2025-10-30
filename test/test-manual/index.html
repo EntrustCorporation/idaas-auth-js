@@ -7,6 +7,22 @@
     <link rel="stylesheet" href="shared-styles.css" />
   </head>
   <body>
+      <div class="config-form">
+        <h2>Manual Test Configuration</h2>
+        <form id="config-form">
+          <label for="issuer-input">Issuer URL</label>
+          <input id="issuer-input" name="issuer" type="url" required />
+
+          <label for="client-id-input">Client ID</label>
+          <input id="client-id-input" name="clientId" type="text" required />
+
+          <label for="username-input">Username</label>
+          <input id="username-input" name="username" type="email" required />
+
+          <button type="submit">Save Configuration</button>
+          <p id="config-status" aria-live="polite"></p>
+        </form>
+      </div>    
     <div class="container">
       <h1>IDaaS Auth Manual Testing</h1>
       <p class="description">
@@ -29,5 +45,7 @@
         <a href="face/face.html" class="test-link"> Face Testing </a>
       </div>
     </div>
+    <script src="./dist/config.js">
+    </script>   
   </body>
 </html>

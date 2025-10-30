@@ -1,13 +1,30 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: Test responses */
 import { IdaasClient } from "../../src";
+import { STORAGE_KEYS } from "./constants";
 
-const CLIENT_ID = "07b9d9ad-4f46-4069-8311-76b8c24550a7";
-const ISSUER = "https://entrust-bank.us.trustedauth.com/api/oidc";
-export const USERNAME = "porya.isfahani@entrust.com";
+const getRequiredConfigValue = (key: string, label: string) => {
+  const value = window.localStorage.getItem(key)?.trim();
+  if (!value) {
+    alert(`Missing ${label}. You will be redirected to http://localhost:8080/ to configure it.`);
+    window.location.href = "http://localhost:8080/";
+    throw new Error(`Missing ${label}. Please configure it on the manual testing landing page.`);
+  }
+  return value;
+};
+
+const getConfig = () => ({
+  issuerUrl: getRequiredConfigValue(STORAGE_KEYS.issuer, "Issuer URL"),
+  clientId: getRequiredConfigValue(STORAGE_KEYS.clientId, "Client ID"),
+  username: getRequiredConfigValue(STORAGE_KEYS.username, "Username"),
+});
+
+const config = getConfig();
+
+export const USERNAME = config.username;
 
 export const idaasClient = new IdaasClient({
-  issuerUrl: ISSUER,
-  clientId: CLIENT_ID,
+  issuerUrl: config.issuerUrl,
+  clientId: config.clientId,
   storageType: "localstorage",
 });
 
