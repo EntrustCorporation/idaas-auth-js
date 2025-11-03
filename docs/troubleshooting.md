@@ -1,20 +1,89 @@
 # Troubleshooting
 
-## Common issues
+This guide lists common issues encountered when integrating the IDaaS Auth JS SDK and how to resolve them. If a problem isn’t covered here, enable verbose logging in your app and capture the request/response context from the browser dev tools.
 
-### Login popup blocked
+---
 
-Enable popups or use redirect flow.
+## Quick checklist
 
-### Access token missing
+1. Confirm the SDK version and browser support (Chromium 108+, Firefox 102+, Safari 15+).
+2. Verify your Entrust tenant configuration (client ID, redirect URIs, authenticators, policies).
+3. Ensure required optional dependencies are installed (`onfido-sdk-ui` for face flows).
+4. Inspect the network tab for failing requests (CORS, 4xx/5xx responses).
 
-Ensure `oidc.login` completed and storage type supports current context.
+---
 
-### Invalid redirect URI
+## Hosted OIDC flows (`oidc`)
 
-Verify the redirect URL is registered with the IDaaS tenant.
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| Popup window blocked or immediately closed | Browser blocked popups. | Switch to redirect flow (`popup: false`) or ask users to allow popups for your domain. |
+| `invalid_redirect_uri` error | Redirect URI sent by SDK isn’t registered. | Update the tenant app configuration or pass the correct `redirectUri` to `login`. |
+| `state mismatch`/`invalid_state` | Callback handled without original state (e.g., multiple clients or double handling). | Use a single `IdaasClient` instance per request and call `handleRedirect()` only once per login. |
 
-## Browser support
+### PKCE issues
 
-- Modern Chromium, Firefox, Safari.
-- For older browsers, polyfill `fetch` and `Promise`.
+- **Missing code verifier** – Occurs if the callback is handled outside the original browser context. Ensure you persist session storage (or override PKCE storage to cookies for Safari).
+- **Clock skew errors** – Adjust `clockSkewInSeconds` in `IdaasClientOptions` if server and client clocks differ significantly.
+
+---
+
+## `getAccessToken` / token storage
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `Requested token not found` | Token cached under different scope/audience or cleared. | Pass matching `scope`/`audience` or provide `fallbackAuthorizationOptions` to trigger a new login. |
+| Token unexpectedly missing after refresh | Using `"memory"` storage across page reloads. | Switch to `"session"` or `"local"` storage unless running purely in-memory (e.g., SSR). |
+| Refresh token not issued | Tenant doesn’t allow refresh tokens or `useRefreshToken` not enabled. | Enable refresh tokens in tenant policy and set `globalUseRefreshToken: true` (or per-call). |
+
+---
+
+## RBA / self-hosted flows (`rba`, `auth`)
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `userId required` errors | Missing first argument on RBA/auth helpers. | Supply `userId` (only passkey discoverable flows may omit it). |
+| `INVALID_TRANSACTION` | Calling `submit`/`poll` after the transaction expired or was cancelled. | Restart with `requestChallenge` or `authenticate*`. |
+| OTP never arrives | Wrong delivery channel/attribute. | Specify `otpDeliveryType`/`otpDeliveryAttribute` or update the user profile in IDaaS. |
+| Push/face flows never complete | No polling or Onfido capture incomplete. | Call `auth.poll()` until `authenticationCompleted` or ensure the external flow (Onfido, push approval) finishes. |
+| Passkey flow rejected with `NotAllowedError` | User cancelled the browser prompt or WebAuthn unsupported. | Prompt the user again or detect support via `browserSupportsPasskey()`. |
+
+---
+
+## Convenience helpers (`auth.*`)
+
+- **Missing `onfido-sdk-ui`** – Face flows throw module errors unless the optional peer dependency is installed: `npm install onfido-sdk-ui`.
+- **Magic link never resolves** – Ensure your backend webhook or IDaaS configuration marks the transaction as completed; continue polling with `auth.poll()`.
+- **Smart Credential push not received** – Verify device enrollment and optional `pushMessageIdentifier` matches configured templates.
+
+---
+
+## Network / CORS / TLS
+
+- All calls go to the Entrust tenant domain; ensure the domain is reachable over HTTPS and CORS is allowed for your app origin.
+- Browser console showing mixed-content errors indicates you’re testing over `http://` while IDaaS requires `https://`. Use `https://localhost` with a dev certificate.
+
+---
+
+## Build / bundler issues
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `process is not defined` | Bundler targeting browser without polyfills. | Configure bundler (Vite, Webpack) to shim Node globals or use ESM build. |
+| Tree shaking not working | CommonJS bundler configuration. | Prefer ESM imports (`import { IdaasClient } from "idaas-auth-js"`) and ensure bundler is in production mode. |
+
+---
+
+## Debugging tips
+
+- Enable verbose logging by instrumenting `console.debug` around SDK calls or intercepting fetch requests.
+- Check `error.response` (if available) for status codes and JSON bodies.
+- Use browser dev tools’ “Preserve log” option to capture redirects and popup requests.
+
+---
+
+## Need more help?
+
+- Review the [Quickstart](quickstart.md) and [Core Concepts](core-concepts.md).
+- Compare your implementation with [Self-Hosted UI Examples](self-hosted.md).
+- Consult Entrust support with request IDs (`x-request-id` headers) when opening tickets.
