@@ -16,7 +16,7 @@ document.getElementById("request-challenge-grid")?.addEventListener("click", asy
   hideResponse();
 
   try {
-    const challengeResponse = await idaasClient.auth.authenticateGrid(USERNAME);
+    const challengeResponse = await idaasClient.auth.grid(USERNAME);
 
     console.log("Challenge response:", challengeResponse);
     updateGridUI(challengeResponse.gridChallenge?.challenge || []);

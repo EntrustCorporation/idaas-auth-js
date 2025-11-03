@@ -28,28 +28,6 @@ export interface IdaasClientOptions {
    * @default "memory"
    */
   storageType?: "memory" | "localstorage";
-
-  /**
-   * The global scope to be used.
-   *
-   * This defaults to `openid profile email` if not set. If you are setting extra scopes and require `profile` and `email` to be included then you must include them in the provided scope.
-   *
-   * Note: The `openid` scope is always applied regardless of this setting.
-   */
-  globalScope?: string;
-
-  /**
-   * The global audience to be used for requesting API access.
-   */
-  globalAudience?: string;
-
-  /**
-   * If true, refresh tokens are used to fetch new access tokens from the IDaaS server.
-   * The default setting is `false`.
-   *
-   * Note: Use of refresh tokens must be enabled on your IDaaS client application. Tokens using refresh tokens will have the `offline_access` scope applied.
-   */
-  globalUseRefreshToken?: boolean;
 }
 
 /**
@@ -73,6 +51,7 @@ export interface SmartCredentialOptions {
 export interface TokenOptions {
   /**
    * The audience to be used for requesting API access. This defaults to the `globalAudience` set in your `IdaasClientOptions` if not set.
+   * Per OIDC spec, this parameter is optional and will be omitted from the authorization request if not provided.
    */
   audience?: string;
 
@@ -86,7 +65,7 @@ export interface TokenOptions {
   scope?: string;
 
   /**
-   * Determines whether the token obtained from this login request can use refresh tokens.  This defaults to the `globalUseRefreshToken` set in your `IdaasClientOptions` if not set.
+   * Determines whether the token obtained from this login request can use refresh tokens.  This defaults to the `useRefreshToken` set in your `IdaasClientOptions` if not set.
    *
    * Note: Use of refresh tokens must be enabled on your IDaaS client application.
    */
@@ -124,65 +103,11 @@ export interface OidcLoginOptions {
 /**
  * The configurable options for the Logout method.
  */
-export interface LogoutOptions {
+export interface OidcLogoutOptions {
   /**
    * The URI to be redirected to after a successful logout. This URI must be included in the `Logout Redirect URI(s)` field in your IDaaS client application settings.
    */
   redirectUri?: string;
-}
-
-/**
- * The configurable options for a fallback login.
- */
-export interface FallbackAuthorizationOptions {
-  /**
-   * The URI to be redirected to after a successful login. The default value is the current page.
-   * This URI must be included in the `Login Redirect URI(s)` field in your IDaaS client application settings.
-   */
-  redirectUri?: string;
-
-  /**
-   * Determines whether the token obtained from this login request can use refresh tokens.  This defaults to the `globalUseRefreshToken` set in your `IdaasClientOptions` if not set.
-   *
-   * Note: Use of refresh tokens must be enabled on your IDaaS client application.
-   */
-  useRefreshToken?: boolean;
-
-  /**
-   * Determines the method of login that will be used to authenticate the user.
-   * The default setting is `false`.
-   */
-  popup?: boolean;
-
-  /**
-   * Determines the strength/quality of the method used to authenticate the user.
-   */
-  acrValues?: string[];
-}
-
-/**
- * The configurable options when requesting an AccessToken.
- */
-export interface GetAccessTokenOptions {
-  /**
-   * The audience the token must have. This defaults to the `globalAudience` in your `IdaasClientOptions` if not set.
-   */
-  audience?: string;
-
-  /**
-   * The scope(s) the token must have. This defaults to the `globalScope` in your `IdaasClientOptions` if not set.
-   */
-  scope?: string;
-
-  /**
-   * The acr value(s) that are acceptable for this token to have, the returned token's acr claim will be one of these values.
-   */
-  acrValues?: string[];
-
-  /**
-   * The values that will be used to attempt a login if the requested token is not found.
-   */
-  fallbackAuthorizationOptions?: FallbackAuthorizationOptions;
 }
 
 /**
@@ -242,13 +167,6 @@ export interface AuthenticationTransactionOptions {
    * The configurable options when requesting an AccessToken.
    */
   tokenOptions: TokenOptions;
-
-  /**
-   * Determines whether the token obtained from this login request can use refresh tokens.  This defaults to the `globalUseRefreshToken` set in your `IdaasClientOptions` if not set.
-   *
-   * Note: Use of refresh tokens must be enabled on your IDaaS client application.
-   */
-  useRefreshToken: boolean;
 }
 
 /**
@@ -256,7 +174,7 @@ export interface AuthenticationTransactionOptions {
  */
 export interface FaceBiometricOptions {
   /**
-   * Determines if the user must answer a mutual challenge for the FACE authenticators.
+   * Determines if the user must answer a mutual challenge for the FACE authenticator.
    */
   mutualChallenge?: boolean;
 }
@@ -318,22 +236,22 @@ export interface AuthenticationRequestParams {
   strict?: boolean;
 
   /**
-   * Options available during OTP authentication
+   * Options available during OTP authentication.
    */
   otpOptions?: OtpOptions;
 
   /**
-   * Options available during TOKENPUSH authentication
+   * Options available during TOKENPUSH authentication.
    */
   softTokenPushOptions?: SoftTokenPushOptions;
 
   /**
-   * Options available during SMARTCREDENTIALPUSH authentication
+   * Options available during SMARTCREDENTIALPUSH authentication.
    */
   smartCredentialOptions?: SmartCredentialOptions;
 
   /**
-   * Options available during FACE authentication
+   * Options available during FACE authentication.
    */
   faceBiometricOptions?: FaceBiometricOptions;
 
@@ -365,7 +283,13 @@ export interface AuthenticationSubmissionParams {
   passkeyResponse?: PublicKeyCredential;
 }
 
+/**
+ * The response from IDaaS when requesting or submitting an authentication challenge.
+ */
 export interface AuthenticationResponse {
+  /**
+   * The authorization token (IDaaS JWT).
+   */
   token?: string;
   /**
    * A flag indicating if authentication has been completed.
@@ -383,7 +307,7 @@ export interface AuthenticationResponse {
   method?: IdaasAuthenticationMethod;
 
   /**
-   * A flag indicating if `pollAuth` should be called.
+   * A flag indicating if `poll` should be called.
    */
   pollForCompletion?: boolean;
 

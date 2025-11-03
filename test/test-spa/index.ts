@@ -49,7 +49,7 @@ document.getElementById("login-with-popup")?.addEventListener("click", async () 
   console.info("Logging in with popup flow");
 
   try {
-    await idaasClient.oidc.login({ redirectUri: DEV_SERVER, popup: true, useRefreshToken: true });
+    await idaasClient.oidc.login({ redirectUri: DEV_SERVER, popup: true }, { useRefreshToken: true });
   } catch (e) {
     console.error("Login with popup failed.", e);
   }
@@ -61,7 +61,7 @@ document.getElementById("login-with-redirect")?.addEventListener("click", async 
   console.info("Logging in with redirect flow");
 
   try {
-    await idaasClient.oidc.login({ redirectUri: DEV_SERVER, popup: false, useRefreshToken: true });
+    await idaasClient.oidc.login({ redirectUri: DEV_SERVER, popup: false }, { useRefreshToken: true });
   } catch (e) {
     console.error("Login with redirect failed.", e);
   }

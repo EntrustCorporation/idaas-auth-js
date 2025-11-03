@@ -15,7 +15,7 @@ document.getElementById("request-challenge-otp")?.addEventListener("click", asyn
   hideResponse();
 
   try {
-    const challengeResponse = await idaasClient.auth.authenticateOtp(USERNAME);
+    const challengeResponse = await idaasClient.auth.otp(USERNAME);
 
     console.log("Challenge response:", challengeResponse);
     updateChallengeUI(challengeResponse);
@@ -33,7 +33,7 @@ document.getElementById("request-challenge-otp-email")?.addEventListener("click"
   hideResponse();
 
   try {
-    const challengeResponse = await idaasClient.auth.authenticateOtp(USERNAME, { otpDeliveryType: "EMAIL" });
+    const challengeResponse = await idaasClient.auth.otp(USERNAME, { otpDeliveryType: "EMAIL" });
 
     console.log("Challenge response:", challengeResponse);
     updateChallengeUI(challengeResponse);
@@ -51,7 +51,7 @@ document.getElementById("request-challenge-otp-sms")?.addEventListener("click", 
   hideResponse();
 
   try {
-    const challengeResponse = await idaasClient.auth.authenticateOtp(USERNAME, { otpDeliveryType: "SMS" });
+    const challengeResponse = await idaasClient.auth.otp(USERNAME, { otpDeliveryType: "SMS" });
 
     console.log("Challenge response:", challengeResponse);
     updateChallengeUI(challengeResponse);
@@ -69,7 +69,7 @@ document.getElementById("request-challenge-otp-voice")?.addEventListener("click"
   hideResponse();
 
   try {
-    const challengeResponse = await idaasClient.auth.authenticateOtp(USERNAME, { otpDeliveryType: "VOICE" });
+    const challengeResponse = await idaasClient.auth.otp(USERNAME, { otpDeliveryType: "VOICE" });
 
     console.log("Challenge response:", challengeResponse);
     updateChallengeUI(challengeResponse);
@@ -87,7 +87,7 @@ document.getElementById("request-challenge-otp-attribute")?.addEventListener("cl
   hideResponse();
 
   try {
-    const challengeResponse = await idaasClient.auth.authenticateOtp(USERNAME, { otpDeliveryAttribute: "test" });
+    const challengeResponse = await idaasClient.auth.otp(USERNAME, { otpDeliveryAttribute: "test" });
 
     console.log("Challenge response:", challengeResponse);
     updateChallengeUI(challengeResponse);

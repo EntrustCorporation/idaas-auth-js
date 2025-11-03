@@ -16,7 +16,7 @@ import { calculateEpochExpiry } from "./utils/format";
  * It manages the authentication transaction lifecycle including challenge requests,
  * response submissions, and asynchronous completion polling.
  *
- * Contains five main methods: requestChallenge, submitChallenge, poll, and cancel.
+ * Contains main methods: requestChallenge, submitChallenge, poll, and cancel.
  */
 export class RbaClient {
   private context: IdaasContext;
@@ -131,11 +131,12 @@ export class RbaClient {
     this.authenticationTransaction = new AuthenticationTransaction({
       oidcConfig,
       authenticationRequestParams,
-      useRefreshToken: tokenOptions?.useRefreshToken ?? this.context.globalUseRefreshToken,
       tokenOptions: {
-        audience: tokenOptions?.audience ?? this.context.globalAudience,
-        scope: tokenOptions?.scope ?? this.context.globalScope,
+        audience: tokenOptions?.audience ?? this.context.tokenOptions.audience,
+        scope: tokenOptions?.scope ?? this.context.tokenOptions.scope,
         acrValues: tokenOptions?.acrValues,
+        useRefreshToken: tokenOptions?.useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
+        maxAge: tokenOptions?.maxAge ?? this.context.tokenOptions.maxAge,
       },
       clientId: this.context.clientId,
     });

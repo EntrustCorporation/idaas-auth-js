@@ -4,7 +4,7 @@ This document provides AI agents and developers with comprehensive information a
 
 ## Project Overview
 
-**Name:** `@entrustcorp/idaas-auth-spa`  
+**Name:** `@entrustcorp/idaas-auth-js`  
 **Description:** IDaaS Authentication SDK for Single Page Applications (SPAs)  
 **Version:** 0.1.43  
 **License:** Apache-2.0  
@@ -89,16 +89,16 @@ The SDK is organized around several main client classes:
 - **Location:** `src/AuthClient.ts`
 - **Purpose:** Convenience methods for common authentication flows
 - **Key Methods:**
-  - `authenticatePassword(userId, password)`: Password authentication
-  - `authenticateSoftToken(userId, options)`: Soft token (OTP/push)
-  - `authenticatePasskey(userId?)`: WebAuthn/FIDO/Passkey authentication
-  - `authenticateGrid(userId)`: Grid card challenge
-  - `authenticateKba(userId)`: Knowledge-based authentication
-  - `authenticateTempAccessCode(userId, code)`: Temporary access code
-  - `authenticateOtp(userId, options)`: One-time password
-  - `authenticateMagiclink(userId)`: Magic link authentication
-  - `authenticateSmartCredential(userId, options)`: Smart credential push
-  - `authenticateFace(userId, options)`: Face biometric (requires onfido-sdk-ui)
+  - `password(userId, password)`: Password authentication
+  - `softToken(userId, options)`: Soft token (OTP/push)
+  - `passkey(userId?)`: WebAuthn/FIDO/Passkey authentication
+  - `grid(userId)`: Grid card challenge
+  - `kba(userId)`: Knowledge-based authentication
+  - `tempAccessCode(userId, code)`: Temporary access code
+  - `otp(userId, options)`: One-time password
+  - `magicLink(userId)`: Magic link authentication
+  - `smartCredential(userId, options)`: Smart credential push
+  - `faceBiometric(userId, options)`: Face biometric (requires onfido-sdk-ui)
   - `submit(params)`: Submit challenge response
   - `poll()`: Poll for async authentication completion
   - `cancel()`: Cancel ongoing authentication
@@ -111,10 +111,11 @@ The SDK is organized around several main client classes:
   - `memory`: In-memory storage (default)
   - `localstorage`: Browser localStorage
 - **Managed Data:**
-  - Access tokens (with scope, audience, expiry, ACR)
-  - ID tokens
+  - Access tokens (with scope, audience, expiry, ACR, maxAgeExpiry)
+  - ID tokens (encoded and decoded)
   - Refresh tokens
-  - OIDC state parameters
+  - Client parameters (nonce, codeVerifier, redirectUri, state)
+  - Token parameters (audience, scope, maxAge, acrValue)
 
 #### 6. **IdaasContext**
 
@@ -124,6 +125,42 @@ The SDK is organized around several main client classes:
   - `issuerUrl`: IDaaS OIDC issuer URL
   - `clientId`: OAuth client ID
   - `globalAudience`, `globalScope`, `globalUseRefreshToken`: Default parameters
+
+### Public API Exports
+
+The SDK exports the following from `src/index.ts`:
+
+**Main Class:**
+- `IdaasClient`: Primary client class
+
+**Configuration Types:**
+- `IdaasClientOptions`: Client configuration options
+- `TokenOptions`: Token request options
+- `OidcLoginOptions`: OIDC-specific login options
+- `OidcLogoutOptions`: Logout configuration
+
+**Authentication Types:**
+- `AuthenticationRequestParams`: RBA challenge request parameters
+- `AuthenticationResponse`: Authentication challenge/completion response
+- `AuthenticationSubmissionParams`: Challenge submission parameters
+- `IdaasAuthenticationMethod`: Authentication method enum
+
+**Authenticator-Specific Options:**
+- `OtpOptions`: OTP authentication options
+- `SoftTokenOptions`: Soft token authentication options
+- `SoftTokenPushOptions`: Soft token push-specific options
+- `FaceBiometricOptions`: Face biometric authentication options
+- `SmartCredentialOptions`: Smart credential push options
+
+**Challenge Types:**
+- `GridChallenge`: Grid card challenge details
+- `KbaChallenge`: Knowledge-based authentication challenge
+- `FaceChallenge`: Face biometric challenge details
+- `FidoChallenge`: FIDO/WebAuthn challenge details
+- `TempAccessCodeChallenge`: Temporary access code challenge
+
+**User Types:**
+- `UserClaims`: OIDC standard user claims
 
 ### Directory Structure
 
@@ -203,12 +240,32 @@ bun test
 # Run specific unit test
 bun test test/unit/url.test.ts
 
-# Run E2E tests
+# Run E2E tests (Playwright)
 bun run test:e2e
+
+# Run E2E tests in UI mode (useful for debugging)
+bunx playwright test --ui
+
+# Run E2E tests in a specific browser
+bunx playwright test --project=chromium
+bunx playwright test --project=firefox
+bunx playwright test --project=webkit
 
 # Run manual test server
 bun run test:manual
 ```
+
+#### E2E Test Infrastructure
+
+The E2E tests use Playwright and automatically start required services:
+
+- **Test OIDC Provider**: Runs on port 3000 (`test/test-idp/oidc-provider.ts`)
+- **Test SPA Application**: Runs on port 8080 (`test/test-spa/app.ts`)
+- **Test Files**: Located in `test/e2e/`
+  - `initialization.spec.ts`: Tests client initialization
+  - `login.spec.ts`: Tests login flows
+
+Configuration is in `playwright.config.ts` with support for Chromium, Firefox, and WebKit browsers.
 
 ### API Code Generation
 
@@ -319,7 +376,7 @@ The SDK manages three types of tokens:
 
 1. **Access Tokens**: Used for API authorization
 
-   - Stored with scope, audience, and expiry
+   - Stored with scope, audience, expiry, ACR, and maxAgeExpiry
    - Can be refreshed if refresh token available
    - Retrieved via `getAccessToken()`
 
@@ -359,21 +416,6 @@ The SDK communicates with two main APIs:
    - Cancel: `DELETE /authenticate/{transactionId}`
 
 ## Common Patterns
-
-### Pattern: Fallback Authorization
-
-Request an access token, falling back to login if not found:
-
-```typescript
-const token = await client.getAccessToken({
-  audience: "api.example.com",
-  scope: "read:data",
-  fallbackAuthorizationOptions: {
-    popup: true,
-    acrValues: ["knowledge"],
-  },
-});
-```
 
 ### Pattern: Authentication Context Classes (ACR)
 
@@ -421,21 +463,21 @@ The `AuthClient` provides simplified methods for common authentication flows:
 
 ```typescript
 // Password authentication
-await client.auth.authenticatePassword("user@example.com", "password123");
+await client.auth.password("user@example.com", "password123");
 
 // Soft token with push
-await client.auth.authenticateSoftToken("user@example.com", { push: true });
+await client.auth.softToken("user@example.com", { push: true });
 
 // Passkey (usernameless)
-await client.auth.authenticatePasskey();
+await client.auth.passkey();
 
 // OTP with custom delivery
-await client.auth.authenticateOtp("user@example.com", {
+await client.auth.otp("user@example.com", {
   otpDeliveryType: "EMAIL",
 });
 
 // Face biometric (requires onfido-sdk-ui and <div id="onfido-mount"></div>)
-await client.auth.authenticateFace("user@example.com");
+await client.auth.faceBiometric("user@example.com");
 ```
 
 ## Utilities Reference
@@ -449,12 +491,12 @@ await client.auth.authenticateFace("user@example.com");
 ### jwt.ts
 
 - `readAccessToken()`: Decode and validate access token
-- `validateUserInfoToken()`: Validate ID token structure
+- `validateIdToken()`: Validate ID token claims and signature
+- `validateUserInfoToken()`: Validate and verify UserInfo JWT responses
 
 ### url.ts
 
-- `buildAuthorizationUrl()`: Construct OAuth authorization URL
-- `parseCallbackUrl()`: Extract OAuth callback parameters
+- `generateAuthorizationUrl()`: Construct OAuth authorization URL with PKCE
 
 ### format.ts
 
@@ -463,6 +505,12 @@ await client.auth.authenticateFace("user@example.com");
 ### passkey.ts
 
 - WebAuthn credential creation and assertion helpers
+
+### browser.ts
+
+- `openPopup()`: Open centered popup window
+- `listenToAuthorizePopup()`: Listen for OAuth callback in popup
+- `browserSupportsPasskey()`: Check if browser supports WebAuthn
 
 ## Publishing
 
@@ -535,7 +583,12 @@ npm publish
 ### For Users
 
 - **README.md**: User-facing documentation with examples
-- **docs/selfHosted.md**: Self-hosted authentication guide
+- **docs/index.md**: Documentation overview
+- **docs/quickstart.md**: Quick start guide
+- **docs/self-hosted.md**: Self-hosted authentication guide
+- **docs/troubleshooting.md**: Troubleshooting guide
+- **docs/guides/**: Detailed guides for OIDC, RBA, and Auth methods
+- **docs/reference/**: API reference documentation
 
 ### For Maintainers
 

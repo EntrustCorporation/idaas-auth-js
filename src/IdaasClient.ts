@@ -1,8 +1,8 @@
 import type { JWTPayload } from "jose";
 import { AuthClient } from "./AuthClient";
 import { getUserInfo, type RefreshTokenRequest, requestToken, type TokenResponse } from "./api";
-import { IdaasContext } from "./IdaasContext";
-import type { GetAccessTokenOptions, IdaasClientOptions, UserClaims } from "./models";
+import { IdaasContext, type NormalizedTokenOptions } from "./IdaasContext";
+import type { IdaasClientOptions, TokenOptions, UserClaims } from "./models";
 import { OidcClient } from "./OidcClient";
 import { RbaClient } from "./RbaClient";
 import { type AccessToken, StorageManager } from "./storage/StorageManager";
@@ -34,23 +34,25 @@ export class IdaasClient {
   /**
    * Creates a new IdaasClient instance for handling OIDC authentication flows.
    *
-   * @param options Configuration options for the client including issuer URL, client ID, and global settings
+   * @param options Configuration options for the client including issuer URL, client ID, and storage type
+   * @param tokenOptions Default token options including audience, scope, and refresh token settings
    */
-  constructor({
-    issuerUrl,
-    clientId,
-    globalAudience,
-    globalScope,
-    globalUseRefreshToken,
-    storageType = "memory",
-  }: IdaasClientOptions) {
+  constructor({ issuerUrl, clientId, storageType = "memory" }: IdaasClientOptions, tokenOptions: TokenOptions = {}) {
     this.storageManager = new StorageManager(clientId, storageType);
+
+    // Normalize token options with defaults (audience remains optional per OIDC spec)
+    const normalizedTokenOptions: NormalizedTokenOptions = {
+      scope: tokenOptions.scope ?? "openid profile email",
+      audience: tokenOptions.audience,
+      useRefreshToken: tokenOptions.useRefreshToken ?? false,
+      maxAge: tokenOptions.maxAge ?? -1,
+      acrValues: tokenOptions.acrValues ?? [],
+    };
+
     this.context = new IdaasContext({
       issuerUrl,
       clientId,
-      globalAudience,
-      globalScope,
-      globalUseRefreshToken,
+      tokenOptions: normalizedTokenOptions,
     });
 
     // Initialize clients with this.context instance as the context provider
@@ -79,7 +81,7 @@ export class IdaasClient {
 
   /**
    * Provides access to self hosted auth convenience methods.
-   * Contains authenticatePassword.
+   * Contains password.
    */
   public get auth() {
     return this._authClient;
@@ -109,14 +111,12 @@ export class IdaasClient {
 
   /**
    * Returns an access token with the required scopes and audience that is unexpired or refreshable.
-   * The `fallbackAuthorizationOptions` parameter determines the result if there are no access tokens with the required scopes and audience that are unexpired or refreshable.
    */
   public async getAccessToken({
-    audience = this.context.globalAudience,
-    scope = this.context.globalScope,
+    audience = this.context.tokenOptions.audience,
+    scope = this.context.tokenOptions.scope,
     acrValues = [],
-    fallbackAuthorizationOptions,
-  }: GetAccessTokenOptions = {}): Promise<string | null> {
+  }: TokenOptions = {}): Promise<string | null> {
     // 1. Remove tokens that are no longer valid
     this.storageManager.removeExpiredTokens();
     let accessTokens = this.storageManager.getAccessTokens();
@@ -127,7 +127,7 @@ export class IdaasClient {
 
     if (accessTokens) {
       // 2. Find all tokens with the required audience that possess all required scopes
-      // Tokens that have the required audience
+      // Tokens that have the required audience (both undefined means match, or exact string match)
       accessTokens = accessTokens.filter((token) => token.audience === audience);
 
       // Tokens that have the required audience and all scopes
@@ -192,22 +192,7 @@ export class IdaasClient {
       }
     }
 
-    // 4. If no suitable tokens were found or all suitable tokens were expired and not refreshable, attempt to login using the fallbackAuthorizationOptions
-    // No suitable tokens found
-    if (fallbackAuthorizationOptions) {
-      const { redirectUri, useRefreshToken, popup } = fallbackAuthorizationOptions;
-
-      return await this.oidc.login({
-        scope,
-        audience,
-        popup,
-        useRefreshToken,
-        redirectUri,
-        acrValues,
-      });
-    }
-
-    throw new Error("Requested token not found, no fallback login specified");
+    throw new Error("Requested token not found");
   }
 
   /**

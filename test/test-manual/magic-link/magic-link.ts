@@ -4,7 +4,7 @@ import { handleCancelAuth, idaasClient, USERNAME, updateChallengeUI, updateSubmi
 document.getElementById("request-challenge-token")?.addEventListener("click", async () => {
   hideResponse();
   try {
-    const challengeResponse = await idaasClient.auth.authenticateMagiclink(USERNAME);
+    const challengeResponse = await idaasClient.auth.magicLink(USERNAME);
 
     console.log("Challenge response:", challengeResponse);
     updateSubmitUI(challengeResponse);

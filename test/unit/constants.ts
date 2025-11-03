@@ -36,13 +36,17 @@ export const NO_DEFAULT_IDAAS_CLIENT = new IdaasClient({
   storageType: "localstorage",
 });
 
-export const SET_DEFAULTS_IDAAS_CLIENT = new IdaasClient({
-  issuerUrl: TEST_ISSUER_URI,
-  clientId: TEST_CLIENT_ID,
-  globalScope: TEST_DIFFERENT_SCOPE,
-  globalAudience: TEST_DIFFERENT_AUDIENCE,
-  storageType: "localstorage",
-});
+export const SET_DEFAULTS_IDAAS_CLIENT = new IdaasClient(
+  {
+    issuerUrl: TEST_ISSUER_URI,
+    clientId: TEST_CLIENT_ID,
+    storageType: "localstorage",
+  },
+  {
+    scope: TEST_DIFFERENT_SCOPE,
+    audience: TEST_DIFFERENT_AUDIENCE,
+  },
+);
 
 export const TEST_TOKEN_PARAMS: TokenParams = {
   scope: TEST_SCOPE,

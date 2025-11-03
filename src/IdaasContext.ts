@@ -1,4 +1,11 @@
 import { fetchOpenidConfiguration, type OidcConfig } from "./api";
+import type { TokenOptions } from "./models";
+
+/**
+ * Normalized token options with defaults applied.
+ * All properties except audience are required (audience is optional per OIDC spec).
+ */
+export type NormalizedTokenOptions = Required<Omit<TokenOptions, "audience">> & Pick<TokenOptions, "audience">;
 
 /**
  * Services class to provide shared functionality to OIDC and RBA clients
@@ -7,28 +14,20 @@ import { fetchOpenidConfiguration, type OidcConfig } from "./api";
 export class IdaasContext {
   readonly issuerUrl: string;
   readonly clientId: string;
-  readonly globalScope: string;
-  readonly globalAudience: string | undefined;
-  readonly globalUseRefreshToken: boolean;
+  readonly tokenOptions: NormalizedTokenOptions;
 
   private config?: OidcConfig;
 
   constructor({
     issuerUrl,
     clientId,
-    globalAudience,
-    globalScope,
-    globalUseRefreshToken,
+    tokenOptions,
   }: {
     issuerUrl: string;
     clientId: string;
-    globalAudience?: string;
-    globalScope?: string;
-    globalUseRefreshToken?: boolean;
+    tokenOptions: NormalizedTokenOptions;
   }) {
-    this.globalAudience = globalAudience;
-    this.globalScope = globalScope ?? "openid profile email";
-    this.globalUseRefreshToken = globalUseRefreshToken ?? false;
+    this.tokenOptions = tokenOptions;
     this.issuerUrl = issuerUrl;
     this.clientId = clientId;
   }

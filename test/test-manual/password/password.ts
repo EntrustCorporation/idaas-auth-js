@@ -15,7 +15,7 @@ document.getElementById("submit-response")?.addEventListener("click", async () =
   }
 
   try {
-    const submitResponse = await idaasClient.auth.authenticatePassword(userId, password);
+    const submitResponse = await idaasClient.auth.password(userId, password);
 
     console.log("Submit response:", submitResponse);
     updateSubmitUI(submitResponse);

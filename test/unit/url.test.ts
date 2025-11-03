@@ -32,13 +32,15 @@ describe("generateAuthorizationUrl", () => {
     const result = await generateAuthorizationUrl(oidcConfig, {
       type: "standard",
       clientId: "client123",
-      scope: "openid profile profile email",
-      audience: "api://default",
-      acrValues: ["urn:acr:bronze", "urn:acr:silver"],
-      maxAge: 300,
+      tokenOptions: {
+        scope: "openid profile profile email",
+        audience: "api://default",
+        acrValues: ["urn:acr:bronze", "urn:acr:silver"],
+        maxAge: 300,
+        useRefreshToken: true,
+      },
       responseMode: "query",
       redirectUri: "https://app.example.com/callback",
-      useRefreshToken: true,
     });
 
     const { params, u } = parse(result.url);
@@ -77,6 +79,7 @@ describe("generateAuthorizationUrl", () => {
     const result = await generateAuthorizationUrl(oidcConfig, {
       type: "standard",
       clientId: "abc",
+      tokenOptions: {},
     });
 
     const { params } = parse(result.url);
@@ -93,7 +96,9 @@ describe("generateAuthorizationUrl", () => {
     const result = await generateAuthorizationUrl(oidcConfig, {
       type: "standard",
       clientId: "abc",
-      maxAge: -1,
+      tokenOptions: {
+        maxAge: -1,
+      },
     });
     const { params } = parse(result.url);
     expect(params.max_age).toBeUndefined();
@@ -103,8 +108,10 @@ describe("generateAuthorizationUrl", () => {
     const result = await generateAuthorizationUrl(oidcConfig, {
       type: "standard",
       clientId: "abc",
-      scope: "profile",
-      useRefreshToken: true,
+      tokenOptions: {
+        scope: "profile",
+        useRefreshToken: true,
+      },
     });
 
     // Order: original scopes ("profile"), then appended openid, then offline_access -> "profile openid offline_access"
@@ -117,7 +124,9 @@ describe("generateAuthorizationUrl", () => {
       clientId: "jwtClient",
       redirectUri: "https://should-not.be/included",
       responseMode: "web_message",
-      scope: "email",
+      tokenOptions: {
+        scope: "email",
+      },
     });
 
     const { u, params } = parse(result.url);
@@ -133,7 +142,9 @@ describe("generateAuthorizationUrl", () => {
     const result = await generateAuthorizationUrl(oidcConfig, {
       type: "standard",
       clientId: "dupTest",
-      scope: "profile email",
+      tokenOptions: {
+        scope: "profile email",
+      },
     });
     // "profile email" then appended openid -> "profile email openid"
     expect(result.usedScope).toBe("profile email openid");

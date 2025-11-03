@@ -16,7 +16,7 @@ document.getElementById("request-challenge-kba")?.addEventListener("click", asyn
   hideResponse();
 
   try {
-    const challengeResponse = await idaasClient.auth.authenticateKba(USERNAME);
+    const challengeResponse = await idaasClient.auth.kba(USERNAME);
 
     console.log("Challenge response:", challengeResponse);
     updateKbaUI(challengeResponse.kbaChallenge?.userQuestions || []);

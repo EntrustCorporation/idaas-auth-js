@@ -5,13 +5,15 @@ export type {
   AuthenticationResponse,
   AuthenticationSubmissionParams,
   FaceBiometricOptions,
-  FallbackAuthorizationOptions,
-  GetAccessTokenOptions,
   IdaasAuthenticationMethod,
   IdaasClientOptions,
-  LogoutOptions,
   OidcLoginOptions,
+  OidcLogoutOptions,
+  OtpOptions,
+  SmartCredentialOptions,
   SoftTokenOptions,
+  SoftTokenPushOptions,
+  TokenOptions,
   UserClaims,
 } from "./models";
 

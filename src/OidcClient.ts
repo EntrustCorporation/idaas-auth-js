@@ -1,7 +1,7 @@
 import { type AccessTokenRequest, requestToken } from "./api";
 import type { ValidatedTokenResponse } from "./IdaasClient";
 import type { IdaasContext } from "./IdaasContext";
-import type { AuthorizeResponse, LogoutOptions, OidcLoginOptions, TokenOptions } from "./models";
+import type { AuthorizeResponse, OidcLoginOptions, OidcLogoutOptions, TokenOptions } from "./models";
 import type { AccessToken, StorageManager, TokenParams } from "./storage/StorageManager";
 import { listenToAuthorizePopup, openPopup } from "./utils/browser";
 import { calculateEpochExpiry, formatUrl, sanitizeUri } from "./utils/format";
@@ -35,15 +35,10 @@ export class OidcClient {
    * @param options - Login options including audience, scope, redirectUri, useRefreshToken, acrValues, maxAge, and popup
    * @returns The access token if using popup mode, otherwise null
    * */
-  public async login({
-    audience,
-    scope,
-    redirectUri,
-    useRefreshToken = false,
-    popup = false,
-    acrValues,
-    maxAge = -1,
-  }: OidcLoginOptions & TokenOptions = {}): Promise<string | null> {
+  public async login(
+    { redirectUri, popup }: OidcLoginOptions = {},
+    tokenOptions: TokenOptions = {},
+  ): Promise<string | null> {
     if (popup) {
       const popupWindow = openPopup("");
       const { response_modes_supported } = await this.context.getConfig();
@@ -52,24 +47,10 @@ export class OidcClient {
         popupWindow.close();
         throw new Error("Attempted to use popup but web_message is not supported by OpenID provider.");
       }
-      return await this.loginWithPopup({
-        audience,
-        scope,
-        redirectUri,
-        useRefreshToken,
-        acrValues,
-        maxAge,
-      });
+      return await this.loginWithPopup({ redirectUri }, tokenOptions);
     }
 
-    await this.loginWithRedirect({
-      audience,
-      scope,
-      redirectUri,
-      useRefreshToken,
-      acrValues,
-      maxAge,
-    });
+    await this.loginWithRedirect({ redirectUri }, tokenOptions);
 
     return null;
   }
@@ -79,7 +60,7 @@ export class OidcClient {
    * If a redirectUri is provided, the user will be redirected to that URI after logout.
    * @param options - Logout options, configurable redirectUri
    */
-  public async logout({ redirectUri }: LogoutOptions = {}): Promise<void> {
+  public async logout({ redirectUri }: OidcLogoutOptions = {}): Promise<void> {
     this.storageManager.remove();
 
     window.location.href = await this.generateLogoutUrl(redirectUri);
@@ -264,14 +245,7 @@ export class OidcClient {
   /**
    * Perform the authorization code flow using a new popup window at the OpenID Provider (OP) to authenticate the user.
    */
-  private async loginWithPopup({
-    audience,
-    scope,
-    redirectUri,
-    useRefreshToken,
-    acrValues,
-    maxAge,
-  }: OidcLoginOptions & TokenOptions): Promise<string | null> {
+  private async loginWithPopup({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<string | null> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
 
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
@@ -281,21 +255,20 @@ export class OidcClient {
         clientId: this.context.clientId,
         responseMode: "web_message",
         redirectUri: finalRedirectUri,
-        useRefreshToken: useRefreshToken ?? this.context.globalUseRefreshToken,
-        scope: scope ?? this.context.globalScope,
-        audience: audience ?? this.context.globalAudience,
-        acrValues,
-        maxAge,
+        tokenOptions: {
+          ...this.context.tokenOptions,
+          ...tokenOptions,
+        },
       },
     );
 
-    const tokenParams: { audience?: string; scope: string; maxAge?: number } = {
-      audience: audience ?? this.context.globalAudience,
+    const tokenParams: TokenParams = {
+      audience: tokenOptions.audience ?? this.context.tokenOptions.audience,
       scope: usedScope,
     };
 
-    if (maxAge && maxAge >= 0) {
-      tokenParams.maxAge = maxAge;
+    if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
+      tokenParams.maxAge = tokenOptions.maxAge;
     }
 
     this.storageManager.saveTokenParams(tokenParams);
@@ -324,14 +297,7 @@ export class OidcClient {
    * Perform the authorization code flow by redirecting to the OpenID Provider (OP) to authenticate the user and then redirect
    * with the necessary state and code.
    */
-  private async loginWithRedirect({
-    audience,
-    scope,
-    redirectUri,
-    useRefreshToken,
-    acrValues,
-    maxAge,
-  }: OidcLoginOptions & TokenOptions): Promise<void> {
+  private async loginWithRedirect({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<void> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
       await this.context.getConfig(),
@@ -340,21 +306,20 @@ export class OidcClient {
         clientId: this.context.clientId,
         responseMode: "query",
         redirectUri: finalRedirectUri,
-        useRefreshToken: useRefreshToken ?? this.context.globalUseRefreshToken,
-        scope: scope ?? this.context.globalScope,
-        audience: audience ?? this.context.globalAudience,
-        acrValues,
-        maxAge,
+        tokenOptions: {
+          ...this.context.tokenOptions,
+          ...tokenOptions,
+        },
       },
     );
 
     const tokenParams: TokenParams = {
-      audience: audience ?? this.context.globalAudience,
+      audience: tokenOptions.audience ?? this.context.tokenOptions.audience,
       scope: usedScope,
     };
 
-    if (maxAge && maxAge >= 0) {
-      tokenParams.maxAge = maxAge;
+    if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
+      tokenParams.maxAge = tokenOptions.maxAge;
     }
 
     this.storageManager.saveTokenParams(tokenParams);

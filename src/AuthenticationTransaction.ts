@@ -50,7 +50,6 @@ export class AuthenticationTransaction {
   private readonly clientId: string;
   private readonly issuerOrigin: string;
   private readonly oidcConfig: OidcConfig;
-  private readonly useRefreshToken: boolean;
   private readonly tokenOptions: TokenOptions;
 
   private authenticationDetails: AuthenticationDetails;
@@ -64,13 +63,7 @@ export class AuthenticationTransaction {
   private token?: string;
   private abortController?: AbortController;
 
-  constructor({
-    oidcConfig,
-    tokenOptions,
-    useRefreshToken,
-    clientId,
-    authenticationRequestParams,
-  }: AuthenticationTransactionOptions) {
+  constructor({ oidcConfig, tokenOptions, clientId, authenticationRequestParams }: AuthenticationTransactionOptions) {
     const { issuer } = oidcConfig;
 
     this.authenticationDetails = {
@@ -81,7 +74,6 @@ export class AuthenticationTransaction {
     this.issuerOrigin = new URL(issuer).origin;
     this.authenticationRequestParams = authenticationRequestParams;
     this.oidcConfig = oidcConfig;
-    this.useRefreshToken = useRefreshToken ?? false;
   }
 
   /**
@@ -91,11 +83,7 @@ export class AuthenticationTransaction {
     // 1. Generate /authorizejwt URL and fetch OIDC details
     const { url, codeVerifier } = await generateAuthorizationUrl(this.oidcConfig, {
       clientId: this.clientId,
-      audience: this.tokenOptions.audience,
-      maxAge: this.tokenOptions.maxAge,
-      acrValues: this.tokenOptions.acrValues,
-      scope: this.authenticationDetails.scope,
-      useRefreshToken: this.useRefreshToken,
+      tokenOptions: this.tokenOptions,
       type: "jwt",
     });
 
@@ -340,7 +328,7 @@ export class AuthenticationTransaction {
       throw new Error("failed to fetch id token and access token from IDaaS");
     }
 
-    if (this.useRefreshToken && !refresh_token) {
+    if (this.tokenOptions.useRefreshToken && !refresh_token) {
       throw new Error("failed to fetch refresh token from IDaaS");
     }
 
