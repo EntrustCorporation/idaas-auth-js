@@ -7,7 +7,7 @@ The `IdaasClient` class is the primary entry point to the IDaaS Auth JS SDK. It 
 ## Constructor
 
 ```typescript
-import { IdaasClient } from "idaas-auth-js";
+import { IdaasClient } from "@entrust/idaas-auth-js";
 
 const idaas = new IdaasClient(options);
 ```
@@ -21,7 +21,7 @@ const idaas = new IdaasClient(options);
 | `globalScope?`           | `string`                     | Space-delimited scopes used when per-call scope is omitted.   | `"openid profile email"` |
 | `globalAudience?`        | `string`                     | Default API audience. Omitted when `undefined`.               | `undefined`              |
 | `globalUseRefreshToken?` | `boolean`                    | Request refresh tokens by default.                            | `false`                  |
-| `storageType?`           | `"memory" \| "localstorage"` | Token persistence strategy.                                   | `"localstorage"`         |
+| `storageType?`           | `"memory" \| "localstorage"` | Token persistence strategy.                                   | `"memory"`               |
 
 ---
 

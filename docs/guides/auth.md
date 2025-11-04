@@ -34,7 +34,7 @@ Some helper methods still require extra steps, see the following methods for com
 ## Setup
 
 ```typescript
-import { IdaasClient } from "idaas-auth-js";
+import { IdaasClient } from "@entrust/idaas-auth-js";
 
 const idaas = new IdaasClient({
   issuerUrl: "https://example.trustedauth.com",

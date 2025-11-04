@@ -7,7 +7,7 @@ Understand how the IDaaS Auth JS SDK is structured, how it manages configuration
 `IdaasClient` is the single entry point exported by the SDK.
 
 ```typescript
-import { IdaasClient } from "idaas-auth-js";
+import { IdaasClient } from "@entrust/idaas-auth-js";
 
 const idaas = new IdaasClient({
   issuerUrl: "https://example.trustedauth.com",

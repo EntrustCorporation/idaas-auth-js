@@ -11,7 +11,7 @@ This guide walks through using the hosted OpenID Connect (OIDC) experience provi
 ## Initialization
 
 ```typescript
-import { IdaasClient } from "idaas-auth-js";
+import { IdaasClient } from "@entrust/idaas-auth-js";
 
 const idaas = new IdaasClient({
   issuerUrl: "https://example.trustedauth.com",
