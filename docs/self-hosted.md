@@ -19,7 +19,7 @@ const idaas = new IdaasClient({
   clientId: "spa-client",
   globalScope: "openid profile email",
   globalAudience: "https://api.example.com",
-  storageType: "local",
+  storageType: "localstorage",
   globalUseRefreshToken: true,
 });
 ```

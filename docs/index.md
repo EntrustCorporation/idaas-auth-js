@@ -1,23 +1,20 @@
 # IDaaS Auth JS Overview
 
-IDaaS Auth JS is a TypeScript-first SDK that streamlines authentication against Entrust Identity-as-a-Service (IDaaS). It unifies hosted OpenID Connect (OIDC) flows, risk-based authentication (RBA) transactions, and convenience auth helpers under one client.
+IDaaS Auth JS is a TypeScript-first SDK that streamlines authentication against Entrust Identity as a Service (IDaaS). It unifies hosted OpenID Connect (OIDC) flows, risk-based authentication (RBA) transactions, and convenience auth helpers under one client.
 
 ## Why use this SDK?
 
 - **Unified API surface** – manage OIDC, RBA, and convenience auth via a single `IdaasClient`.
 - **Type-safe primitives** – all public methods ship with TypeScript definitions and IntelliSense-friendly documentation.
-- **Self-hosted or hosted UI** – mix popup/redirect OIDC screens with self-hosted RBA UI in the same app.
+- **Hosted or self-hosted flexibility** – let IDaaS render the entire login UI via OIDC, or craft your own screens using RBA and auth helpers.
 
 ## High-level architecture
 
 ```
 IdaasClient
- ├─ OidcClient  → Hosted login/logout, redirect handling, token exchange
- ├─ RbaClient   → Self-hosted challenge/request/poll flows
- └─ AuthClient  → Password, OTP, passkey, soft token, magic link, face helpers
-     ▲
-     │  uses
-IdaasContext → shared issuer/client configuration + cached OIDC metadata
+ ├─ OidcClient  → Hosted login/logout, redirect handling, token exchange.
+ ├─ RbaClient   → Self-hosted challenge/request/poll flows.
+ └─ AuthClient  → Password, OTP, passkey, soft token, magic link, face helpers.
 ```
 
 ## Core workflow
@@ -26,11 +23,11 @@ IdaasContext → shared issuer/client configuration + cached OIDC metadata
 import { IdaasClient } from "idaas-auth-js";
 
 const idaas = new IdaasClient({
-  issuerUrl: "https://tenant.example.com",
+  issuerUrl: "https://example.trustedauth.com",
   clientId: "spa-client",
   globalScope: "openid profile email",
   globalAudience: "https://api.example.com",
-  storageType: "local",
+  storageType: "localstorage",
 });
 
 // Hosted IDaaS popup
@@ -46,11 +43,13 @@ const isAuthenticated = idaas.isAuthenticated();
 
 ### When to use which client
 
-| Scenario | Recommended client | Notes |
-| --- | --- | --- |
-| Hosted login with IDaaS screens | `oidc` | Handles PKCE, redirect parsing, logout. |
-| Build your own challenge UI | `rba` | Request challenges, submit responses, poll asynchronous flows. |
-| Quick helpers (password, OTP, passkey, face) | `auth` | Thin wrappers over `rba` with sensible defaults. |
+Use oidc when you want Entrust to host the whole login: it handles PKCE, redirects, and logout for a quick hosted experience. Choose rba when you are building the UI yourself and need full control over multi-factor, and risk-based challenges. Reach for the auth helpers when you still own the UI but just need streamlined entry points for a specific factor (password, OTP, passkey, face) without wiring every RBA call manually.
+
+| Scenario                                     | Recommended client | Notes                                                          |
+| -------------------------------------------- | ------------------ | -------------------------------------------------------------- |
+| Hosted login with IDaaS screens              | `oidc`             | Handles PKCE, redirect parsing, logout.                        |
+| Build your own UI                            | `rba`              | Request challenges, submit responses, poll asynchronous flows. |
+| Quick helpers (password, OTP, passkey, face) | `auth`             | Thin wrappers over `rba` with sensible defaults.               |
 
 ## Token handling
 

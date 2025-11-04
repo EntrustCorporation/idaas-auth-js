@@ -18,7 +18,7 @@ const idaas = new IdaasClient({
   clientId: "spa-client",
   globalScope: "openid profile email",
   globalAudience: "https://api.example.com",
-  storageType: "local",
+  storageType: "localstorage",
   globalUseRefreshToken: true,
 });
 ```
@@ -93,15 +93,15 @@ await idaas.oidc.logout({
 
 ## Configuration options
 
-| Option | Description |
-| --- | --- |
-| `scope` | Space-delimited scopes; defaults to `globalScope` or `openid profile email` if no `globalScope` was set. |
-| `audience` | Overrides `globalAudience` for API tokens. |
-| `maxAge` | Forces reauthentication if the session age exceeds the value (seconds). |
-| `responseMode` | Defaults to `query`; use `fragment` or `form_post` if required. |
-| `state` | Custom state for CSRF or routing; auto-generated if omitted. |
-| `acrValues` | Array or space-delimited string of Authentication Context Class References (ACR) to request. |
-| `useRefreshToken` | Request a refresh token during the authorization-code exchange. |
+| Option            | Description                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------------- |
+| `scope`           | Space-delimited scopes; defaults to `globalScope` or `openid profile email` if no `globalScope` was set. |
+| `audience`        | Overrides `globalAudience` for API tokens.                                                               |
+| `maxAge`          | Forces reauthentication if the session age exceeds the value (seconds).                                  |
+| `responseMode`    | Defaults to `query`; use `fragment` or `form_post` if required.                                          |
+| `state`           | Custom state for CSRF or routing; auto-generated if omitted.                                             |
+| `acrValues`       | Array or space-delimited string of Authentication Context Class References (ACR) to request.             |
+| `useRefreshToken` | Request a refresh token during the authorization-code exchange.                                          |
 
 ## Error handling
 

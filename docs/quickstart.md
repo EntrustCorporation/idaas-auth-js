@@ -6,13 +6,13 @@ Get up and running with IDaaS Auth JS in minutes by installing the SDK, wiring a
 
 - Node.js 22+.
 - An Entrust IDaaS tenant with:
-  - Registered application client ID.
-  - Redirect URI configured if you use the redirect flow.
+  - A Generic SPA.
+  - A Redirect URI configured in the Generic SPA if you use the redirect flow.
 
 ## 1. Install the SDK
 
 ```bash
-npm install idaas-auth-js
+npm install @entrustcorp/idaas-auth-js
 # optional for face authentication
 npm install onfido-sdk-ui
 ```
@@ -27,7 +27,7 @@ const idaas = new IdaasClient({
   clientId: "my-app-client-id",
   globalScope: "openid profile email",     // defaults provided; override as needed
   globalAudience: "https://api.example.com",
-  storageType: "local",                    // "memory" | "local"
+  storageType: "localstorage",                    // "memory" | "localstorage"
   globalUseRefreshToken: true,             // request refresh tokens by default
 });
 ```

@@ -37,8 +37,7 @@ const challenge = await idaas.rba.requestChallenge({
   audience: "https://api.example.com",
   maxAge: 900,
   transactionDetails: {
-    deviceId: "ios-123",
-    geoLocation: "45.398,-75.692",
+    amount: "10000",
   },
 });
 ```
@@ -58,27 +57,27 @@ Typical response shape:
 
 #### `AuthenticationRequestParams` (first argument)
 
-| Property | Description | Default |
-| --- | --- | --- |
-| `userId` | Identifier of the end user. Required for most authenticators. | `undefined` |
-| `password` | Password to submit in combined flows (e.g., password + second factor). | `undefined` |
+| Property                        | Description                                                                              | Default              |
+| ------------------------------- | ---------------------------------------------------------------------------------------- | -------------------- |
+| `userId`                        | Identifier of the end user. Required for most authenticators.                            | `undefined`          |
+| `password`                      | Password to submit in combined flows (e.g., password + second factor).                   | `undefined`          |
 | `preferredAuthenticationMethod` | Hint for the authenticator to use (`"OTP"`, `"PASSKEY"`, `"TOKENPUSH"`, `"FACE"`, etc.). | Determined by policy |
-| `strict` | If `true`, forces the preferred method; IDaaS will fail instead of falling back. | `false` |
-| `otpOptions` | `{ otpDeliveryType?, otpDeliveryAttribute? }` for OTP delivery control. | `undefined` |
-| `softTokenPushOptions` | `{ mutualChallenge? }` toggles mutual-challenge values for soft token push. | `undefined` |
-| `smartCredentialOptions` | `{ summary?, pushMessageIdentifier? }` for Smart Credential push messaging. | `undefined` |
-| `faceBiometricOptions` | `{ mutualChallenge? }` enables mutual challenge for face authenticator. | `undefined` |
-| `transactionDetails` | Array of contextual details (`TransactionDetail[]`) sent to IDaaS risk engine. | `undefined` |
+| `strict`                        | If `true`, forces the preferred method; IDaaS will fail instead of falling back.         | `false`              |
+| `otpOptions`                    | `{ otpDeliveryType?, otpDeliveryAttribute? }` for OTP delivery control.                  | `undefined`          |
+| `softTokenPushOptions`          | `{ mutualChallenge? }` toggles mutual-challenge values for soft token push.              | `undefined`          |
+| `smartCredentialOptions`        | `{ summary?, pushMessageIdentifier? }` for Smart Credential push messaging.              | `undefined`          |
+| `faceBiometricOptions`          | `{ mutualChallenge? }` enables mutual challenge for face authenticator.                  | `undefined`          |
+| `transactionDetails`            | Array of contextual details (`TransactionDetail[]`) sent to IDaaS risk engine.           | `undefined`          |
 
 #### `TokenOptions` (second argument)
 
-| Property | Description | Default |
-| --- | --- | --- |
-| `audience` | API audience for issued access tokens. | `globalAudience` (omitted if `undefined`) |
-| `scope` | Space-delimited scopes. | `globalScope` (`openid profile email` if globalScope not set) |
-| `useRefreshToken` | Request refresh tokens for this transaction. | `globalUseRefreshToken` (or `false`) |
-| `maxAge` | Session age limit (seconds) before reauthentication is forced. | Not sent |
-| `acrValues` | Array of acceptable ACRs to satisfy. | Not sent |
+| Property          | Description                                                    | Default                                                       |
+| ----------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
+| `audience`        | API audience for issued access tokens.                         | `globalAudience` (omitted if `undefined`)                     |
+| `scope`           | Space-delimited scopes.                                        | `globalScope` (`openid profile email` if globalScope not set) |
+| `useRefreshToken` | Request refresh tokens for this transaction.                   | `globalUseRefreshToken` (or `false`)                          |
+| `maxAge`          | Session age limit (seconds) before reauthentication is forced. | Not sent                                                      |
+| `acrValues`       | Array of acceptable ACRs to satisfy.                           | Not sent                                                      |
 
 ## Rendering the challenge
 

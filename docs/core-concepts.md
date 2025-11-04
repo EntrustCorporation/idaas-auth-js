@@ -14,7 +14,7 @@ const idaas = new IdaasClient({
   clientId: "spa-client",
   globalScope: "openid profile email",
   globalAudience: "https://api.example.com",
-  storageType: "local",
+  storageType: "localstorage",
   globalUseRefreshToken: true,
 });
 ```
@@ -25,22 +25,14 @@ const idaas = new IdaasClient({
 - **`idaas.rba`** – Risk-Based Authentication transactions for self-hosted UIs.
 - **`idaas.auth`** – Convenience wrappers (password, passkey, OTP, face, etc.) built on `rba`.
 
-Each facade shares configuration through an internal `IdaasContext`.
-
-## IdaasContext
-
-`IdaasContext` holds the issuer URL, client ID, default scope/audience, and refresh-token preference. It also lazily loads and caches the OIDC discovery document (`/.well-known/openid-configuration`) so the SDK only fetches it once per session.
-
-This context is injected into `OidcClient`, `RbaClient`, and `AuthClient`, ensuring they all respect the same defaults.
-
 ## Token storage
 
 `StorageManager` orchestrates persistence. Choose the storage strategy when constructing the client:
 
-| Mode | Backing store | Use case |
-| --- | --- | --- |
-| `"memory"` (default) | In-memory map | SSR or ephemeral sessions. |
-| `"local"` | `window.localStorage` | Long-lived multi-tab sessions. |
+| Mode                 | Backing store         | Use case                       |
+| -------------------- | --------------------- | ------------------------------ |
+| `"memory"` (default) | In-memory map         | SSR or ephemeral sessions.     |
+| `"localstorage"`     | `window.localstorage` | Long-lived multi-tab sessions. |
 
 Tokens are saved with an expiry timestamp. On every read, the manager removes expired entries. If `globalUseRefreshToken` is enabled (and the tenant issues refresh tokens), `getAccessToken()` will automatically exchange an expired access token for a new one.
 
@@ -48,7 +40,6 @@ Tokens are saved with an expiry timestamp. On every read, the manager removes ex
 
 - `idaas.oidc.logout()` removes stored tokens and optionally redirects to a desired URL.
 - `idaas.rba.cancel()` stops an active RBA transaction but does not clear tokens.
-- To fully reset local state without contacting the server, call `idaas.clearStorage()`.
 
 ## Authentication lifecycle
 

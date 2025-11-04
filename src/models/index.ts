@@ -256,7 +256,7 @@ export interface AuthenticationTransactionOptions {
  */
 export interface FaceBiometricOptions {
   /**
-   * Determines if the user must answer a mutual challenge for the FACE authenticators.
+   * Determines if the user must answer a mutual challenge for the FACE authenticator.
    */
   mutualChallenge?: boolean;
 }
@@ -318,22 +318,22 @@ export interface AuthenticationRequestParams {
   strict?: boolean;
 
   /**
-   * Options available during OTP authentication
+   * Options available during OTP authentication.
    */
   otpOptions?: OtpOptions;
 
   /**
-   * Options available during TOKENPUSH authentication
+   * Options available during TOKENPUSH authentication.
    */
   softTokenPushOptions?: SoftTokenPushOptions;
 
   /**
-   * Options available during SMARTCREDENTIALPUSH authentication
+   * Options available during SMARTCREDENTIALPUSH authentication.
    */
   smartCredentialOptions?: SmartCredentialOptions;
 
   /**
-   * Options available during FACE authentication
+   * Options available during FACE authentication.
    */
   faceBiometricOptions?: FaceBiometricOptions;
 
