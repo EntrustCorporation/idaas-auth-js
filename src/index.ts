@@ -11,7 +11,11 @@ export type {
   IdaasClientOptions,
   LogoutOptions,
   OidcLoginOptions,
+  OtpOptions,
+  SmartCredentialOptions,
   SoftTokenOptions,
+  SoftTokenPushOptions,
+  TokenOptions,
   UserClaims,
 } from "./models";
 

@@ -59,10 +59,11 @@ Convenience helpers including `authenticatePassword`, `authenticateOtp`, `authen
 - `authenticateGrid(userId)`
 - `authenticatePasskey(userId?)`
 - `authenticateKba(userId)`
-- `authenticateTempAccess(userId, tempAccessCode)`
-- `authenticateOtp(userId)`
+- `authenticateTempAccessCode(userId, tempAccessCode)`
+- `authenticateOtp(userId, OtpOptions?)`
 - `authenticateSmartCredential(userId, SmartCredentialOptions?)`
 - `authenticateFace(userId, FaceBiometricOptions?)`
+- `authenticateMagicLink(userId)`
 - `submit(AuthenticationSubmissionParams?)`
 - `poll()`
 - `cancel()`
@@ -172,7 +173,7 @@ Used when `getAccessToken` cannot find a session and you want the SDK to start a
 
 | Property               | Type                                                    | Description                                                                                  |
 | ---------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `otpDeliveryType`      | `"SMS" \| "EMAIL" \| "VOICE" \| "WECHAT" \| "WHATSAPP"` | Determines if the user must answer a mutual challenge for the FACE authenticator.            |
+| `otpDeliveryType`      | `"SMS" \| "EMAIL" \| "VOICE" \| "WECHAT" \| "WHATSAPP"` | The delivery type for the OTP challenge.                                                     |
 | `otpDeliveryAttribute` | `string`                                                | The name of the delivery attribute to use for the OTP challenge, such as a "business-email". |
 
 ### `TransactionDetail`

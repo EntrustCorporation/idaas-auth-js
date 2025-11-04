@@ -17,7 +17,7 @@ Under the hood each helper calls into `IdaasClient.rba` to request, submit, poll
 | `authenticatePasskey(userId?)`                  | WebAuthn/FIDO or usernameless passkey.              | ✅                                                                         |
 | `authenticateKba(userId)`                       | Knowledge-based questions.                          | ❌ Supply ordered answers via `auth.submit({ kbaChallengeAnswers })`.      |
 | `authenticateTempAccessCode(userId, code)`      | Temporary access code.                              | ✅                                                                         |
-| `authenticateMagiclink(userId)`                 | Magic link (polls for completion).                  | ✅                                                                         |
+| `authenticateMagicLink(userId)`                 | Magic link (polls for completion).                  | ✅                                                                         |
 | `authenticateSmartCredential(userId, options?)` | Smart Credential push.                              | ✅                                                                         | 
 | `authenticateFace(userId, options?)`            | Face biometrics via Onfido.                         | ✅                                                                         |
 
