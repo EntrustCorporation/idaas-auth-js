@@ -10,6 +10,23 @@ IDaaS Auth JS is the official JavaScript/TypeScript SDK for Entrust Identity-as-
 - Risk-Based Authentication transaction management with challenge/submit/poll/cancel lifecycle.
 - Convenience authentication methods for passkeys (WebAuthn), password, OTP, soft token, magic link, face, smart credential, grid, KBA, and temporary access codes.
 
+# Create a Free Trial Account
+
+Entrust Identity as a Service (IDaaS) is a cloud-based identity and access management (IAM) solution with multi-factor authentication (MFA), credential-based passwordless access, and single sign-on (SSO).
+
+Get started with a [free trial](https://in.entrust.com/IDaaS/) account today.
+
+## Configure Your IDaaS Application
+
+1. After logging in as an administrator, navigate to the applications page.
+2. Click the plus sign in the top left to create a new application.
+3. Scroll down and select `Generic SPA Application`.
+4. On the `Setup` page, check the `Authorization Code` grant type. This SDK supports only the authorization code flow with PKCE.
+5. If you intend to use refresh tokens, check the `Refresh Token (OIDC)` grant type. Failing to do so will cause errors if you attempt to use refresh tokens.
+6. Add all URIs that you may redirect to after a successful login or logout. Failing to do so will cause errors if you attempt to redirect to a different URI.
+7. Make any other changes necessary for your application, then submit your changes.
+
+**Make note of your application's `Client ID` and `Issuer URL` (typically `https://{yourIdaasDomain}.region.trustedauth.com/api/oidc`). These will be required to configure the SDK.**
 ---
 
 ## Installation
@@ -44,112 +61,13 @@ await idaas.oidc.login({ popup: true });
 
 // Use tokens
 const accessToken = await idaas.getAccessToken();
-const user = idaas.getIdTokenClaims();
 ```
 
----
-
-## Core concepts
-
-### IdaasClient
-
-- Central entry point exposing three facades:
-  - `oidc` – hosted OpenID Connect login/logout/redirect handlers.
-  - `rba` – self-hosted risk-based authentication transactions.
-  - `auth` – “convenience” methods for authenticating (password, OTP, passkey, etc.).
-- Created with issuer URL, client ID, and optional global defaults (`scope`, `audience`, `useRefreshToken`, storage type).
-
-### Authentication lifecycle
-
-1. Request or trigger a challenge (`oidc.login`, `rba.requestChallenge`, `auth.authenticateX`).
-2. Submit credentials or poll for completion (`submit`, `poll`).
-3. Tokens saved on success; `getAccessToken` returns matching tokens or refreshes them.
-
----
-
-## Usage guides
-
-### OIDC login
-
-```typescript
-// Popup
-await idaas.oidc.login({
-  popup: true,
-  scope: "openid profile email",
-  audience: "https://api.example.com",
-});
-
-// Redirect
-await idaas.oidc.login({
-  popup: false,
-  redirectUri: "https://app.example.com/callback",
-});
-```
-
-Handle redirects:
-
-```typescript
-// In your redirect/callback route
-await idaas.oidc.handleRedirect();
-```
-
-Logout:
-
-```typescript
-await idaas.oidc.logout({
-  redirectUri: "https://app.example.com/post-logout",
-});
-```
-
-### Risk-Based Authentication (self-hosted)
-
-```typescript
-// Start challenge
-const challenge = await idaas.rba.requestChallenge({
-  userId: "user@example.com",
-  preferredAuthenticationMethod: "OTP",
-});
-
-// Submit response
-await idaas.rba.submitChallenge({ response: "123456" });
-
-// Poll for push-style challenges
-const finalResult = await idaas.rba.poll();
-```
-
-### Convenience auth helpers
-
-```typescript
-// Password
-await idaas.auth.authenticatePassword("user@example.com", "secret");
-
-// Passkey (WebAuthn discoverable credentials)
-await idaas.auth.authenticatePasskey();
-
-// Soft token push with mutual challenge
-await idaas.auth.authenticateSoftToken("user@example.com", {
-  push: true,
-  mutualChallenge: true,
-});
-
-// Magic link
-await idaas.auth.authenticateMagiclink("user@example.com");
-```
-
-### Self-hosted UI snippet (face)
-
-```typescript
-await idaas.auth.authenticateFace("user@example.com", {
-  mutualChallenge: true,
-});
-// Requires <div id="onfido-mount"></div> and onfido-sdk-ui installed.
-```
+See the [Quickstart guide](docs/quickstart.md) for redirect flows, error handling, and self-hosted examples.
 
 ---
 
 ## Documentation
-
-Detailed Markdown guides live under [`/docs`](./docs):
 
 - [Overview](docs/index.md)
 - [Quickstart](docs/quickstart.md)
@@ -160,17 +78,6 @@ Detailed Markdown guides live under [`/docs`](./docs):
 - [Self-Hosted UI Examples](docs/self-hosted.md)
 - [API Reference](docs/reference/idaas-client.md)
 - [Troubleshooting](docs/troubleshooting.md)
-
----
-
-## Troubleshooting
-
-| Issue | Fix |
-| --- | --- |
-| Popup blocked | Switch to redirect flow or allow popups for your domain. |
-| `Requested token not found` | Ensure `getAccessToken` scopes/audience match or supply `fallbackAuthorizationOptions`. |
-| `onfido-sdk-ui` import error | Install optional peer dependency before using `authenticateFace`. |
-| Passkey errors | Confirm browser supports WebAuthn (`browserSupportsPasskey()` guard). |
 
 ---
 

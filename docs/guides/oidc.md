@@ -24,7 +24,7 @@ const idaas = new IdaasClient({
 ```
 
 `globalScope`, `globalAudience`, and `globalUseRefreshToken` act as defaults when you don’t pass overrides to `login`. 
-If not provided scope will default to `"open id profile email"`. 
+If not provided scope will default to `"openid profile email"`. 
 
 ## Login flows
 

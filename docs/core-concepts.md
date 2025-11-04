@@ -46,13 +46,16 @@ Tokens are saved with an expiry timestamp. On every read, the manager removes ex
 1. **Initialize** `IdaasClient` with issuer/client metadata.
 2. **Start a flow**:
    - Hosted: `idaas.oidc.login({ popup | redirect })`
-   - Self-hosted: `idaas.rba.requestChallenge({ ...options })`
+   - RBA: `idaas.rba.requestChallenge({ ...options })`
    - Convenience: `idaas.auth.authenticatePassword(...)`, etc.
 3. **Complete the flow**:
    - Hosted redirect: `idaas.oidc.handleRedirect()`
    - RBA: `idaas.rba.submitChallenge()` or `idaas.rba.poll()`
 4. **Consume tokens**: `idaas.getAccessToken()`, `idaas.getIdTokenClaims()`.
-5. **Sign out / clear state** when finished.
+5. **Sign out**:
+   - Hosted: `idaas.oidc.logout`
+   - RBA: `idaas.rba.logout`
+   - Convenience: `idaas.auth.logout`
 
 ## OIDC flows
 
@@ -79,7 +82,7 @@ Tokens are saved with an expiry timestamp. On every read, the manager removes ex
 
 ```typescript
 await idaas.auth.authenticatePassword("user@example.com", "secret");
-await idaas.auth.authenticateOtp("user@example.com", { deliveryChannel: "SMS" });
+await idaas.auth.authenticateOtp("user@example.com", { otpDeliveryType: "SMS" });
 await idaas.auth.authenticatePasskey();
 await idaas.auth.authenticateSoftToken("user@example.com", { push: true });
 await idaas.auth.authenticateFace("user@example.com", { mutualChallenge: true });

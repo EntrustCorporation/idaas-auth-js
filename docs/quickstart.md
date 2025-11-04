@@ -6,8 +6,8 @@ Get up and running with IDaaS Auth JS in minutes by installing the SDK, wiring a
 
 - Node.js 22+.
 - An Entrust IDaaS tenant with:
-  - A Generic SPA.
-  - A Redirect URI configured in the Generic SPA if you use the redirect flow.
+  - A Generic SPA Application.
+  - A Redirect URI configured in the Generic SPA Application if you use the redirect flow.
 
 ## 1. Install the SDK
 
