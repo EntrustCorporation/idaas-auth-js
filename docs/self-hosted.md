@@ -15,7 +15,7 @@ These examples show how to build custom login experiences on top of the IDaaS Au
 import { IdaasClient } from "idaas-auth-js";
 
 const idaas = new IdaasClient({
-  issuerUrl: "https://tenant.example.com",
+  issuerUrl: "https://example.trustedauth.com",
   clientId: "spa-client",
   globalScope: "openid profile email",
   globalAudience: "https://api.example.com",

@@ -37,7 +37,7 @@ Some helper methods still require extra steps, see the following methods for com
 import { IdaasClient } from "idaas-auth-js";
 
 const idaas = new IdaasClient({
-  issuerUrl: "https://tenant.example.com",
+  issuerUrl: "https://example.trustedauth.com",
   clientId: "spa-client",
   globalScope: "openid profile email",
   globalAudience: "https://api.example.com",

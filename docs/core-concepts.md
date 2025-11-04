@@ -10,7 +10,7 @@ Understand how the IDaaS Auth JS SDK is structured, how it manages configuration
 import { IdaasClient } from "idaas-auth-js";
 
 const idaas = new IdaasClient({
-  issuerUrl: "https://tenant.example.com",
+  issuerUrl: "https://example.trustedauth.com",
   clientId: "spa-client",
   globalScope: "openid profile email",
   globalAudience: "https://api.example.com",

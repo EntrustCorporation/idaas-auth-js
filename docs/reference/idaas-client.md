@@ -15,7 +15,7 @@ const idaas = new IdaasClient(options);
 ### `IdaasClientOptions`
 
 | Property                 | Type                         | Description | Default |
-| --- -------------------- | ---------------------------- | ------------------------------------------------------------- | ------------------------ |
+| ------------------------ | ---------------------------- | ------------------------------------------------------------- | ------------------------ |
 | `issuerUrl`              | `string`                     | Entrust IDaaS issuer URL (`https://example.trustedauth.com`). | —                        |
 | `clientId`               | `string`                     | Registered application/client identifier.                     | —                        |
 | `globalScope?`           | `string`                     | Space-delimited scopes used when per-call scope is omitted.   | `"openid profile email"` |
@@ -158,10 +158,9 @@ Used when `getAccessToken` cannot find a session and you want the SDK to start a
 
 ### `SoftTokenPushOptions`
 
-| Property | Type | Description |
-| ---------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| `otpDeliveryType`      | `"SMS" \| "EMAIL" \| "VOICE \| "WECHAT" \| "WHATSAPP"` | Determines if the user must answer a mutual challenge for the FACE authenticator.            |
-| `otpDeliveryAttribute` | `string`                                               | The name of the delivery attribute to use for the OTP challenge, such as a "business-email". |
+| Property          | Type      | Description                                                                            |
+| ----------------- | --------- | -------------------------------------------------------------------------------------- |
+| `mutualChallenge` | `boolean` | Determines if the user must answer a mutual challenge for the TOKENPUSH authenticator. |
 
 ### `FaceBiometricOptions`
 
@@ -171,10 +170,10 @@ Used when `getAccessToken` cannot find a session and you want the SDK to start a
 
 ### `OtpOptions`
 
-| Property               | Type                                                   | Description                                                                                  |
-| ---------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| `otpDeliveryType`      | `"SMS" \| "EMAIL" \| "VOICE \| "WECHAT" \| "WHATSAPP"` | Determines if the user must answer a mutual challenge for the FACE authenticator.            |
-| `otpDeliveryAttribute` | `string`                                               | The name of the delivery attribute to use for the OTP challenge, such as a "business-email". |
+| Property               | Type                                                    | Description                                                                                  |
+| ---------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `otpDeliveryType`      | `"SMS" \| "EMAIL" \| "VOICE" \| "WECHAT" \| "WHATSAPP"` | Determines if the user must answer a mutual challenge for the FACE authenticator.            |
+| `otpDeliveryAttribute` | `string`                                                | The name of the delivery attribute to use for the OTP challenge, such as a "business-email". |
 
 ### `TransactionDetail`
 
@@ -185,7 +184,7 @@ Used when `getAccessToken` cannot find a session and you want the SDK to start a
 
 ### `IdaasAuthenticationMethod`
 
-`"PASSWORD" | "KBA" | "TEMP_ACCESS_CODE" | "OTP" | "GRID" | "TOKEN" | "TOKENPUSH" | "FIDO" | "SMARTCREDENTIALPUSH" | "PASSWORD_AND_SECONDFACTOR" | "MAGICLINK" | "PASSKEY" | "FACE" | "EXTERNAL`
+`"PASSWORD" | "KBA" | "TEMP_ACCESS_CODE" | "OTP" | "GRID" | "TOKEN" | "TOKENPUSH" | "FIDO" | "SMARTCREDENTIALPUSH" | "PASSWORD_AND_SECONDFACTOR" | "MAGICLINK" | "PASSKEY" | "FACE" | "EXTERNAL"`
 
 ### `AuthenticationRequestParams`
 
@@ -197,7 +196,7 @@ Used when `getAccessToken` cannot find a session and you want the SDK to start a
 | `strict?`                        | `boolean`                   | Determines if the preferred authentication method must be used. |
 | `otpOptions?`                    | `OtpOptions`                | Options available during OTP authentication.                    |
 | `softTokenPushOptions?`          | `SoftTokenPushOptions`      | Options available during TOKENPUSH authentication.              |
-| `smartCredentialOptions?`        | `smartCredentialOptions`    | Options available during SMARTCREDENTIALPUSH authentication.    |
+| `smartCredentialOptions?`        | `SmartCredentialOptions`    | Options available during SMARTCREDENTIALPUSH authentication.    |
 | `faceBiometricOptions?`          | `FaceBiometricOptions`      | Options available during FACE authentication.                   |
 | `transactionDetails?`            | `TransactionDetail[]`       | The transaction details of the request.                         |
 
