@@ -33,7 +33,6 @@ All methods share the same `IdaasContext`, so defaults such as `globalScope`, `g
 const challenge = await idaas.rba.requestChallenge({
   userId: "alice@example.com",
   preferredAuthenticationMethod: "OTP",
-  mutualChallengeEnabled: true,
   audience: "https://api.example.com",
   maxAge: 900,
   transactionDetails: [{ detail: "amount", value: "10000" }],
@@ -158,8 +157,7 @@ await idaas.rba.submitChallenge({
 ```typescript
 await idaas.rba.requestChallenge({
   preferredAuthenticationMethod: "TOKENPUSH",
-  mutualChallengeEnabled: true,
-  pushEnabled: true,
+  softTokenPushOptions: { mutualChallenge: true },
 });
 
 await idaas.rba.poll();
@@ -171,7 +169,7 @@ await idaas.rba.poll();
 ```typescript
 const challenge = await idaas.rba.requestChallenge({
   preferredAuthenticationMethod: "FACE",
-  mutualChallengeEnabled: true,
+  faceBiometricOptions: { mutualChallenge: true },
 });
 
 showMutualAuthChallenge(challenge.pushMutualChallenge);

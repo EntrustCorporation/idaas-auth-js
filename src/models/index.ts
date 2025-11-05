@@ -365,7 +365,13 @@ export interface AuthenticationSubmissionParams {
   passkeyResponse?: PublicKeyCredential;
 }
 
+/**
+ * The response from IDaaS when requesting or submitting an authentication challenge.
+ */
 export interface AuthenticationResponse {
+  /**
+   * The Authenticated/unauthenticated authorization token.
+   */
   token?: string;
   /**
    * A flag indicating if authentication has been completed.
@@ -383,7 +389,7 @@ export interface AuthenticationResponse {
   method?: IdaasAuthenticationMethod;
 
   /**
-   * A flag indicating if `pollAuth` should be called.
+   * A flag indicating if `poll` should be called.
    */
   pollForCompletion?: boolean;
 

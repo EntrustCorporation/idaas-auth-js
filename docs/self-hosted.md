@@ -211,12 +211,11 @@ async function startSmartCredential(userId: string) {
 
 ```typescript
 import Onfido from "onfido-sdk-ui";
-
+// ensure <div id="onfido-mount"></div> exists
 async function startFace(userId: string) {
   try {
     const initial = await idaas.auth.authenticateFace(userId, {
       mutualChallenge: true,
-      onfidoMountId: "onfido-mount", // ensure <div id="onfido-mount"></div> exists
     });
 
     if(initial.authenticationCompleted){

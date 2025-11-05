@@ -202,6 +202,31 @@ Used when `getAccessToken` cannot find a session and you want the SDK to start a
 | `faceBiometricOptions?`          | `FaceBiometricOptions`      | Options available during FACE authentication.                   |
 | `transactionDetails?`            | `TransactionDetail[]`       | The transaction details of the request.                         |
 
+### `AuthenticationResponse`
+
+| Property                   | Type                                | Description                                                                                                       |
+| -------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `token?`                   | `string`                            | The Authenticated/unauthenticated authorization token.                                                            |
+| `authenticationCompleted?` | `boolean`                           | A flag indicating if authentication has been completed.                                                           |
+| `secondFactorMethod?`      | `IdaasAuthenticationMethod`         | The second factor authenticator that will be used.                                                                |
+| `method?`                  | `IdaasAuthenticationMethod`         | The method of authentication that will be used.                                                                   |
+| `pollForCompletion?`       | `boolean`                           | A flag indicating if `poll` should be called.                                                                     |
+| `userId?`                  | `string`                            | The user ID of the authenticated user/user to authenticate.                                                       |
+| `gridChallenge?`           | `GridChallenge`                     | Parameters required for completing the `GRID` authentication method.                                              |
+| `kbaChallenge?`            | `KbaChallenge`                      | Parameters required for completing the `KBA` authentication method.                                               |
+| `faceChallenge?`           | `FaceChallenge`                     | Parameters required for completing the `FACE` authentication method.                                              |
+| `tempAccessCodeChallenge?` | `TempAccessCodeChallenge`           | Parameters defining the behaviour of the `TEMP_ACCESS_CODE` authentication method.                                |
+| `pushMutualChallenge?`     | `string`                            | Push authentication mutual challenge for token or Face Biometric.                                                 |
+| `passkeyChallenge?`        | `PublicKeyCredentialRequestOptions` | The PublicKeyCredentialRequestOptions to be passed in the publicKey field to the navigator.credential.get() call. |
+
+### `AuthenticationSubmissionParams`
+
+| Property               | Type                  | Description                                                                                                                             |
+| ---------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `response?`            | `string`              | The user's response to the authentication challenge.                                                                                    |
+| `kbaChallengeAnswers?` | `string[]`            | The user's answers to the KBA challenge questions. Answers must be in the order of the questions returned when requesting the challenge.|
+| `passkeyResponse?`     | `PublicKeyCredential` | The second factor authenticator that will be used.                                                                                      |
+
 ---
 
 ## Related documentation

@@ -16,7 +16,7 @@ import { calculateEpochExpiry } from "./utils/format";
  * It manages the authentication transaction lifecycle including challenge requests,
  * response submissions, and asynchronous completion polling.
  *
- * Contains five main methods: requestChallenge, submitChallenge, poll, and cancel.
+ * Contains four main methods: requestChallenge, submitChallenge, poll, and cancel.
  */
 export class RbaClient {
   private context: IdaasContext;
