@@ -27,6 +27,7 @@ Get started with a [free trial](https://in.entrust.com/IDaaS/) account today.
 7. Make any other changes necessary for your application, then submit your changes.
 
 **Make note of your application's `Client ID` and `Issuer URL` (typically `https://{yourIdaasDomain}.region.trustedauth.com/api/oidc`). These will be required to configure the SDK.**
+
 ---
 
 ## Installation
