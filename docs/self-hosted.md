@@ -12,7 +12,7 @@ These examples show how to build custom login experiences on top of the IDaaS Au
 ## Base client setup
 
 ```typescript
-import { IdaasClient } from "@entrust/idaas-auth-js";
+import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
 const idaas = new IdaasClient({
   issuerUrl: "https://example.trustedauth.com",

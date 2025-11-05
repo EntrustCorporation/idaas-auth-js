@@ -20,7 +20,7 @@ npm install onfido-sdk-ui
 ## 2. Create an IdaasClient
 
 ```typescript
-import { IdaasClient } from "@entrust/idaas-auth-js";
+import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
 const idaas = new IdaasClient({
   issuerUrl: "https://example.trustedauth.com", // OIDC issuer from your tenant

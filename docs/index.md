@@ -20,7 +20,7 @@ IdaasClient
 ## Core workflow
 
 ```typescript
-import { IdaasClient } from "@entrust/idaas-auth-js";
+import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
 const idaas = new IdaasClient({
   issuerUrl: "https://example.trustedauth.com",

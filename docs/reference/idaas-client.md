@@ -7,7 +7,7 @@ The `IdaasClient` class is the primary entry point to the IDaaS Auth JS SDK. It 
 ## Constructor
 
 ```typescript
-import { IdaasClient } from "@entrust/idaas-auth-js";
+import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
 const idaas = new IdaasClient(options);
 ```
@@ -31,7 +31,7 @@ const idaas = new IdaasClient(options);
 
 Hosted OpenID Connect helper providing:
 
-- `login(OidcLoginOptions?)`
+- `login(options?: OidcLoginOptions & TokenOptions)`
 - `handleRedirect()`
 - `logout(LogoutOptions?)`
 
@@ -63,7 +63,7 @@ Convenience helpers including `authenticatePassword`, `authenticateOtp`, `authen
 - `authenticateOtp(userId, OtpOptions?)`
 - `authenticateSmartCredential(userId, SmartCredentialOptions?)`
 - `authenticateFace(userId, FaceBiometricOptions?)`
-- `authenticateMagicLink(userId)`
+- `authenticateMagiclink(userId)`
 - `submit(AuthenticationSubmissionParams?)`
 - `poll()`
 - `cancel()`
@@ -153,9 +153,10 @@ Used when `getAccessToken` cannot find a session and you want the SDK to start a
 
 ### `SoftTokenOptions`
 
-| Property          | Type      | Description                                                                            |
-| ----------------- | --------- | -------------------------------------------------------------------------------------- |
-| `mutualChallenge` | `boolean` | Determines if the user must answer a mutual challenge for the TOKENPUSH authenticator. |
+| Property          | Type      | Description                                                                                      |
+| ----------------- | --------- | ------------------------------------------------------------------------------------------------ |
+| `mutualChallenge` | `boolean` | Determines if the user must answer a mutual challenge for the TOKENPUSH authenticator.           |
+| `push`            | `boolean` | Determines if push authentication (true) or standard token authentication (false) should be used |
 
 ### `SoftTokenPushOptions`
 

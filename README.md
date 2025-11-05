@@ -32,7 +32,7 @@ Get started with a [free trial](https://in.entrust.com/IDaaS/) account today.
 ## Installation
 
 ```bash
-npm install idaas-auth-js
+npm install @entrustcorp/idaas-auth-js
 ```
 
 Optional dependency for face biometrics:
@@ -46,7 +46,7 @@ npm install onfido-sdk-ui
 ## Quickstart
 
 ```typescript
-import { IdaasClient } from "idaas-auth-js";
+import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
 const idaas = new IdaasClient({
   issuerUrl: "https://example.trustedauth.com",

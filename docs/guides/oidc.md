@@ -5,13 +5,13 @@ This guide walks through using the hosted OpenID Connect (OIDC) experience provi
 ## Prerequisites
 
 - Your Entrust tenant’s issuer URL (e.g., `https://example.trustedauth.com`).
-- A registered application client ID with redirect URIs configured.
+- A SPA Application client ID with redirect URIs configured created in the IDaaS tenant.
 - HTTPS origin in production (OIDC requires secure contexts for PKCE and WebAuthn).
 
 ## Initialization
 
 ```typescript
-import { IdaasClient } from "@entrust/idaas-auth-js";
+import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
 const idaas = new IdaasClient({
   issuerUrl: "https://example.trustedauth.com",
@@ -123,7 +123,7 @@ Common issues:
 
 ## Testing tip
 
-- When QA-ing redirect flows locally, use `http://localhost` domains registered in the tenant.
+- When QA-ing redirect flows locally, use `http://localhost` domains registered in the SPA Application.
 
 ## Related docs
 

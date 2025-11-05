@@ -17,7 +17,7 @@ Under the hood each helper calls into `IdaasClient.rba` to request, submit, poll
 | `authenticatePasskey(userId?)`                  | WebAuthn/FIDO or usernameless passkey.              | ✅                                                                         |
 | `authenticateKba(userId)`                       | Knowledge-based questions.                          | ❌ Supply ordered answers via `auth.submit({ kbaChallengeAnswers })`.      |
 | `authenticateTempAccessCode(userId, code)`      | Temporary access code.                              | ✅                                                                         |
-| `authenticateMagicLink(userId)`                 | Magic link (polls for completion).                  | ✅                                                                         |
+| `authenticateMagiclink(userId)`                 | Magic link (polls for completion).                  | ✅                                                                         |
 | `authenticateSmartCredential(userId, options?)` | Smart Credential push.                              | ✅                                                                         | 
 | `authenticateFace(userId, options?)`            | Face biometrics via Onfido.                         | ✅                                                                         |
 
@@ -34,7 +34,7 @@ Some helper methods still require extra steps, see the following methods for com
 ## Setup
 
 ```typescript
-import { IdaasClient } from "@entrust/idaas-auth-js";
+import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
 const idaas = new IdaasClient({
   issuerUrl: "https://example.trustedauth.com",
