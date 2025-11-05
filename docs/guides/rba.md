@@ -36,9 +36,7 @@ const challenge = await idaas.rba.requestChallenge({
   mutualChallengeEnabled: true,
   audience: "https://api.example.com",
   maxAge: 900,
-  transactionDetails: {
-    amount: "10000",
-  },
+  transactionDetails: [{ detail: "amount", value: "10000" }],
 });
 ```
 
