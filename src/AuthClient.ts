@@ -348,6 +348,10 @@ export class AuthClient {
     });
   }
 
+  public async logout(): Promise<void> {
+    return await this.rbaClient.logout();
+  }
+
   /**
    * Polls the authentication provider to check for completion of an ongoing authentication process.
    * Useful for authentication flows that may complete asynchronously (e.g., token push authentication).

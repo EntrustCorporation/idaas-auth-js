@@ -40,6 +40,13 @@ export interface IdToken {
 }
 
 /**
+ * Contains the IDaaS Session Token.
+ */
+export interface IdaasSessionToken {
+  token: string;
+}
+
+/**
  * All information associated with a single access token.
  */
 export interface AccessToken {
@@ -63,12 +70,14 @@ export class StorageManager {
   private readonly accessTokenStorageKey: string;
   private readonly idTokenStorageKey: string;
   private readonly tokenParamsStorageKey: string;
+  private readonly idaasSessionTokenStorageKey: string;
   private readonly storage: IStore;
 
   constructor(clientId: string, storageType: "memory" | "localstorage") {
     this.clientParamsStorageKey = `entrust.${clientId}.clientParams`;
     this.accessTokenStorageKey = `entrust.${clientId}.accessTokens`;
     this.idTokenStorageKey = `entrust.${clientId}.idToken`;
+    this.idaasSessionTokenStorageKey = `entrust.${clientId}.idaasSessionToken`;
     this.tokenParamsStorageKey = `entrust.${clientId}.tokenParams`;
     this.storage = storageType === "memory" ? new InMemoryStore() : new LocalStorageStore();
   }
@@ -88,6 +97,15 @@ export class StorageManager {
   public saveClientParams(data: ClientParams) {
     const stringifiedData = JSON.stringify(data);
     this.storage.save(this.clientParamsStorageKey, stringifiedData);
+  }
+
+  /**
+   * Save the IDaaS session token in storage.
+   * @param data The IDaaS session token.
+   */
+  public saveIdaasSessionToken(data: IdaasSessionToken) {
+    const stringifiedData = JSON.stringify(data);
+    this.storage.save(this.idaasSessionTokenStorageKey, stringifiedData);
   }
 
   /**
@@ -225,6 +243,14 @@ export class StorageManager {
    */
   public getIdToken(): IdToken | undefined {
     return this.get(this.idTokenStorageKey);
+  }
+
+  /**
+   * Retrieves the information about the IDaaS session token stored in storage.
+   * @returns IDaaS session token object if stored, otherwise undefined.
+   */
+  public getIdaasSessionToken(): IdaasSessionToken | undefined {
+    return this.get(this.idaasSessionTokenStorageKey);
   }
 
   /**
