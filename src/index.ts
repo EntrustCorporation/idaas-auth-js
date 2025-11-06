@@ -5,8 +5,6 @@ export type {
   AuthenticationResponse,
   AuthenticationSubmissionParams,
   FaceBiometricOptions,
-  FallbackAuthorizationOptions,
-  GetAccessTokenOptions,
   IdaasAuthenticationMethod,
   IdaasClientOptions,
   LogoutOptions,

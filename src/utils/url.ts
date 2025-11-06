@@ -1,15 +1,12 @@
 // URL generation functions
 import type { OidcConfig } from "../api";
+import type { TokenOptions } from "../models";
 import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPair } from "../utils/crypto";
 
 export interface GenerateAuthorizationUrlOptions {
   // Common parameters
   clientId: string;
-  scope?: string;
-  audience?: string;
-  acrValues?: string[];
-  maxAge?: number;
-  useRefreshToken?: boolean;
+  tokenOptions: TokenOptions;
 
   // OIDC flow params
   responseMode?: "query" | "web_message";
@@ -45,11 +42,11 @@ export const generateAuthorizationUrl = async (
     baseUrl = oidcConfig.authorization_endpoint;
   }
 
-  // Process scope
-  const scopeAsArray = options.scope ? options.scope.split(" ").filter(Boolean) : [];
+  // Process scope (default to empty string if not provided)
+  const scopeAsArray = options.tokenOptions.scope ? options.tokenOptions.scope.split(" ").filter(Boolean) : [];
   scopeAsArray.push("openid");
 
-  if (options.useRefreshToken) {
+  if (options.tokenOptions.useRefreshToken) {
     scopeAsArray.push("offline_access");
   }
 
@@ -72,18 +69,18 @@ export const generateAuthorizationUrl = async (
   url.searchParams.append("code_challenge", codeChallenge);
   url.searchParams.append("code_challenge_method", "S256");
 
-  if (options.audience) {
-    url.searchParams.append("audience", options.audience);
+  if (options.tokenOptions.audience) {
+    url.searchParams.append("audience", options.tokenOptions.audience);
   }
 
   // Add maxAge if provided and >= 0
-  if (options.maxAge !== undefined && options.maxAge >= 0) {
-    url.searchParams.append("max_age", options.maxAge.toString());
+  if (options.tokenOptions.maxAge !== undefined && options.tokenOptions.maxAge >= 0) {
+    url.searchParams.append("max_age", options.tokenOptions.maxAge.toString());
   }
 
   // Add ACR values if provided
-  if (options.acrValues && options.acrValues.length > 0) {
-    url.searchParams.append("acr_values", options.acrValues.join(" "));
+  if (options.tokenOptions.acrValues && options.tokenOptions.acrValues.length > 0) {
+    url.searchParams.append("acr_values", options.tokenOptions.acrValues.join(" "));
   }
 
   url.searchParams.append("response_type", "code");

@@ -25,10 +25,10 @@ const idaas = new IdaasClient(options, tokenOptions);
 | Property          | Type        | Description                                               | Default                  |
 | ----------------- | ----------- | --------------------------------------------------------- | ------------------------ |
 | `scope`           | `string?`   | Space-delimited scopes used when per-call scope omitted.  | `"openid profile email"` |
-| `audience`        | `string?`   | Default API audience. Omitted when `undefined`.           | `undefined`              |
+| `audience`        | `string?`   | Default API audience. Omitted when `undefined`.           | `""` (empty string)      |
 | `useRefreshToken` | `boolean?`  | Request refresh tokens by default.                        | `false`                  |
-| `maxAge`          | `number?`   | Maximum age of tokens in seconds.                         | Not sent                 |
-| `acrValues`       | `string[]?` | Requested ACR values.                                     | Not sent                 |
+| `maxAge`          | `number?`   | Maximum age of tokens in seconds.                         | `-1`                     |
+| `acrValues`       | `string[]?` | Requested ACR values.                                     | `[]` (empty array)       |
 
 ---
 
@@ -38,9 +38,9 @@ const idaas = new IdaasClient(options, tokenOptions);
 
 Hosted OpenID Connect helper providing:
 
-- `login(options?: OidcLoginOptions & TokenOptions)`
+- `login(options?: OidcLoginOptions, tokenOptions?: TokenOptions)`
 - `handleRedirect()`
-- `logout(LogoutOptions?)`
+- `logout(options?: LogoutOptions)`
 
 See the [OIDC Guide](../guides/oidc.md) for usage.
 
@@ -89,7 +89,7 @@ See the [Convenience Auth Guide](../guides/auth.md).
 
 Returns `true` when a ID token exists.
 
-### `getAccessToken(options?: GetAccessTokenOptions): Promise<string | null>`
+### `getAccessToken(options?: TokenOptions): Promise<string | null>`
 
 Retrieves a cached access token. If the token is expired and a refresh token is available (subject to tenant configuration), the SDK performs a refresh.
 
@@ -110,15 +110,15 @@ Returns the user claims from the OpenId Provider using the userinfo endpoint or 
 
 ### `TokenOptions`
 
-Used by OIDC/RBA helpers for per-request overrides.
+Used by OIDC/RBA helpers for per-request overrides. When not provided, values default to those set in the IdaasClient constructor.
 
-| Property          | Type        | Description                                                              | Default                 |
-| ----------------- | ----------- | ------------------------------------------------------------------------ | ----------------------- |
-| `audience`        | `string?`   | API audience for access tokens.                                          | `globalAudience`        |
-| `scope`           | `string?`   | Space-delimited scopes.                                                  | `globalScope`           |
-| `useRefreshToken` | `boolean?`  | Request a refresh token.                                                 | `globalUseRefreshToken` |
-| `maxAge`          | `number?`   | Require reauthentication if the session is older than this many seconds. | Not sent                |
-| `acrValues`       | `string[]?` | Requested ACR values.                                                    | Not sent                |
+| Property          | Type        | Description                                                              | Default when not provided in method call |
+| ----------------- | ----------- | ------------------------------------------------------------------------ | ---------------------------------------- |
+| `audience`        | `string?`   | API audience for access tokens.                                          | Constructor `tokenOptions.audience`      |
+| `scope`           | `string?`   | Space-delimited scopes.                                                  | Constructor `tokenOptions.scope`         |
+| `useRefreshToken` | `boolean?`  | Request a refresh token.                                                 | Constructor `tokenOptions.useRefreshToken` |
+| `maxAge`          | `number?`   | Require reauthentication if the session is older than this many seconds. | Constructor `tokenOptions.maxAge`        |
+| `acrValues`       | `string[]?` | Requested ACR values.                                                    | Constructor `tokenOptions.acrValues`     |
 
 ### `OidcLoginOptions`
 
@@ -132,26 +132,6 @@ Used by OIDC/RBA helpers for per-request overrides.
 | Property      | Type      | Description                                    |
 | ------------- | --------- | ---------------------------------------------- |
 | `redirectUri` | `string?` | Post-logout redirect URI (must be registered). |
-
-### `FallbackAuthorizationOptions`
-
-Used when `getAccessToken` cannot find a session and you want the SDK to start a fresh authorization automatically.
-
-| Property          | Type        | Description                                                                                                                        |
-| ----------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `acrValues`       | `string[]?` | Requested ACR values.                                                                                                              |
-| `redirectUri`     | `string?`   | Target redirect URI for the fallback flow.                                                                                         |
-| `useRefreshToken` | `boolean?`  | Determines whether the token obtained from this login request can use refresh tokens. This defaults to the `globalUseRefreshToken` |
-| `popup`           | `boolean?`  | Determines the method of login that will be used to authenticate the user.                                                         |
-
-### `GetAccessTokenOptions`
-
-| Property                       | Type                            | Description                                   |
-| ------------------------------ | ------------------------------- | --------------------------------------------- |
-| `audience`                     | `string?`                       | Required audience of the cached token.        |
-| `scope`                        | `string?`                       | Required scopes (space-delimited).            |
-| `acrValues`                    | `string[]?`                     | Requested ACR values.                         |
-| `fallbackAuthorizationOptions` | `FallbackAuthorizationOptions?` | Start a new authorization if no token exists. |
 
 ### `SmartCredentialOptions`
 

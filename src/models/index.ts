@@ -51,6 +51,7 @@ export interface SmartCredentialOptions {
 export interface TokenOptions {
   /**
    * The audience to be used for requesting API access. This defaults to the `globalAudience` set in your `IdaasClientOptions` if not set.
+   * Per OIDC spec, this parameter is optional and will be omitted from the authorization request if not provided.
    */
   audience?: string;
 
@@ -107,60 +108,6 @@ export interface LogoutOptions {
    * The URI to be redirected to after a successful logout. This URI must be included in the `Logout Redirect URI(s)` field in your IDaaS client application settings.
    */
   redirectUri?: string;
-}
-
-/**
- * The configurable options for a fallback login.
- */
-export interface FallbackAuthorizationOptions {
-  /**
-   * The URI to be redirected to after a successful login. The default value is the current page.
-   * This URI must be included in the `Login Redirect URI(s)` field in your IDaaS client application settings.
-   */
-  redirectUri?: string;
-
-  /**
-   * Determines whether the token obtained from this login request can use refresh tokens.  This defaults to the `globalUseRefreshToken` set in your `IdaasClientOptions` if not set.
-   *
-   * Note: Use of refresh tokens must be enabled on your IDaaS client application.
-   */
-  useRefreshToken?: boolean;
-
-  /**
-   * Determines the method of login that will be used to authenticate the user.
-   * The default setting is `false`.
-   */
-  popup?: boolean;
-
-  /**
-   * Determines the strength/quality of the method used to authenticate the user.
-   */
-  acrValues?: string[];
-}
-
-/**
- * The configurable options when requesting an AccessToken.
- */
-export interface GetAccessTokenOptions {
-  /**
-   * The audience the token must have. This defaults to the `globalAudience` in your `IdaasClientOptions` if not set.
-   */
-  audience?: string;
-
-  /**
-   * The scope(s) the token must have. This defaults to the `globalScope` in your `IdaasClientOptions` if not set.
-   */
-  scope?: string;
-
-  /**
-   * The acr value(s) that are acceptable for this token to have, the returned token's acr claim will be one of these values.
-   */
-  acrValues?: string[];
-
-  /**
-   * The values that will be used to attempt a login if the requested token is not found.
-   */
-  fallbackAuthorizationOptions?: FallbackAuthorizationOptions;
 }
 
 /**

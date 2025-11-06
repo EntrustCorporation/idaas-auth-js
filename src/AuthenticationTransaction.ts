@@ -91,11 +91,7 @@ export class AuthenticationTransaction {
     // 1. Generate /authorizejwt URL and fetch OIDC details
     const { url, codeVerifier } = await generateAuthorizationUrl(this.oidcConfig, {
       clientId: this.clientId,
-      audience: this.tokenOptions.audience,
-      maxAge: this.tokenOptions.maxAge,
-      acrValues: this.tokenOptions.acrValues,
-      scope: this.authenticationDetails.scope,
-      useRefreshToken: this.useRefreshToken,
+      tokenOptions: this.tokenOptions,
       type: "jwt",
     });
 

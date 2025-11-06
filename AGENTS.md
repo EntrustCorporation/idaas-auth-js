@@ -140,8 +140,6 @@ The SDK exports the following from `src/index.ts`:
 - `TokenOptions`: Token request options
 - `OidcLoginOptions`: OIDC-specific login options
 - `LogoutOptions`: Logout configuration
-- `GetAccessTokenOptions`: Access token retrieval options
-- `FallbackAuthorizationOptions`: Fallback authorization configuration
 
 **Authentication Types:**
 - `AuthenticationRequestParams`: RBA challenge request parameters
@@ -420,21 +418,6 @@ The SDK communicates with two main APIs:
    - Cancel: `DELETE /authenticate/{transactionId}`
 
 ## Common Patterns
-
-### Pattern: Fallback Authorization
-
-Request an access token, falling back to login if not found:
-
-```typescript
-const token = await client.getAccessToken({
-  audience: "api.example.com",
-  scope: "read:data",
-  fallbackAuthorizationOptions: {
-    popup: true,
-    acrValues: ["knowledge"],
-  },
-});
-```
 
 ### Pattern: Authentication Context Classes (ACR)
 

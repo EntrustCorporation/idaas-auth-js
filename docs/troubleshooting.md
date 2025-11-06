@@ -25,10 +25,10 @@ This guide lists common issues encountered when integrating the IDaaS Auth JS SD
 
 ## `getAccessToken` / token storage
 
-| Symptom                     | Likely cause                                                          | Fix                                                                                                |
-| --------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `Requested token not found` | Token cached under different scope/audience or cleared.               | Pass matching `scope`/`audience` or provide `fallbackAuthorizationOptions` to trigger a new login. |
-| Refresh token not issued    | Tenant doesn’t allow refresh tokens or `useRefreshToken` not enabled. | Enable refresh tokens in tenant policy and set `globalUseRefreshToken: true` (or per-call).        |
+| Symptom                     | Likely cause                                                          | Fix                                                                                         |
+| --------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `Requested token not found` | Token cached under different scope/audience or cleared.               | Pass matching `scope`/`audience`.                                                           |
+| Refresh token not issued    | Tenant doesn’t allow refresh tokens or `useRefreshToken` not enabled. | Enable refresh tokens in tenant policy and set `globalUseRefreshToken: true` (or per-call). |
 
 ---
 

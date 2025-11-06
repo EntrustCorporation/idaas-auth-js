@@ -276,15 +276,17 @@ export class OidcClient {
         clientId: this.context.clientId,
         responseMode: "web_message",
         redirectUri: finalRedirectUri,
-        useRefreshToken: useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
-        scope: scope ?? this.context.tokenOptions.scope,
-        audience: audience ?? this.context.tokenOptions.audience,
-        acrValues,
-        maxAge,
+        tokenOptions: {
+          useRefreshToken: useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
+          scope: scope ?? this.context.tokenOptions.scope,
+          audience: audience ?? this.context.tokenOptions.audience,
+          acrValues: acrValues ?? this.context.tokenOptions.acrValues,
+          maxAge: maxAge ?? this.context.tokenOptions.maxAge,
+        },
       },
     );
 
-    const tokenParams: { audience?: string; scope: string; maxAge?: number } = {
+    const tokenParams: TokenParams = {
       audience: audience ?? this.context.tokenOptions.audience,
       scope: usedScope,
     };
@@ -335,11 +337,13 @@ export class OidcClient {
         clientId: this.context.clientId,
         responseMode: "query",
         redirectUri: finalRedirectUri,
-        useRefreshToken: useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
-        scope: scope ?? this.context.tokenOptions.scope,
-        audience: audience ?? this.context.tokenOptions.audience,
-        acrValues,
-        maxAge,
+        tokenOptions: {
+          useRefreshToken: useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
+          scope: scope ?? this.context.tokenOptions.scope,
+          audience: audience ?? this.context.tokenOptions.audience,
+          acrValues: acrValues ?? this.context.tokenOptions.acrValues,
+          maxAge: maxAge ?? this.context.tokenOptions.maxAge,
+        },
       },
     );
 

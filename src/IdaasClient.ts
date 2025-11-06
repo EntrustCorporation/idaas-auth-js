@@ -1,8 +1,8 @@
 import type { JWTPayload } from "jose";
 import { AuthClient } from "./AuthClient";
 import { getUserInfo, type RefreshTokenRequest, requestToken, type TokenResponse } from "./api";
-import { IdaasContext } from "./IdaasContext";
-import type { GetAccessTokenOptions, IdaasClientOptions, TokenOptions, UserClaims } from "./models";
+import { IdaasContext, type NormalizedTokenOptions } from "./IdaasContext";
+import type { IdaasClientOptions, TokenOptions, UserClaims } from "./models";
 import { OidcClient } from "./OidcClient";
 import { RbaClient } from "./RbaClient";
 import { type AccessToken, StorageManager } from "./storage/StorageManager";
@@ -40,10 +40,10 @@ export class IdaasClient {
   constructor({ issuerUrl, clientId, storageType = "memory" }: IdaasClientOptions, tokenOptions: TokenOptions = {}) {
     this.storageManager = new StorageManager(clientId, storageType);
 
-    // Ensure all tokenOptions properties have defined values
-    const requiredTokenOptions: Required<TokenOptions> = {
+    // Normalize token options with defaults (audience remains optional per OIDC spec)
+    const normalizedTokenOptions: NormalizedTokenOptions = {
       scope: tokenOptions.scope ?? "openid profile email",
-      audience: tokenOptions.audience ?? "",
+      audience: tokenOptions.audience,
       useRefreshToken: tokenOptions.useRefreshToken ?? false,
       maxAge: tokenOptions.maxAge ?? -1,
       acrValues: tokenOptions.acrValues ?? [],
@@ -52,7 +52,7 @@ export class IdaasClient {
     this.context = new IdaasContext({
       issuerUrl,
       clientId,
-      tokenOptions: requiredTokenOptions,
+      tokenOptions: normalizedTokenOptions,
     });
 
     // Initialize clients with this.context instance as the context provider
@@ -111,25 +111,23 @@ export class IdaasClient {
 
   /**
    * Returns an access token with the required scopes and audience that is unexpired or refreshable.
-   * The `fallbackAuthorizationOptions` parameter determines the result if there are no access tokens with the required scopes and audience that are unexpired or refreshable.
    */
   public async getAccessToken({
     audience = this.context.tokenOptions.audience,
     scope = this.context.tokenOptions.scope,
     acrValues = [],
-    fallbackAuthorizationOptions,
-  }: GetAccessTokenOptions = {}): Promise<string | null> {
+  }: TokenOptions = {}): Promise<string | null> {
     // 1. Remove tokens that are no longer valid
     this.storageManager.removeExpiredTokens();
     let accessTokens = this.storageManager.getAccessTokens();
-    const requestedScopes = this.context.tokenOptions.scope.split(" ");
+    const requestedScopes = scope.split(" ");
     const now = Date.now();
     // buffer (in seconds) to refresh/delete early, ensures an expired token is not returned
     const buffer = 15;
 
     if (accessTokens) {
       // 2. Find all tokens with the required audience that possess all required scopes
-      // Tokens that have the required audience
+      // Tokens that have the required audience (both undefined means match, or exact string match)
       accessTokens = accessTokens.filter((token) => token.audience === audience);
 
       // Tokens that have the required audience and all scopes
@@ -194,21 +192,7 @@ export class IdaasClient {
       }
     }
 
-    // 4. If no suitable tokens were found or all suitable tokens were expired and not refreshable, attempt to login using the fallbackAuthorizationOptions
-    // No suitable tokens found
-    if (fallbackAuthorizationOptions) {
-      const { redirectUri, useRefreshToken, popup } = fallbackAuthorizationOptions;
-
-      return await this.oidc.login(
-        {
-          popup,
-          redirectUri,
-        },
-        { scope, audience, useRefreshToken, acrValues },
-      );
-    }
-
-    throw new Error("Requested token not found, no fallback login specified");
+    throw new Error("Requested token not found");
   }
 
   /**
