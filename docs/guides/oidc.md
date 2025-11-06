@@ -28,7 +28,14 @@ If not provided scope will default to `"openid profile email"`.
 
 ## Login
 
-### Configuration options
+### Login Options
+
+| Option        | Description                                                                     |
+| ------------- | ------------------------------------------------------------------------------- |
+| `redirectUri` | The URI to redirect to after a successful login using the redirect flow.        |
+| `popup`       | A flag to determine whether to do a redirect flow or popup flow for logging in. |
+
+### Token Options
 
 | Option            | Description                                                                                              |
 | ----------------- | -------------------------------------------------------------------------------------------------------- |
