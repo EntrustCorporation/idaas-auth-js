@@ -80,8 +80,12 @@ export class RbaClient {
    */
   public async logout(): Promise<void> {
     const baseUrl = new URL(this.context.issuerUrl).origin;
-    const token = this.storageManager.getIdaasSessionToken()?.token || "";
-    await logoutSilently(token, baseUrl);
+    const token = this.storageManager.getIdaasSessionToken()?.token;
+
+    if (token) {
+      await logoutSilently(token, baseUrl);
+    }
+
     this.storageManager.remove();
   }
 
