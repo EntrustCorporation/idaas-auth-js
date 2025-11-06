@@ -21,12 +21,17 @@ OR
 requestChallenge → poll → success/failure
 ```
 
-1. **requestChallenge** – Starts an RBA transaction and tells you which authenticator the user must satisfy.
-2. **submitChallenge** – Sends the user’s response (OTP code, WebAuthn assertion, etc.).
-3. **poll** – For asynchronous methods (push notifications, face capture) keep asking the server for completion status.
-4. **cancel** – Abort an in-flight transaction if the user backs out.
-
 All methods share the same `IdaasContext`, so defaults such as `globalScope`, `globalAudience`, and refresh-token preference flow through automatically.
+
+## Available methods
+
+| Method                                            | Description                                                                                               |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `requestChallenge(options, tokenOptions)`         | Starts an RBA transaction and tells you which authenticator the user must satisfy.                        |
+| `submitChallenge(authenticationSubmissionParams)` | Sends the user’s response (OTP code, WebAuthn assertion, etc.).                                           |
+| `poll()`                                          | For asynchronous methods (push notifications, face capture) keep asking the server for completion status. |
+| `cancel()`                                        | Abort an in-flight transaction if the user backs out.                                                     |
+| `logout()`                                        | Silently logs the user out of the ID Provider and clears tokens.                                          |
 
 ## Requesting a challenge
 
