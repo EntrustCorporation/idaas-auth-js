@@ -370,7 +370,7 @@ export interface AuthenticationSubmissionParams {
  */
 export interface AuthenticationResponse {
   /**
-   * The Authenticated/unauthenticated authorization token.
+   * The authorization token (IDaaS JWT).
    */
   token?: string;
   /**

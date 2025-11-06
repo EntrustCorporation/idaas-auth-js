@@ -13,7 +13,7 @@ Get up and running with IDaaS Auth JS in minutes by installing the SDK, wiring a
 
 ```bash
 npm install @entrustcorp/idaas-auth-js
-# optional for face authentication
+# optional for face biometric authentication
 npm install onfido-sdk-ui
 ```
 
@@ -24,18 +24,18 @@ import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
 const idaas = new IdaasClient({
   issuerUrl: "https://example.trustedauth.com", // OIDC issuer from your tenant
-  clientId: "my-app-client-id",
-  globalScope: "openid profile email",     // defaults provided; override as needed
-  globalAudience: "https://api.example.com",
-  storageType: "localstorage",                    // "memory" | "localstorage"
-  globalUseRefreshToken: true,             // request refresh tokens by default
+  clientId: "my-app-client-id",                 // Your application's client ID
+  globalScope: "openid profile email",          // defaults provided; override as needed
+  globalAudience: "https://api.example.com",    // The resource you want the access token to grant access to
+  storageType: "localstorage",                  // "memory" | "localstorage"
+  globalUseRefreshToken: true,                  // request refresh tokens by default
 });
 ```
 
 The client exposes three facades:
 
-- `idaas.oidc` – hosted OIDC flows (popup/redirect/login/logout).
-- `idaas.rba` – self-hosted risk-based authentication.
+- `idaas.oidc` – hosted UI OIDC flows (popup/redirect/login/logout).
+- `idaas.rba` – self-hosted UI risk-based authentication.
 - `idaas.auth` – convenience authentication methods (password, passkey, OTP, etc.).
 
 ## 3. Trigger a hosted login flow
@@ -82,18 +82,7 @@ await fetch("https://api.example.com/me", {
 });
 ```
 
-## 5. Optional: Self-hosted challenge flows
-
-```typescript
-const challenge = await idaas.rba.requestChallenge({
-  userId: "user@example.com",
-  preferredAuthenticationMethod: "OTP",
-});
-
-await idaas.rba.submitChallenge({ response: "123456" });
-```
-
-## 6. Sign the user out
+## 5. Sign the user out
 
 ```typescript
 await idaas.oidc.logout({
@@ -103,6 +92,7 @@ await idaas.oidc.logout({
 
 ## Next steps
 
-- Dive deeper into [Core Concepts](core-concepts.md) to understand configuration and storage.
-- Explore the [OIDC Guide](guides/oidc.md) and [Risk-Based Authentication Guide](guides/rba.md) for advanced flows.
+- Explore the [OIDC Guide](guides/oidc.md) for more information on the OIDC methods.
+- Visit the [Risk-Based Authentication Guide](guides/rba.md) for advanced flows.
+- See the [Convenience](guides/auth.md) one off authentication methods.
 - Browse the [API Reference](reference/idaas-client.md) for complete method signatures.

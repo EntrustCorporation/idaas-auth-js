@@ -197,14 +197,13 @@ export class IdaasClient {
     if (fallbackAuthorizationOptions) {
       const { redirectUri, useRefreshToken, popup } = fallbackAuthorizationOptions;
 
-      return await this.oidc.login({
-        scope,
-        audience,
-        popup,
-        useRefreshToken,
-        redirectUri,
-        acrValues,
-      });
+      return await this.oidc.login(
+        {
+          popup,
+          redirectUri,
+        },
+        { scope, audience, useRefreshToken, acrValues },
+      );
     }
 
     throw new Error("Requested token not found, no fallback login specified");

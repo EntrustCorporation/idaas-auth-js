@@ -33,7 +33,7 @@ async function startOtp(userId: string) {
   try {
     const challenge = await idaas.auth.authenticateOtp(userId, {
       otpDeliveryType: "SMS",
-      otpDeliveryAttribute: "+15551234567",
+      otpDeliveryAttribute: "work-phone",
     });
 
     // Prompt user for the code they received
@@ -171,7 +171,7 @@ async function startTempAccessCode(userId: string) {
 ```typescript
 async function startMagicLink(userId: string) {
   try {
-    const initial = await idaas.auth.authenticateMagiclink(userId);
+    const initial = await idaas.auth.authenticateMagicLink(userId);
 
     if(initial.authenticationCompleted){
       console.log("Magic link redeemed!");
@@ -214,7 +214,7 @@ import Onfido from "onfido-sdk-ui";
 // ensure <div id="onfido-mount"></div> exists
 async function startFace(userId: string) {
   try {
-    const initial = await idaas.auth.authenticateFace(userId, {
+    const initial = await idaas.auth.authenticateFaceBiometric(userId, {
       mutualChallenge: true,
     });
 
@@ -233,7 +233,6 @@ async function startFace(userId: string) {
 
 ## Next steps
 
-- Review [Core Concepts](core-concepts.md) for architecture details.
 - Dive into the [Risk-Based Authentication Guide](guides/rba.md) for lower-level control.
 - Consult the [API Reference](reference/idaas-client.md) for method signatures.
 - Check [Troubleshooting](troubleshooting.md) for common issues.

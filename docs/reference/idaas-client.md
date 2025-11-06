@@ -14,7 +14,7 @@ const idaas = new IdaasClient(options);
 
 ### `IdaasClientOptions`
 
-| Property                 | Type                         | Description | Default |
+| Property                 | Type                         | Description                                                   | Default                  |
 | ------------------------ | ---------------------------- | ------------------------------------------------------------- | ------------------------ |
 | `issuerUrl`              | `string`                     | Entrust IDaaS issuer URL (`https://example.trustedauth.com`). | —                        |
 | `clientId`               | `string`                     | Registered application/client identifier.                     | —                        |
@@ -43,6 +43,7 @@ Risk-Based Authentication helper exposing:
 
 - `requestChallenge(authenticationParams?, tokenOptions?)`
 - `submitChallenge(submitParams)`
+- `logout()`
 - `poll()`
 - `cancel()`
 
@@ -52,7 +53,7 @@ See the [RBA Guide](../guides/rba.md) for details.
 
 ### `auth: AuthClient`
 
-Convenience helpers including `authenticatePassword`, `authenticateOtp`, `authenticatePasskey`, `authenticateSoftToken`, `authenticateFace`, and more.
+Convenience helpers including `authenticatePassword`, `authenticateOtp`, `authenticatePasskey`, `authenticateSoftToken`, `authenticateFaceBiometric`, and more.
 
 - `authenticatePassword(userId, password)`
 - `authenticateSoftToken(userId, SoftTokenOptions?)`
@@ -62,9 +63,10 @@ Convenience helpers including `authenticatePassword`, `authenticateOtp`, `authen
 - `authenticateTempAccessCode(userId, tempAccessCode)`
 - `authenticateOtp(userId, OtpOptions?)`
 - `authenticateSmartCredential(userId, SmartCredentialOptions?)`
-- `authenticateFace(userId, FaceBiometricOptions?)`
-- `authenticateMagiclink(userId)`
+- `authenticateFaceBiometric(userId, FaceBiometricOptions?)`
+- `authenticateMagicLink(userId)`
 - `submit(AuthenticationSubmissionParams?)`
+- `logout()`
 - `poll()`
 - `cancel()`
 
@@ -78,7 +80,7 @@ See the [Convenience Auth Guide](../guides/auth.md).
 
 ### `isAuthenticated(): boolean`
 
-Returns `true` when a valid (non-expired) access token exists for the default scope/audience.
+Returns `true` when a ID token exists.
 
 ### `getAccessToken(options?: GetAccessTokenOptions): Promise<string | null>`
 
@@ -128,7 +130,7 @@ Used by OIDC/RBA helpers for per-request overrides.
 
 Used when `getAccessToken` cannot find a session and you want the SDK to start a fresh authorization automatically.
 
-| Property | Type | Description |
+| Property          | Type                 | Description                                                                                                                        |
 | ----------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `acrValues`       | `string \| string[]` | Requested ACR values.                                                                                                              |
 | `redirectUri`     | `string`             | Target redirect URI for the fallback flow.                                                                                         |
@@ -233,7 +235,6 @@ Used when `getAccessToken` cannot find a session and you want the SDK to start a
 
 - [Overview](../index.md)
 - [Quickstart](../quickstart.md)
-- [Core Concepts](../core-concepts.md)
 - [OIDC Guide](../guides/oidc.md)
 - [Risk-Based Authentication Guide](../guides/rba.md)
 - [Convenience Auth Guide](../guides/auth.md)

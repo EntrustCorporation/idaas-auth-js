@@ -26,7 +26,17 @@ const idaas = new IdaasClient({
 `globalScope`, `globalAudience`, and `globalUseRefreshToken` act as defaults when you don’t pass overrides to `login`. 
 If not provided scope will default to `"openid profile email"`. 
 
-## Login flows
+## Login
+
+### Configuration options
+
+| Option            | Description                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------------- |
+| `scope`           | Space-delimited scopes; defaults to `globalScope` or `openid profile email` if no `globalScope` was set. |
+| `audience`        | The protected resource to be accessed with access tokens. Overrides `globalAudience`.                    |
+| `maxAge`          | Forces reauthentication if the session age exceeds the value (seconds).                                  |
+| `acrValues`       | Array of Authentication Context Class References (ACR) to request.                                       |
+| `useRefreshToken` | Request a refresh token during the authorization-code exchange.                                          |
 
 ### Popup (recommended for SPAs)
 
@@ -56,7 +66,7 @@ await idaas.oidc.login({
 - Requires handling the callback at the configured `redirectUri`.
 
 #### Handling the callback
-
+Ensure the page that users are redirected to after signing in on the IDaaS page makes a call to `handleRedirect` to complete the login ceremony.
 ```typescript
 // callback.ts
 await idaas.oidc.handleRedirect();
@@ -75,7 +85,7 @@ await fetch("https://api.example.com/me", {
 });
 ```
 
-- `getAccessToken(options?)` issues a refresh-token grant if needed (when refresh tokens are enabled).
+- `getAccessToken(options?)` gets the locally stored access token, or issues a refresh-token grant if needed (when refresh tokens are enabled).
 - `getIdTokenClaims()` returns decoded claims or `null` if no ID token is stored.
 - `isAuthenticated()` returns `true` when valid tokens are cached.
 
@@ -90,16 +100,6 @@ await idaas.oidc.logout({
 - Calls the IDaaS end-session endpoint and clears stored credentials.
 - `redirectUri` must be registered with the tenant.
 - If no `redirectUri` is provided users will be redirected to the issuer URL's sign in page.
-
-## Configuration options
-
-| Option            | Description                                                                                              |
-| ----------------- | -------------------------------------------------------------------------------------------------------- |
-| `scope`           | Space-delimited scopes; defaults to `globalScope` or `openid profile email` if no `globalScope` was set. |
-| `audience`        | Overrides `globalAudience` for API tokens.                                                               |
-| `maxAge`          | Forces reauthentication if the session age exceeds the value (seconds).                                  |
-| `acrValues`       | Array or space-delimited string of Authentication Context Class References (ACR) to request.             |
-| `useRefreshToken` | Request a refresh token during the authorization-code exchange.                                          |
 
 ## Error handling
 
@@ -118,16 +118,15 @@ try {
 Common issues:
 
 - **Popup blocked** – use redirect flow or instruct users to allow popups.
-- **`invalid_redirect_uri`** – confirm the URI matches the tenant configuration.
+- **`invalid_redirect_uri`** – confirm the URI matches the OIDC application configuration.
 - **Network/timeout errors** – inspect `error.cause` for underlying fetch failures.
 
 ## Testing tip
 
-- When QA-ing redirect flows locally, use `http://localhost` domains registered in the SPA Application.
+- When testing redirect flows locally, be sure to add localhost with the port number in the login redirect URIs of OIDC Application.
 
 ## Related docs
 
 - [Quickstart](../quickstart.md)
-- [Core Concepts](../core-concepts.md)
 - [API Reference](../reference/idaas-client.md)
 - [Troubleshooting](../troubleshooting.md)

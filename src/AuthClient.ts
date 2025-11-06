@@ -229,7 +229,7 @@ export class AuthClient {
    * @param userId The user ID to authenticate.
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
-  public async authenticateMagiclink(userId: string): Promise<AuthenticationResponse> {
+  public async authenticateMagicLink(userId: string): Promise<AuthenticationResponse> {
     await this.rbaClient.requestChallenge({
       userId,
       strict: true,
@@ -285,7 +285,7 @@ export class AuthClient {
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    * @throws If faceChallenge is missing, Onfido initialization fails, or polling fails.
    */
-  public async authenticateFace(
+  public async authenticateFaceBiometric(
     userId: string,
     { mutualChallenge }: FaceBiometricOptions = {},
   ): Promise<AuthenticationResponse> {

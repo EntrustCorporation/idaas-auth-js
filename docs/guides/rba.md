@@ -4,7 +4,8 @@ Risk-Based Authentication (RBA) lets you keep the login UX in your own applicati
 
 ## Prerequisites
 
-- Entrust IDaaS tenant with RBA enabled for your application.
+- Entrust IDaaS tenant with OIDC application configured with resource rules appropriate to your business requirements.
+- Enable the JWT IDaaS grant type in the OIDC application.
 - Knowledge of the authenticators you plan to surface (OTP, passkey, face, soft token, etc.).
 - HTTPS origins for WebAuthn-based methods (passkeys, FIDO).
 
@@ -31,11 +32,10 @@ All methods share the same `IdaasContext`, so defaults such as `globalScope`, `g
 
 ```typescript
 const challenge = await idaas.rba.requestChallenge({
-  userId: "alice@example.com",
-  preferredAuthenticationMethod: "OTP",
+  userId: "user@example.com",
   audience: "https://api.example.com",
   maxAge: 900,
-  transactionDetails: [{ detail: "amount", value: "10000" }],
+  transactionDetails: [{ detail: "amount", value: "10000" }], // RBA policy determines if this is considered "high-risk" and chooses authenticator accordingly
 });
 ```
 
@@ -54,17 +54,19 @@ Typical response shape:
 
 #### `AuthenticationRequestParams` (first argument)
 
-| Property                        | Description                                                                              | Default              |
-| ------------------------------- | ---------------------------------------------------------------------------------------- | -------------------- |
-| `userId`                        | Identifier of the end user. Required for most authenticators.                            | `undefined`          |
-| `password`                      | Password to submit in combined flows (e.g., password + second factor).                   | `undefined`          |
-| `preferredAuthenticationMethod` | Hint for the authenticator to use (`"OTP"`, `"PASSKEY"`, `"TOKENPUSH"`, `"FACE"`, etc.). | Determined by policy |
-| `strict`                        | If `true`, forces the preferred method; IDaaS will fail instead of falling back.         | `false`              |
-| `otpOptions`                    | `{ otpDeliveryType?, otpDeliveryAttribute? }` for OTP delivery control.                  | `undefined`          |
-| `softTokenPushOptions`          | `{ mutualChallenge? }` toggles mutual-challenge values for soft token push.              | `undefined`          |
-| `smartCredentialOptions`        | `{ summary?, pushMessageIdentifier? }` for Smart Credential push messaging.              | `undefined`          |
-| `faceBiometricOptions`          | `{ mutualChallenge? }` enables mutual challenge for face authenticator.                  | `undefined`          |
-| `transactionDetails`            | Array of contextual details (`TransactionDetail[]`) sent to IDaaS risk engine.           | `undefined`          |
+If no `preferredAuthenticationMethod` is provided, the authenticator to be used is determined by the resource rule policy. if `strict` is set to `true`, enforces the preferredAuthenticationMethod; authentication will fail instead of falling back to other methods. Defaults to 'false.
+
+| Property                        | Description                                                                              |
+| ------------------------------- | ---------------------------------------------------------------------------------------- |
+| `userId`                        | Identifier of the end user. Required for most authenticators.                            |
+| `password`                      | Password to submit in combined flows (e.g., password + second factor).                   |
+| `preferredAuthenticationMethod` | Hint for the authenticator to use (`"OTP"`, `"PASSKEY"`, `"TOKENPUSH"`, `"FACE"`, etc.). |
+| `strict`                        | If `true`, forces the preferred method; IDaaS will fail instead of falling back.         |
+| `otpOptions`                    | `{ otpDeliveryType?, otpDeliveryAttribute? }` for OTP delivery control.                  |
+| `softTokenPushOptions`          | `{ mutualChallenge? }` toggles mutual-challenge values for soft token push.              |
+| `smartCredentialOptions`        | `{ summary?, pushMessageIdentifier? }` for Smart Credential push messaging.              |
+| `faceBiometricOptions`          | `{ mutualChallenge? }` enables mutual challenge for face authenticator.                  |
+| `transactionDetails`            | Array of contextual details (`TransactionDetail[]`) sent to IDaaS risk engine.           |
 
 #### `TokenOptions` (second argument)
 
@@ -73,17 +75,17 @@ Typical response shape:
 | `audience`        | API audience for issued access tokens.                         | `globalAudience` (omitted if `undefined`)                     |
 | `scope`           | Space-delimited scopes.                                        | `globalScope` (`openid profile email` if globalScope not set) |
 | `useRefreshToken` | Request refresh tokens for this transaction.                   | `globalUseRefreshToken` (or `false`)                          |
-| `maxAge`          | Session age limit (seconds) before reauthentication is forced. | Not sent                                                      |
+| `maxAge`          | Session age limit (seconds) before reauthentication is forced. | -1                                                            |
 | `acrValues`       | Array of acceptable ACRs to satisfy.                           | Not sent                                                      |
 
 ## Rendering the challenge
 
-Use the response payload to decide what UI to show. For example, if `challenge.challengeType === "OTP"` display an input for the code; if it’s `"PASSKEY"` trigger a WebAuthn ceremony.
+Use the response payload to decide what UI to show. For example, if `challenge.method === "OTP"` display an input for the code; if it’s `"PASSKEY"` trigger a WebAuthn ceremony.
 
 ```typescript
-if (challenge.challengeType === "OTP") {
+if (challenge.method === "OTP") {
   showOtpInput();
-} else if (challenge.challengeType === "PASSKEY") {
+} else if (challenge.method === "PASSKEY") {
   await startPasskeyFlow(challenge);
 }
 ```
@@ -92,15 +94,14 @@ if (challenge.challengeType === "OTP") {
 
 ```typescript
 await idaas.rba.submitChallenge({
-  response: otpInput.value, // or WebAuthn assertion, mutual challenge data, etc.
+  response: otpCode, // or mutual challenge data, etc.
 });
 ```
 
-You can pass additional fields depending on the authenticator:
+You must use different properties for KBA & Passkey submissions.
 
-- **Passkey:** include `publicKeyCredential` response from `navigator.credentials.get`.
-- **Face / Onfido:** include capture/session IDs returned by the SDK.
-- **Soft token:** supply OTP value or acknowledge a push.
+- **Passkey:** `passkeyChallenge` Set to `publicKeyCredential` response from `navigator.credentials.get`.
+- **KBA:** `kbaChallengeAnswers` Set to an array of answers to KBA questions in order of the questions array.
 
 `submitChallenge` returns an `AuthenticationResponse` containing tokens (when the flow ends immediately) or a status update instructing you to poll.
 
@@ -109,12 +110,10 @@ You can pass additional fields depending on the authenticator:
 Some authenticators (push, face) take time to complete server-side. Use `poll` to check status until the transaction resolves or times out.
 
 ```typescript
-let result = await idaas.rba.poll();
-
-if (result.status === "COMPLETED") {
-  const token = await idaas.getAccessToken();
-} else if (result.status === "FAILED") {
-  showError(result.failureReason);
+try{
+  let result = await idaas.rba.poll();
+} catch (err) {
+  console.error("Authentication failed:", err);
 }
 ```
 
@@ -126,15 +125,28 @@ if (result.status === "COMPLETED") {
 await idaas.rba.cancel();
 ```
 
-Call this when the user exits the flow or you switch authenticators midstream. Cancelled transactions won’t produce tokens.
+Call this when you want to cancel the authentication request. Cancelled transactions won’t produce tokens.
+
+## Handling MFA flows
+
+Multi-Factor authentication flows start with a password login. You can submit the password right away with `requestChallenge` or first request a challenge with the userId to ensure the user exists.
+
+```typescript
+// With Password
+const challenge = await idaas.rba.requestChallenge({userId, password})
+
+// Check challenge.method and handle the authentication method.
+```
+
+```typescript
+// Without Password
+const challenge = await idaas.rba.requestChallenge({ userId })
+const submitResponse = await idaas.rba.submit({ response: password })
+
+//check submitResponse.method and handle the authentication method.
+```
 
 ## Handling common authenticators
-
-### OTP (SMS / Email / TOTP)
-
-1. `requestChallenge({ preferredAuthenticationMethod: "OTP" })`
-2. Prompt for the numeric code.
-3. `submitChallenge({ response: code })`
 
 ### Passkey (WebAuthn)
 
@@ -164,7 +176,7 @@ await idaas.rba.poll();
 ```
 
 ### Face (Onfido)
-> Refer to the [Onfido Web SDK documentation](https://documentation.onfido.com/sdk/web/) for details on how to use their SDK.
+> Refer to the [Onfido Web SDK documentation](https://documentation.onfido.com/sdk/web/) for details on how to use.
 
 ```typescript
 const challenge = await idaas.rba.requestChallenge({

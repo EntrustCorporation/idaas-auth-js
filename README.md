@@ -28,6 +28,14 @@ Get started with a [free trial](https://in.entrust.com/IDaaS/) account today.
 
 **Make note of your application's `Client ID` and `Issuer URL` (typically `https://{yourIdaasDomain}.region.trustedauth.com/api/oidc`). These will be required to configure the SDK.**
 
+## Content Security Policy (CSP)
+
+The IDaaS Auth SDK will send API requests to your IDaaS tenant. You will need to ensure the Content Security Policy of your web application is updated to include your IDaaS tenant hostname as an allowed connection source. For more information regarding CSP, see the MDN [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP) documentation.
+
+The following must be set in your Content Security Policy for the SDK to work. Replace entrust.us.trustedauth.com with your IDaaS tenant hostname.
+
+`connect-src 'entrust.us.trustedauth.com'`
+
 ---
 
 ## Installation
@@ -72,7 +80,6 @@ See the [Quickstart guide](docs/quickstart.md) for redirect flows, error handlin
 
 - [Overview](docs/index.md)
 - [Quickstart](docs/quickstart.md)
-- [Core Concepts](docs/core-concepts.md)
 - [OIDC Guide](docs/guides/oidc.md)
 - [Risk-Based Authentication Guide](docs/guides/rba.md)
 - [Convenience Auth Guide](docs/guides/auth.md)

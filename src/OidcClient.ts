@@ -35,15 +35,10 @@ export class OidcClient {
    * @param options - Login options including audience, scope, redirectUri, useRefreshToken, acrValues, maxAge, and popup
    * @returns The access token if using popup mode, otherwise null
    * */
-  public async login({
-    audience,
-    scope,
-    redirectUri,
-    useRefreshToken = false,
-    popup = false,
-    acrValues,
-    maxAge = -1,
-  }: OidcLoginOptions & TokenOptions = {}): Promise<string | null> {
+  public async login(
+    { redirectUri, popup = false }: OidcLoginOptions = {},
+    { audience, scope, useRefreshToken = false, acrValues, maxAge = -1 }: TokenOptions = {},
+  ): Promise<string | null> {
     if (popup) {
       const popupWindow = openPopup("");
       const { response_modes_supported } = await this.context.getConfig();

@@ -15,11 +15,11 @@ Under the hood each helper calls into `IdaasClient.rba` to request, submit, poll
 | `authenticateSoftToken(userId, options?)`       | Soft token OTP or push.                             | ⚠️ Push (no mutual challenge) auto-polls; other modes require submit poll. |
 | `authenticateGrid(userId)`                      | Grid challenge.                                     | ❌ Collect grid values then `auth.submit({ response })`.                   |
 | `authenticatePasskey(userId?)`                  | WebAuthn/FIDO or usernameless passkey.              | ✅                                                                         |
-| `authenticateKba(userId)`                       | Knowledge-based questions.                          | ❌ Supply ordered answers via `auth.submit({ kbaChallengeAnswers })`.      |
+| `authenticateKba(userId)`                       | Knowledge-based questions.                          | ❌ Supply answers in same order as questions array via `auth.submit({ kbaChallengeAnswers })`.      |
 | `authenticateTempAccessCode(userId, code)`      | Temporary access code.                              | ✅                                                                         |
-| `authenticateMagiclink(userId)`                 | Magic link (polls for completion).                  | ✅                                                                         |
+| `authenticateMagicLink(userId)`                 | Magic link                                          | ✅                                                                         |
 | `authenticateSmartCredential(userId, options?)` | Smart Credential push.                              | ✅                                                                         | 
-| `authenticateFace(userId, options?)`            | Face biometrics via Onfido.                         | ✅                                                                         |
+| `authenticateFaceBiometric(userId, options?)`   | Face biometrics via Onfido.                         | ✅                                                                         |
 
 > If you need full control over the challenge lifecycle, use the lower-level [`IdaasClient.rba`](rba.md) API.
 
@@ -30,6 +30,7 @@ Some helper methods still require extra steps, see the following methods for com
 | `submit(params)`                                | Submits OTPs, passkey assertions, KBA answers, etc.                                            |
 | `poll()`                                        | Polls the active transaction (mainly for push or face flows when mutual challenge is enabled). |
 | `cancel()`                                      | Cancels the active transaction.                                                                |
+| `logout()`                                      | Silently logs the user out of the ID Provider and clears tokens.                               |
 
 ## Setup
 
@@ -51,7 +52,7 @@ The `auth` helpers reuse `IdaasClient` defaults. When neither global nor per-cal
 ## Password authentication
 
 ```typescript
-const result = await idaas.auth.authenticatePassword("alice@example.com", "PA$$w0rd!");
+const result = await idaas.auth.authenticatePassword("user@example.com", "PA$$w0rd!");
 
 if (result.authenticationCompleted) {
   const accessToken = await idaas.getAccessToken();
@@ -63,9 +64,9 @@ if (result.authenticationCompleted) {
 ## OTP authentication
 
 ```typescript
-const challenge = await idaas.auth.authenticateOtp("alice@example.com", {
+const challenge = await idaas.auth.authenticateOtp("user@example.com", {
   otpDeliveryType: "SMS",
-  otpDeliveryAttribute: "+15551234567",
+  otpDeliveryAttribute: "work-phone",
 });
 
 // prompt user for code, then submit
@@ -83,7 +84,7 @@ await idaas.auth.submit({ response: otpCode });
 
 ```typescript
 // Push with mutual challenge
-const { pushMutualChallenge } = await idaas.auth.authenticateSoftToken("alice@example.com", {
+const { pushMutualChallenge } = await idaas.auth.authenticateSoftToken("user@example.com", {
   push: true,
   mutualChallenge: true,
 });
@@ -94,29 +95,28 @@ const final = await idaas.auth.poll();
 
 ```typescript
 // Plain push (auto-polls internally)
-const final = await idaas.auth.authenticateSoftToken("alice@example.com", {
+const final = await idaas.auth.authenticateSoftToken("user@example.com", {
   push: true,
 });
 ```
 
 ```typescript
 // OTP (manual entry)
-const challenge = await idaas.auth.authenticateSoftToken("alice@example.com");
+const challenge = await idaas.auth.authenticateSoftToken("user@example.com");
 await idaas.auth.submit({ response: softTokenCode });
 ```
 
-### `SoftTokenOptions`
-
-| Property          | Description                                        | Effect                                 |
-| ----------------- | ---------------------------------------------------| -------------------------------------- |
-| `push`            | Trigger push approval instead of OTP entry.        | `true` starts a `TOKENPUSH` challenge. |
-| `mutualChallenge` | Display mutual challenge strings in push response. | Only applied when `push` is `true`.    |
+### `SoftTokenOptions
+| Property          | Description                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| `push`            | Trigger push approval instead of OTP entry. `true` starts a `TOKENPUSH` challenge.                           |
+| `mutualChallenge` | Request mutual challenge values to prevent MFA fatigue phishing attacks. Only applied when `push` is `true`. |
 
 ## Passkey (WebAuthn)
 
 ```typescript
 const result = await idaas.auth.authenticatePasskey();
-// or authenticatePasskey("alice@example.com") for FIDO with known username
+// or authenticatePasskey("user@example.com") for FIDO with known username
 ```
 
 - Throws if the browser lacks WebAuthn support.
@@ -125,7 +125,7 @@ const result = await idaas.auth.authenticatePasskey();
 ## Grid authentication
 
 ```typescript
-const challenge = await idaas.auth.authenticateGrid("alice@example.com");
+const challenge = await idaas.auth.authenticateGrid("user@example.com");
 
 // challenge.gridChallenge.challenge → [{ row, column }, ...]
 const userResponse = collectGridValues(challenge.gridChallenge);
@@ -135,7 +135,7 @@ await idaas.auth.submit({ response: userResponse });
 ## Knowledge-based authentication (KBA)
 
 ```typescript
-const challenge = await idaas.auth.authenticateKba("alice@example.com");
+const challenge = await idaas.auth.authenticateKba("user@example.com");
 
 // challenge.kbaChallenge.userQuestions → [{ question }, ...]
 const answers = await promptForAnswers(challenge.kbaChallenge);
@@ -147,26 +147,23 @@ Answers array must match the order of the questions array.
 ## Temporary access code
 
 ```typescript
-await idaas.auth.authenticateTempAccessCode("alice@example.com", "ABC123");
+const result = await idaas.auth.authenticateTempAccessCode("user@example.com", "ABC123");
 ```
 
-Requests a temporary code challenge and submits the code in one go.
+`authenticateTempAccessCode` requests a temporary access code challenge and immediately submits the provided code.
 
 ## Magic link
 
 ```typescript
-await idaas.auth.authenticateMagiclink("alice@example.com");
-
-const final = await idaas.auth.poll();
-
+const result = await idaas.auth.authenticateMagicLink("user@example.com");
 ```
 
-The helper immediately polls.
+The authenticateMagicLink immediately polls for completion.
 
 ## Smart Credential push
 
 ```typescript
-const result = await idaas.auth.authenticateSmartCredential("alice@example.com", {
+const result = await idaas.auth.authenticateSmartCredential("user@example.com", {
   summary: "Approve login to Example App",
   pushMessageIdentifier: "example-app-login",
 });
@@ -183,9 +180,10 @@ const result = await idaas.auth.authenticateSmartCredential("alice@example.com",
 ## Face (Onfido)
 
 ```typescript
-const result = await idaas.auth.authenticateFace("alice@example.com", {
+const result = await idaas.auth.authenticateFaceBiometric("user@example.com", {
   mutualChallenge: true,
 });
+// Display the mutual challenge stored in result.pushMutualChallenge
 ```
 
 Requirements:
@@ -199,9 +197,9 @@ Requirements:
 
 ### `FaceBiometricOptions`
 
-| Property          | Description                                                |
-| ----------------- | ---------------------------------------------------------- |
-| `mutualChallenge` | Request mutual challenge values for anti-phishing prompts. |
+| Property          | Description                                                              |
+| ----------------- | ------------------------------------------------------------------------ |
+| `mutualChallenge` | Request mutual challenge values to prevent MFA fatigue phishing attacks. |
 
 ## Manual submit/poll/cancel
 
@@ -214,7 +212,7 @@ await idaas.auth.submit({
   // or passkeyResponse, kbaChallengeAnswers, etc.
 });
 
-// Poll push/face progress
+// Poll push/face if mutual auth enabled.
 await idaas.auth.poll();
 
 // Cancel the active transaction
@@ -233,11 +231,6 @@ try {
   displayError(extractMessage(error));
 }
 ```
-
-Common issues:
-
-- Unsupported browser APIs (passkey requires WebAuthn).
-- Missing optional dependency (`onfido-sdk-ui`) for face authentication.
 
 ## Next steps
 
