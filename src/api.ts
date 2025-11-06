@@ -9,6 +9,7 @@ import type {
   UserChallengeParameters,
 } from "./models/openapi-ts";
 import {
+  logoutUsingPost,
   userAuthenticateUsingPost,
   userAuthenticatorQueryUsingPost,
   userChallengeUsingPost,
@@ -216,6 +217,23 @@ export const submitAuthChallenge = async (
     throw parseResponseError(error);
   }
   return data;
+};
+
+/**
+ * Revokes the server session without redirecting the browser by calling the logout endpoint.
+ *
+ * @param authorization bearer token identifying the session to terminate
+ * @param baseUrl origin of the IDaaS API host
+ */
+export const logoutSilently = async (authorization: string, baseUrl: string): Promise<void> => {
+  const { error } = await logoutUsingPost({
+    baseUrl,
+    headers: { Authorization: `Bearer ${authorization}` },
+  });
+
+  if (error) {
+    throw parseResponseError(error);
+  }
 };
 
 export const getAuthRequestId = async (endpoint: string) => {

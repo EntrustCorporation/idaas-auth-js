@@ -1,5 +1,6 @@
 import { decodeJwt } from "jose";
 import { AuthenticationTransaction } from "./AuthenticationTransaction";
+import { logoutSilently } from "./api";
 import type { IdaasContext } from "./IdaasContext";
 import type {
   AuthenticationRequestParams,
@@ -64,12 +65,28 @@ export class RbaClient {
     }
 
     const authenticationResponse = await this.authenticationTransaction.submitAuthChallenge({ ...options });
+    this.storageManager.saveIdaasSessionToken({ token: authenticationResponse.token || "" });
 
     if (authenticationResponse.authenticationCompleted) {
       this.handleAuthenticationTransactionSuccess();
     }
 
     return authenticationResponse;
+  }
+
+  /**
+   * Ends the user’s session both locally and at the IdP by revoking the server-issued token,
+   * then clears cached credentials and resets the current authentication transaction.
+   */
+  public async logout(): Promise<void> {
+    const baseUrl = new URL(this.context.issuerUrl).origin;
+    const token = this.storageManager.getIdaasSessionToken()?.token;
+
+    if (token) {
+      await logoutSilently(token, baseUrl);
+    }
+
+    this.storageManager.remove();
   }
 
   /**
