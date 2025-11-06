@@ -192,8 +192,8 @@ Used when `getAccessToken` cannot find a session and you want the SDK to start a
 
 ### `AuthenticationRequestParams`
 
-| Property                         | Type                        | Description                                                     |
-| -------------------------------- | --------------------------- | --------------------------------------------------------------- |
+| Property                        | Type                         | Description                                                     |
+| --------------------------------| ---------------------------- | --------------------------------------------------------------- |
 | `userId`                        | `string?`                    | The user ID of the user to request the challenge for.           |
 | `password`                      | `string?`                    | The user's password to submit for MFA flows.                    |
 | `preferredAuthenticationMethod` | `IdaasAuthenticationMethod?` |  The preferred method of authentication.                        |
