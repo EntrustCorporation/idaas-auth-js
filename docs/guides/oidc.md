@@ -13,18 +13,22 @@ This guide walks through using the hosted OpenID Connect (OIDC) experience provi
 ```typescript
 import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
-const idaas = new IdaasClient({
-  issuerUrl: "https://example.trustedauth.com",
-  clientId: "spa-client",
-  globalScope: "openid profile email",
-  globalAudience: "https://api.example.com",
-  storageType: "localstorage",
-  globalUseRefreshToken: true,
-});
+const idaas = new IdaasClient(
+  {
+    issuerUrl: "https://example.trustedauth.com",
+    clientId: "spa-client",
+    storageType: "localstorage",
+  },
+  {
+    scope: "openid profile email",
+    audience: "https://api.example.com",
+    useRefreshToken: true,
+  }
+);
 ```
 
-`globalScope`, `globalAudience`, and `globalUseRefreshToken` act as defaults when you don’t pass overrides to `login`. 
-If not provided scope will default to `"openid profile email"`. 
+The second parameter provides default token options (`scope`, `audience`, and `useRefreshToken`) that act as defaults when you don't pass overrides to `login`. 
+If not provided, `scope` will default to `"openid profile email"`.
 
 ## Login
 

@@ -14,14 +14,18 @@ These examples show how to build custom login experiences on top of the IDaaS Au
 ```typescript
 import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
-const idaas = new IdaasClient({
-  issuerUrl: "https://example.trustedauth.com",
-  clientId: "spa-client",
-  globalScope: "openid profile email",
-  globalAudience: "https://api.example.com",
-  storageType: "localstorage",
-  globalUseRefreshToken: true,
-});
+const idaas = new IdaasClient(
+  {
+    issuerUrl: "https://example.trustedauth.com",
+    clientId: "spa-client",
+    storageType: "localstorage",
+  },
+  {
+    scope: "openid profile email",
+    audience: "https://api.example.com",
+    useRefreshToken: true,
+  }
+);
 ```
 
 ---

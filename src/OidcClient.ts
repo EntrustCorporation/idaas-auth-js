@@ -36,8 +36,8 @@ export class OidcClient {
    * @returns The access token if using popup mode, otherwise null
    * */
   public async login(
-    { redirectUri, popup = false }: OidcLoginOptions = {},
-    { audience, scope, useRefreshToken = false, acrValues, maxAge = -1 }: TokenOptions = {},
+    { redirectUri, popup }: OidcLoginOptions = {},
+    { audience, scope, useRefreshToken, acrValues, maxAge }: TokenOptions = {},
   ): Promise<string | null> {
     if (popup) {
       const popupWindow = openPopup("");
@@ -276,16 +276,16 @@ export class OidcClient {
         clientId: this.context.clientId,
         responseMode: "web_message",
         redirectUri: finalRedirectUri,
-        useRefreshToken: useRefreshToken ?? this.context.globalUseRefreshToken,
-        scope: scope ?? this.context.globalScope,
-        audience: audience ?? this.context.globalAudience,
+        useRefreshToken: useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
+        scope: scope ?? this.context.tokenOptions.scope,
+        audience: audience ?? this.context.tokenOptions.audience,
         acrValues,
         maxAge,
       },
     );
 
     const tokenParams: { audience?: string; scope: string; maxAge?: number } = {
-      audience: audience ?? this.context.globalAudience,
+      audience: audience ?? this.context.tokenOptions.audience,
       scope: usedScope,
     };
 
@@ -335,16 +335,16 @@ export class OidcClient {
         clientId: this.context.clientId,
         responseMode: "query",
         redirectUri: finalRedirectUri,
-        useRefreshToken: useRefreshToken ?? this.context.globalUseRefreshToken,
-        scope: scope ?? this.context.globalScope,
-        audience: audience ?? this.context.globalAudience,
+        useRefreshToken: useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
+        scope: scope ?? this.context.tokenOptions.scope,
+        audience: audience ?? this.context.tokenOptions.audience,
         acrValues,
         maxAge,
       },
     );
 
     const tokenParams: TokenParams = {
-      audience: audience ?? this.context.globalAudience,
+      audience: audience ?? this.context.tokenOptions.audience,
       scope: usedScope,
     };
 

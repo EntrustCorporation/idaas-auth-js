@@ -37,17 +37,21 @@ Some helper methods still require extra steps, see the following methods for com
 ```typescript
 import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
-const idaas = new IdaasClient({
-  issuerUrl: "https://example.trustedauth.com",
-  clientId: "spa-client",
-  globalScope: "openid profile email",
-  globalAudience: "https://api.example.com",
-  globalUseRefreshToken: true,
-  storageType: "localstorage",
-});
+const idaas = new IdaasClient(
+  {
+    issuerUrl: "https://example.trustedauth.com",
+    clientId: "spa-client",
+    storageType: "localstorage",
+  },
+  {
+    scope: "openid profile email",
+    audience: "https://api.example.com",
+    useRefreshToken: true,
+  }
+);
 ```
 
-The `auth` helpers reuse `IdaasClient` defaults. When neither global nor per-call audience/scope are provided, the SDK omits them and IDaaS applies tenant defaults.
+The `auth` helpers reuse `IdaasClient` defaults from the second parameter (`TokenOptions`). When neither default nor per-call audience/scope are provided, the SDK omits them and IDaaS applies tenant defaults.
 
 ## Password authentication
 

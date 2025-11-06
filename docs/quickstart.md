@@ -22,14 +22,18 @@ npm install onfido-sdk-ui
 ```typescript
 import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
-const idaas = new IdaasClient({
-  issuerUrl: "https://example.trustedauth.com", // OIDC issuer from your tenant
-  clientId: "my-app-client-id",                 // Your application's client ID
-  globalScope: "openid profile email",          // defaults provided; override as needed
-  globalAudience: "https://api.example.com",    // The resource you want the access token to grant access to
-  storageType: "localstorage",                  // "memory" | "localstorage"
-  globalUseRefreshToken: true,                  // request refresh tokens by default
-});
+const idaas = new IdaasClient(
+  {
+    issuerUrl: "https://example.trustedauth.com", // OIDC issuer from your tenant
+    clientId: "my-app-client-id",                 // Your application's client ID
+    storageType: "localstorage",                  // "memory" | "localstorage"
+  },
+  {
+    scope: "openid profile email",                // defaults provided; override as needed
+    audience: "https://api.example.com",          // The resource you want the access token to grant access to
+    useRefreshToken: true,                        // request refresh tokens by default
+  }
+);
 ```
 
 The client exposes three facades:

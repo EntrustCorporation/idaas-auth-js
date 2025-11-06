@@ -9,19 +9,26 @@ The `IdaasClient` class is the primary entry point to the IDaaS Auth JS SDK. It 
 ```typescript
 import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
-const idaas = new IdaasClient(options);
+const idaas = new IdaasClient(options, tokenOptions);
 ```
 
-### `IdaasClientOptions`
+### `IdaasClientOptions` (First Parameter)
 
-| Property                | Type                           | Description                                                   | Default                  |
-| ----------------------- | ------------------------------ | ------------------------------------------------------------- | ------------------------ |
-| `issuerUrl`             | `string`                       | Entrust IDaaS issuer URL (`https://example.trustedauth.com`). | —                        |
-| `clientId`              | `string`                       | Registered application/client identifier.                     | —                        |
-| `globalScope`           | `string?`                      | Space-delimited scopes used when per-call scope is omitted.   | `"openid profile email"` |
-| `globalAudience`        | `string?`                      | Default API audience. Omitted when `undefined`.               | `undefined`              |
-| `globalUseRefreshToken` | `boolean?`                     | Request refresh tokens by default.                            | `false`                  |
-| `storageType`           | `"memory?" \| "localstorage?"` | Token persistence strategy.                                   | `"memory"`               |
+| Property      | Type                           | Description                                                    | Default    |
+| ------------- | ------------------------------ | -------------------------------------------------------------- | ---------- |
+| `issuerUrl`   | `string`                       | Entrust IDaaS issuer URL (`https://example.trustedauth.com`).  | —          |
+| `clientId`    | `string`                       | Registered application/client identifier.                      | —          |
+| `storageType` | `"memory?" \| "localstorage?"` | Token persistence strategy.                                    | `"memory"` |
+
+### `TokenOptions` (Second Parameter - Optional)
+
+| Property          | Type        | Description                                               | Default                  |
+| ----------------- | ----------- | --------------------------------------------------------- | ------------------------ |
+| `scope`           | `string?`   | Space-delimited scopes used when per-call scope omitted.  | `"openid profile email"` |
+| `audience`        | `string?`   | Default API audience. Omitted when `undefined`.           | `undefined`              |
+| `useRefreshToken` | `boolean?`  | Request refresh tokens by default.                        | `false`                  |
+| `maxAge`          | `number?`   | Maximum age of tokens in seconds.                         | Not sent                 |
+| `acrValues`       | `string[]?` | Requested ACR values.                                     | Not sent                 |
 
 ---
 

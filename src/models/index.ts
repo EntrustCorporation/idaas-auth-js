@@ -28,28 +28,6 @@ export interface IdaasClientOptions {
    * @default "memory"
    */
   storageType?: "memory" | "localstorage";
-
-  /**
-   * The global scope to be used.
-   *
-   * This defaults to `openid profile email` if not set. If you are setting extra scopes and require `profile` and `email` to be included then you must include them in the provided scope.
-   *
-   * Note: The `openid` scope is always applied regardless of this setting.
-   */
-  globalScope?: string;
-
-  /**
-   * The global audience to be used for requesting API access.
-   */
-  globalAudience?: string;
-
-  /**
-   * If true, refresh tokens are used to fetch new access tokens from the IDaaS server.
-   * The default setting is `false`.
-   *
-   * Note: Use of refresh tokens must be enabled on your IDaaS client application. Tokens using refresh tokens will have the `offline_access` scope applied.
-   */
-  globalUseRefreshToken?: boolean;
 }
 
 /**

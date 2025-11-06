@@ -2,7 +2,7 @@ import type { JWTPayload } from "jose";
 import { AuthClient } from "./AuthClient";
 import { getUserInfo, type RefreshTokenRequest, requestToken, type TokenResponse } from "./api";
 import { IdaasContext } from "./IdaasContext";
-import type { GetAccessTokenOptions, IdaasClientOptions, UserClaims } from "./models";
+import type { GetAccessTokenOptions, IdaasClientOptions, TokenOptions, UserClaims } from "./models";
 import { OidcClient } from "./OidcClient";
 import { RbaClient } from "./RbaClient";
 import { type AccessToken, StorageManager } from "./storage/StorageManager";
@@ -34,23 +34,25 @@ export class IdaasClient {
   /**
    * Creates a new IdaasClient instance for handling OIDC authentication flows.
    *
-   * @param options Configuration options for the client including issuer URL, client ID, and global settings
+   * @param options Configuration options for the client including issuer URL, client ID, and storage type
+   * @param tokenOptions Default token options including audience, scope, and refresh token settings
    */
-  constructor({
-    issuerUrl,
-    clientId,
-    globalAudience,
-    globalScope,
-    globalUseRefreshToken,
-    storageType = "memory",
-  }: IdaasClientOptions) {
+  constructor({ issuerUrl, clientId, storageType = "memory" }: IdaasClientOptions, tokenOptions: TokenOptions = {}) {
     this.storageManager = new StorageManager(clientId, storageType);
+
+    // Ensure all tokenOptions properties have defined values
+    const requiredTokenOptions: Required<TokenOptions> = {
+      scope: tokenOptions.scope ?? "openid profile email",
+      audience: tokenOptions.audience ?? "",
+      useRefreshToken: tokenOptions.useRefreshToken ?? false,
+      maxAge: tokenOptions.maxAge ?? -1,
+      acrValues: tokenOptions.acrValues ?? [],
+    };
+
     this.context = new IdaasContext({
       issuerUrl,
       clientId,
-      globalAudience,
-      globalScope,
-      globalUseRefreshToken,
+      tokenOptions: requiredTokenOptions,
     });
 
     // Initialize clients with this.context instance as the context provider
@@ -112,15 +114,15 @@ export class IdaasClient {
    * The `fallbackAuthorizationOptions` parameter determines the result if there are no access tokens with the required scopes and audience that are unexpired or refreshable.
    */
   public async getAccessToken({
-    audience = this.context.globalAudience,
-    scope = this.context.globalScope,
+    audience = this.context.tokenOptions.audience,
+    scope = this.context.tokenOptions.scope,
     acrValues = [],
     fallbackAuthorizationOptions,
   }: GetAccessTokenOptions = {}): Promise<string | null> {
     // 1. Remove tokens that are no longer valid
     this.storageManager.removeExpiredTokens();
     let accessTokens = this.storageManager.getAccessTokens();
-    const requestedScopes = scope.split(" ");
+    const requestedScopes = this.context.tokenOptions.scope.split(" ");
     const now = Date.now();
     // buffer (in seconds) to refresh/delete early, ensures an expired token is not returned
     const buffer = 15;
