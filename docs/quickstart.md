@@ -48,15 +48,23 @@ The client exposes three facades:
 
 ```typescript
 try {
-  await idaas.oidc.login({
-    popup: true,
-    scope: "openid profile email",
-    audience: "https://api.example.com",
-  });
+  await idaas.oidc.login({ popup: true });
 } catch (error) {
   // Handle popup blockers, network errors, or IDaaS API errors
   console.error("Login failed", error);
 }
+```
+
+To override token defaults per-call, pass a second parameter:
+
+```typescript
+await idaas.oidc.login(
+  { popup: true },
+  {
+    scope: "openid profile email offline_access",
+    audience: "https://different-api.example.com",
+  }
+);
 ```
 
 ### Redirect flow

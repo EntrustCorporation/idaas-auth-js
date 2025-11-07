@@ -1,32 +1,12 @@
-# Self-Hosted UI Examples
+# Self-Hosted Authentication Examples
 
-These examples show how to build custom login experiences on top of the IDaaS Auth JS SDK. Each flow:
+This document provides complete examples for building your own login UI using the `IdaasClient.rba` and `IdaasClient.auth` facades. These examples demonstrate the request-submit-poll lifecycle for popular authenticator types.
 
-1. Instantiates an `IdaasClient`.
-2. Starts a Risk-Based Authentication (RBA) transaction.
-3. Shows the challenge in your UI.
-4. Submits the user’s input (and optionally polls for completion).
+## Prerequisites
 
----
-
-## Base client setup
-
-```typescript
-import { IdaasClient } from "@entrustcorp/idaas-auth-js";
-
-const idaas = new IdaasClient(
-  {
-    issuerUrl: "https://example.trustedauth.com",
-    clientId: "spa-client",
-    storageType: "localstorage",
-  },
-  {
-    scope: "openid profile email",
-    audience: "https://api.example.com",
-    useRefreshToken: true,
-  }
-);
-```
+- Review the [Quickstart guide](quickstart.md) for SDK installation and basic client initialization
+- Understand the [Risk-Based Authentication Guide](guides/rba.md) for the underlying transaction flow
+- See the [Convenience Auth Guide](guides/auth.md) for simplified helper methods
 
 ---
 
@@ -86,7 +66,7 @@ async function startSoftTokenPush(userId: string) {
     });
 
     if (initial.pushMutualChallenge) {
-      console.log("Challenge:", initial.pushMutualChallenge.userChallenge);
+      console.log("Challenge:", initial.pushMutualChallenge);
     }
 
     const final = await idaas.auth.poll();

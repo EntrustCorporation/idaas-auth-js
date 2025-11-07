@@ -21,8 +21,6 @@ OR
 requestChallenge → poll → success/failure
 ```
 
-All methods share the same `IdaasContext`, so defaults such as `globalScope`, `globalAudience`, and refresh-token preference flow through automatically.
-
 ## Available methods
 
 | Method                                            | Description                                                                                               |
@@ -36,12 +34,16 @@ All methods share the same `IdaasContext`, so defaults such as `globalScope`, `g
 ## Requesting a challenge
 
 ```typescript
-const challenge = await idaas.rba.requestChallenge({
-  userId: "user@example.com",
-  audience: "https://api.example.com",
-  maxAge: 900,
-  transactionDetails: [{ detail: "amount", value: "10000" }], // RBA policy determines if this is considered "high-risk" and chooses authenticator accordingly
-});
+const challenge = await idaas.rba.requestChallenge(
+  {
+    userId: "user@example.com",
+    transactionDetails: [{ detail: "amount", value: "10000" }], // RBA policy determines if this is considered "high-risk" and chooses authenticator accordingly
+  },
+  {
+    audience: "https://api.example.com",
+    maxAge: 900,
+  }
+);
 ```
 
 Typical response shape:
@@ -57,9 +59,11 @@ Typical response shape:
 
 ### Option reference
 
+See the [API Reference](../reference/idaas-client.md) for complete type definitions.
+
 #### `AuthenticationRequestParams` (first argument)
 
-If no `preferredAuthenticationMethod` is provided, the authenticator to be used is determined by the resource rule policy. if `strict` is set to `true`, enforces the preferredAuthenticationMethod; authentication will fail instead of falling back to other methods. Defaults to 'false.
+Request parameters control which authenticator to use and provide context for risk evaluation:
 
 | Property                        | Description                                                                              |
 | ------------------------------- | ---------------------------------------------------------------------------------------- |
@@ -67,21 +71,22 @@ If no `preferredAuthenticationMethod` is provided, the authenticator to be used 
 | `password`                      | Password to submit in combined flows (e.g., password + second factor).                   |
 | `preferredAuthenticationMethod` | Hint for the authenticator to use (`"OTP"`, `"PASSKEY"`, `"TOKENPUSH"`, `"FACE"`, etc.). |
 | `strict`                        | If `true`, forces the preferred method; IDaaS will fail instead of falling back.         |
-| `otpOptions`                    | `{ otpDeliveryType?, otpDeliveryAttribute? }` for OTP delivery control.                  |
-| `softTokenPushOptions`          | `{ mutualChallenge? }` toggles mutual-challenge values for soft token push.              |
-| `smartCredentialOptions`        | `{ summary?, pushMessageIdentifier? }` for Smart Credential push messaging.              |
-| `faceBiometricOptions`          | `{ mutualChallenge? }` enables mutual challenge for face authenticator.                  |
-| `transactionDetails`            | Array of contextual details (`TransactionDetail[]`) sent to IDaaS risk engine.           |
+
+For available options types (`otpOptions`, `softTokenPushOptions`, `smartCredentialOptions`, `faceBiometricOptions`) and `transactionDetails`, see the [AuthenticationRequestParams reference](../reference/idaas-client.md#authenticationrequestparams).
 
 #### `TokenOptions` (second argument)
 
+The second parameter to `requestChallenge()` allows you to override default token settings:
+
 | Property          | Description                                                    | Default                                                       |
 | ----------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
-| `audience`        | API audience for issued access tokens.                         | `globalAudience` (omitted if `undefined`)                     |
-| `scope`           | Space-delimited scopes.                                        | `globalScope` (`openid profile email` if globalScope not set) |
-| `useRefreshToken` | Request refresh tokens for this transaction.                   | `globalUseRefreshToken` (or `false`)                          |
-| `maxAge`          | Session age limit (seconds) before reauthentication is forced. | -1                                                            |
+| `audience`        | API audience for issued access tokens.                         | Constructor `audience` (omitted if `undefined`)                     |
+| `scope`           | Space-delimited scopes.                                        | Constructor `scope` (`"openid profile email"` if not set) |
+| `useRefreshToken` | Request refresh tokens for this transaction.                   | Constructor `useRefreshToken` (or `false`)                          |
+| `maxAge`          | Session age limit (seconds) before reauthentication is forced. | `-1`                                                            |
 | `acrValues`       | Array of acceptable ACRs to satisfy.                           | Not sent                                                      |
+
+For complete details, see the [API Reference](../reference/idaas-client.md#tokenoptions).
 
 ## Rendering the challenge
 

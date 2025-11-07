@@ -65,7 +65,7 @@ export interface TokenOptions {
   scope?: string;
 
   /**
-   * Determines whether the token obtained from this login request can use refresh tokens.  This defaults to the `globalUseRefreshToken` set in your `IdaasClientOptions` if not set.
+   * Determines whether the token obtained from this login request can use refresh tokens.  This defaults to the `useRefreshToken` set in your `IdaasClientOptions` if not set.
    *
    * Note: Use of refresh tokens must be enabled on your IDaaS client application.
    */

@@ -34,6 +34,8 @@ Some helper methods still require extra steps, see the following methods for com
 
 ## Setup
 
+See the [Quickstart guide](../quickstart.md) for detailed client initialization. The basic pattern is:
+
 ```typescript
 import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
@@ -51,7 +53,7 @@ const idaas = new IdaasClient(
 );
 ```
 
-The `auth` helpers reuse `IdaasClient` defaults from the second parameter (`TokenOptions`). When neither default nor per-call audience/scope are provided, the SDK omits them and IDaaS applies tenant defaults.
+The `auth` helpers inherit token defaults from the second constructor parameter. When neither default nor per-call audience/scope are provided, the SDK omits them and IDaaS applies tenant defaults.
 
 ## Password authentication
 
@@ -77,12 +79,7 @@ const challenge = await idaas.auth.authenticateOtp("user@example.com", {
 await idaas.auth.submit({ response: otpCode });
 ```
 
-### `OtpOptions`
-
-| Property               | Description                                                                                                             |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `otpDeliveryType`      | Channel for the OTP (e.g., `"SMS"`, `"EMAIL"`, `"VOICE", "WECHAT", "WHATSAPP"`). Leave undefined to use policy default. |
-| `otpDeliveryAttribute` | Override which phone/email attribute receives the OTP.                                                                  |
+> See [`OtpOptions`](../reference/idaas-client.md#otpoptions) in the API reference for available configuration options.
 
 ## Soft token (push or OTP)
 
@@ -110,11 +107,7 @@ const challenge = await idaas.auth.authenticateSoftToken("user@example.com");
 await idaas.auth.submit({ response: softTokenCode });
 ```
 
-### `SoftTokenOptions
-| Property          | Description                                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------------------------------------ |
-| `push`            | Trigger push approval instead of OTP entry. `true` starts a `TOKENPUSH` challenge.                           |
-| `mutualChallenge` | Request mutual challenge values to prevent MFA fatigue phishing attacks. Only applied when `push` is `true`. |
+> See [`SoftTokenOptions`](../reference/idaas-client.md#softtokenoptions) in the API reference for available configuration options.
 
 ## Passkey (WebAuthn)
 
@@ -174,12 +167,7 @@ const result = await idaas.auth.authenticateSmartCredential("user@example.com", 
 // Automatically polls until the push is approved or rejected.
 ```
 
-### `SmartCredentialOptions`
-
-| Property                | Description                               |
-| ----------------------- | ----------------------------------------- |
-| `summary`               | Text shown in the push notification.      |
-| `pushMessageIdentifier` | Identifier for customized push templates. |
+> See [`SmartCredentialOptions`](../reference/idaas-client.md#smartcredentialoptions) in the API reference for available configuration options.
 
 ## Face (Onfido)
 
@@ -190,6 +178,8 @@ const result = await idaas.auth.authenticateFaceBiometric("user@example.com", {
 // Display the mutual challenge stored in result.pushMutualChallenge
 ```
 
+> See [`FaceBiometricOptions`](../reference/idaas-client.md#facebiometricoptions) in the API reference for available configuration options.
+
 Requirements:
 
 - Install the optional peer dependency: `npm install onfido-sdk-ui`.
@@ -198,12 +188,6 @@ Requirements:
 - For non-web captures, it returns the response—call `idaas.auth.poll()`.
 
 > Consult the [Onfido Web SDK documentation](https://documentation.onfido.com/sdk/web/) for UI configuration and best practices.
-
-### `FaceBiometricOptions`
-
-| Property          | Description                                                              |
-| ----------------- | ------------------------------------------------------------------------ |
-| `mutualChallenge` | Request mutual challenge values to prevent MFA fatigue phishing attacks. |
 
 ## Manual submit/poll/cancel
 

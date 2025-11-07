@@ -30,7 +30,7 @@ Use `oidc` when you want Entrust to host the whole login: it handles PKCE, redir
 ## Token handling
 
 - Access/refresh/ID tokens persist through `StorageManager`.
-- `globalUseRefreshToken` enables refresh token requests by default.
+- `useRefreshToken` enables refresh token requests by default.
 - `getAccessToken()` refreshes expired access tokens automatically when a refresh token exists.
 - Call `logout()` to wipe cached credentials.
 

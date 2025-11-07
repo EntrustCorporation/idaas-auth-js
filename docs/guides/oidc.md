@@ -28,7 +28,7 @@ const idaas = new IdaasClient(
 ```
 
 The second parameter provides default token options (`scope`, `audience`, and `useRefreshToken`) that act as defaults when you don't pass overrides to `login`. 
-If not provided, `scope` will default to `"openid profile email"`.
+If not provided, `scope` defaults to `"openid profile email"`.
 
 ## Login
 
@@ -41,23 +41,29 @@ If not provided, `scope` will default to `"openid profile email"`.
 
 ### Token Options
 
+When calling `login()`, you can optionally provide a second `TokenOptions` parameter to override the defaults set during client initialization:
+
 | Option            | Description                                                                                              |
 | ----------------- | -------------------------------------------------------------------------------------------------------- |
-| `scope`           | Space-delimited scopes; defaults to `globalScope` or `openid profile email` if no `globalScope` was set. |
-| `audience`        | The protected resource to be accessed with access tokens. Overrides `globalAudience`.                    |
+| `scope`           | Space-delimited scopes; defaults to constructor `scope` or `"openid profile email"` if not set. |
+| `audience`        | The protected resource to be accessed with access tokens. Overrides constructor `audience`.                    |
 | `maxAge`          | Forces reauthentication if the session age exceeds the value (seconds).                                  |
 | `acrValues`       | Array of Authentication Context Class References (ACR) to request.                                       |
 | `useRefreshToken` | Request a refresh token during the authorization-code exchange.                                          |
 
+For complete details, see the [API Reference](../reference/idaas-client.md#tokenoptions).
+
 ### Popup (recommended for SPAs)
 
 ```typescript
-await idaas.oidc.login({
-  popup: true,
-  scope: "openid profile email",
-  audience: "https://api.example.com",
-  maxAge: 900,
-});
+await idaas.oidc.login(
+  { popup: true },
+  {
+    scope: "openid profile email",
+    audience: "https://api.example.com",
+    maxAge: 900,
+  }
+);
 ```
 
 - Opens Entrust’s hosted UI in a centered popup.
@@ -67,10 +73,12 @@ await idaas.oidc.login({
 ### Redirect
 
 ```typescript
-await idaas.oidc.login({
-  popup: false,
-  redirectUri: "https://app.example.com/callback",
-});
+await idaas.oidc.login(
+  {
+    popup: false,
+    redirectUri: "https://app.example.com/callback",
+  }
+);
 ```
 
 - Navigates the browser to the hosted login page.
