@@ -40,8 +40,6 @@ describe("IdaasClient.getAccessToken", () => {
     expect(spyOnPersistenceGetAccessTokens).toBeCalled();
   });
 
-
-
   test("uses audience provided if present", async () => {
     storeToken({
       ...TEST_ACCESS_TOKEN_OBJECT,

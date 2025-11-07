@@ -170,7 +170,7 @@ describe("IdaasClient.oidc.login", () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { maxAge: 0 });
 
       expect(spyOnGenerateAuthorizationUrl).toBeCalled();
-      const { url: authUrl} = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
+      const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
       const { max_age: maxAge } = getUrlParams(authUrl);
 
       expect(maxAge).toBe("0");
