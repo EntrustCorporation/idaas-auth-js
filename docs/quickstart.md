@@ -25,7 +25,7 @@ import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 const idaas = new IdaasClient(
   {
     issuerUrl: "https://example.trustedauth.com", // OIDC issuer from your tenant
-    clientId: "my-app-client-id",                 // Your application's client ID
+    clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",                 // Your application's client ID
     storageType: "localstorage",                  // "memory" | "localstorage"
   },
   {
@@ -50,7 +50,6 @@ The client exposes three facades:
 try {
   await idaas.oidc.login({ popup: true });
 } catch (error) {
-  // Handle popup blockers, network errors, or IDaaS API errors
   console.error("Login failed", error);
 }
 ```

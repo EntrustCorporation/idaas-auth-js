@@ -16,7 +16,7 @@ import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 const idaas = new IdaasClient(
   {
     issuerUrl: "https://example.trustedauth.com",
-    clientId: "spa-client",
+    clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     storageType: "localstorage",
   },
   {
@@ -26,9 +26,6 @@ const idaas = new IdaasClient(
   }
 );
 ```
-
-The second parameter provides default token options (`scope`, `audience`, and `useRefreshToken`) that act as defaults when you don't pass overrides to `login`. 
-If not provided, `scope` defaults to `"openid profile email"`.
 
 ## Login
 
@@ -45,8 +42,8 @@ When calling `login()`, you can optionally provide a second `TokenOptions` param
 
 | Option            | Description                                                                                              |
 | ----------------- | -------------------------------------------------------------------------------------------------------- |
-| `scope`           | Space-delimited scopes; defaults to constructor `scope` or `"openid profile email"` if not set. |
-| `audience`        | The protected resource to be accessed with access tokens. Overrides constructor `audience`.                    |
+| `scope`           | Space-delimited scopes; defaults to constructor `scope` or `"openid profile email"` if not set.          |
+| `audience`        | The protected resource to be accessed with access tokens.                                                |
 | `maxAge`          | Forces reauthentication if the session age exceeds the value (seconds).                                  |
 | `acrValues`       | Array of Authentication Context Class References (ACR) to request.                                       |
 | `useRefreshToken` | Request a refresh token during the authorization-code exchange.                                          |
@@ -128,9 +125,7 @@ Wrap calls in `try/catch` to surface browser or IDaaS errors:
 try {
   await idaas.oidc.login({ popup: true });
 } catch (error) {
-  if (error instanceof Error) {
-    console.error("OIDC login failed:", error.message);
-  }
+  console.error("OIDC login failed", error);
 }
 ```
 
@@ -138,7 +133,6 @@ Common issues:
 
 - **Popup blocked** – use redirect flow or instruct users to allow popups.
 - **`invalid_redirect_uri`** – confirm the URI matches the OIDC application configuration.
-- **Network/timeout errors** – inspect `error.cause` for underlying fetch failures.
 
 ## Testing tip
 

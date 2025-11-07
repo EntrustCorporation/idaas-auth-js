@@ -103,7 +103,7 @@ export interface OidcLoginOptions {
 /**
  * The configurable options for the Logout method.
  */
-export interface LogoutOptions {
+export interface OidcLogoutOptions {
   /**
    * The URI to be redirected to after a successful logout. This URI must be included in the `Logout Redirect URI(s)` field in your IDaaS client application settings.
    */

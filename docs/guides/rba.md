@@ -122,8 +122,8 @@ Some authenticators (push, face) take time to complete server-side. Use `poll` t
 ```typescript
 try{
   let result = await idaas.rba.poll();
-} catch (err) {
-  console.error("Authentication failed:", err);
+} catch (error) {
+  console.error("Authentication failed", error);
 }
 ```
 
@@ -207,7 +207,7 @@ const onfidoSdk = (challenge: AuthenticationResponse) => {
         authenticationPollResponse = await idaasClient.rba.poll();
         updateSubmitUI(authenticationPollResponse);
       } catch (error) {
-        console.error("Error during authentication polling:", error);
+        console.error("Error during authentication polling", error);
       } finally {
         instance.tearDown();
       }

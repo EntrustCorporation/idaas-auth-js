@@ -40,7 +40,7 @@ Hosted OpenID Connect helper providing:
 
 - `login(options?: OidcLoginOptions, tokenOptions?: TokenOptions)`
 - `handleRedirect()`
-- `logout(options?: LogoutOptions)`
+- `logout(options?: OidcLogoutOptions)`
 
 See the [OIDC Guide](../guides/oidc.md) for usage.
 
@@ -59,8 +59,6 @@ Risk-Based Authentication helper exposing:
 See the [RBA Guide](../guides/rba.md) for details.
 
 ### `auth: AuthClient`
-
-Convenience helpers including `authenticatePassword`, `authenticateOtp`, `authenticatePasskey`, `authenticateSoftToken`, `authenticateFaceBiometric`, and more.
 
 - `authenticatePassword(userId, password)`
 - `authenticateSoftToken(userId, SoftTokenOptions?)`
@@ -127,7 +125,7 @@ Used by OIDC/RBA helpers for per-request overrides. When not provided, values de
 | `popup`       | `boolean?` | Use hosted popup (`true`) or redirect (`false`). |
 | `redirectUri` | `string?`  | Callback URI for redirect/popup flows.           |
 
-### `LogoutOptions`
+### `OidcLogoutOptions`
 
 | Property      | Type      | Description                                    |
 | ------------- | --------- | ---------------------------------------------- |

@@ -27,7 +27,7 @@ async function startOtp(userId: string) {
 
     console.log("OTP authentication complete!");
   } catch (error) {
-    console.error("OTP authentication failed:", error);
+    console.error("OTP authentication failed", error);
   }
 }
 ```
@@ -45,7 +45,7 @@ async function startPasskey(userId?: string) {
       console.log("Passkey authentication complete!");
     }
   } catch (error) {
-    console.error("Passkey authentication failed:", error);
+    console.error("Passkey authentication failed", error);
   }
 }
 ```
@@ -78,7 +78,7 @@ async function startSoftTokenPush(userId: string) {
     }
     
   } catch (error) {
-    console.error("Soft token push failed:", error);
+    console.error("Soft token push failed", error);
   }
 }
 ```
@@ -101,7 +101,7 @@ async function startGrid(userId: string) {
       console.log("Grid challenge satisfied!");
     }
   } catch (error) {
-    console.error("Grid authentication failed:", error);
+    console.error("Grid authentication failed", error);
   }
 }
 ```
@@ -123,7 +123,7 @@ async function startKba(userId: string) {
       console.log("KBA passed!");
     }
   } catch (error) {
-    console.error("KBA authentication failed:", error);
+    console.error("KBA authentication failed", error);
   }
 }
 ```
@@ -143,7 +143,7 @@ async function startTempAccessCode(userId: string) {
       console.log("Temporary access code accepted!");
     }
   } catch (error) {
-    console.error("Temporary access code failed:", error);
+    console.error("Temporary access code failed", error);
   }
 }
 ```
@@ -162,7 +162,7 @@ async function startMagicLink(userId: string) {
     }
 
   } catch (error) {
-    console.error("Magic link failed:", error);
+    console.error("Magic link failed", error);
   }
 }
 ```
@@ -184,7 +184,7 @@ async function startSmartCredential(userId: string) {
     }
 
   } catch (error) {
-    console.error("Smart Credential push failed:", error);
+    console.error("Smart Credential push failed", error);
   }
 }
 ```
@@ -206,7 +206,7 @@ async function startFace(userId: string) {
       console.log("Face verification succeeded!");
     }
   } catch (error) {
-    console.error("Face authentication failed:", error);
+    console.error("Face authentication failed", error);
   }
 }
 ```

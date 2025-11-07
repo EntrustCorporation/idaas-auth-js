@@ -7,7 +7,7 @@ export type {
   FaceBiometricOptions,
   IdaasAuthenticationMethod,
   IdaasClientOptions,
-  LogoutOptions,
+  OidcLogoutOptions,
   OidcLoginOptions,
   OtpOptions,
   SmartCredentialOptions,

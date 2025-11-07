@@ -139,7 +139,7 @@ The SDK exports the following from `src/index.ts`:
 - `IdaasClientOptions`: Client configuration options
 - `TokenOptions`: Token request options
 - `OidcLoginOptions`: OIDC-specific login options
-- `LogoutOptions`: Logout configuration
+- `OidcLogoutOptions`: Logout configuration
 
 **Authentication Types:**
 - `AuthenticationRequestParams`: RBA challenge request parameters

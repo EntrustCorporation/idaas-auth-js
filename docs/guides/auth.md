@@ -42,7 +42,7 @@ import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 const idaas = new IdaasClient(
   {
     issuerUrl: "https://example.trustedauth.com",
-    clientId: "spa-client",
+    clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     storageType: "localstorage",
   },
   {

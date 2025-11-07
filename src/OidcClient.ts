@@ -1,7 +1,7 @@
 import { type AccessTokenRequest, requestToken } from "./api";
 import type { ValidatedTokenResponse } from "./IdaasClient";
 import type { IdaasContext } from "./IdaasContext";
-import type { AuthorizeResponse, LogoutOptions, OidcLoginOptions, TokenOptions } from "./models";
+import type { AuthorizeResponse, OidcLogoutOptions, OidcLoginOptions, TokenOptions } from "./models";
 import type { AccessToken, StorageManager, TokenParams } from "./storage/StorageManager";
 import { listenToAuthorizePopup, openPopup } from "./utils/browser";
 import { calculateEpochExpiry, formatUrl, sanitizeUri } from "./utils/format";
@@ -60,7 +60,7 @@ export class OidcClient {
    * If a redirectUri is provided, the user will be redirected to that URI after logout.
    * @param options - Logout options, configurable redirectUri
    */
-  public async logout({ redirectUri }: LogoutOptions = {}): Promise<void> {
+  public async logout({ redirectUri }: OidcLogoutOptions = {}): Promise<void> {
     this.storageManager.remove();
 
     window.location.href = await this.generateLogoutUrl(redirectUri);
