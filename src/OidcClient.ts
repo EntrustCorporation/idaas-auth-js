@@ -1,7 +1,7 @@
 import { type AccessTokenRequest, requestToken } from "./api";
 import type { ValidatedTokenResponse } from "./IdaasClient";
 import type { IdaasContext } from "./IdaasContext";
-import type { AuthorizeResponse, OidcLogoutOptions, OidcLoginOptions, TokenOptions } from "./models";
+import type { AuthorizeResponse, OidcLoginOptions, OidcLogoutOptions, TokenOptions } from "./models";
 import type { AccessToken, StorageManager, TokenParams } from "./storage/StorageManager";
 import { listenToAuthorizePopup, openPopup } from "./utils/browser";
 import { calculateEpochExpiry, formatUrl, sanitizeUri } from "./utils/format";
