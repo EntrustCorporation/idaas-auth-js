@@ -63,16 +63,7 @@ See the [API Reference](../reference/idaas-client.md) for complete type definiti
 
 #### `AuthenticationRequestParams` (first argument)
 
-Request parameters control which authenticator to use and provide context for risk evaluation:
-
-| Property                        | Description                                                                              |
-| ------------------------------- | ---------------------------------------------------------------------------------------- |
-| `userId`                        | Identifier of the end user. Required for most authenticators.                            |
-| `password`                      | Password to submit in combined flows (e.g., password + second factor).                   |
-| `preferredAuthenticationMethod` | Hint for the authenticator to use (`"OTP"`, `"PASSKEY"`, `"TOKENPUSH"`, `"FACE"`, etc.). |
-| `strict`                        | If `true`, forces the preferred method; IDaaS will fail instead of falling back.         |
-
-For available options types (`otpOptions`, `softTokenPushOptions`, `smartCredentialOptions`, `faceBiometricOptions`) and `transactionDetails`, see the [AuthenticationRequestParams reference](../reference/idaas-client.md#authenticationrequestparams).
+See the [AuthenticationRequestParams reference](../reference/idaas-client.md#authenticationrequestparams) for complete details.
 
 #### `TokenOptions` (second argument)
 

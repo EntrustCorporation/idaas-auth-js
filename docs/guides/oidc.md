@@ -31,10 +31,7 @@ const idaas = new IdaasClient(
 
 ### Login Options
 
-| Option        | Description                                                                     |
-| ------------- | ------------------------------------------------------------------------------- |
-| `redirectUri` | The URI to redirect to after a successful login using the redirect flow.        |
-| `popup`       | A flag to determine whether to do a redirect flow or popup flow for logging in. |
+See the [OidcLoginOptions reference](../reference/idaas-client.md#oidcloginoptions) for complete details.
 
 ### Token Options
 
