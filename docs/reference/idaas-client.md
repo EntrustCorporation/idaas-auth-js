@@ -54,16 +54,16 @@ See the [RBA Guide](../guides/rba.md) for details.
 
 ### `auth: AuthClient`
 
-- `authenticatePassword(userId, password)`
-- `authenticateSoftToken(userId, SoftTokenOptions?)`
-- `authenticateGrid(userId)`
-- `authenticatePasskey(userId?)`
-- `authenticateKba(userId)`
-- `authenticateTempAccessCode(userId, tempAccessCode)`
-- `authenticateOtp(userId, OtpOptions?)`
-- `authenticateSmartCredential(userId, SmartCredentialOptions?)`
-- `authenticateFaceBiometric(userId, FaceBiometricOptions?)`
-- `authenticateMagicLink(userId)`
+- `password(userId, password)`
+- `softToken(userId, SoftTokenOptions?)`
+- `grid(userId)`
+- `passkey(userId?)`
+- `kba(userId)`
+- `tempAccessCode(userId, tempAccessCode)`
+- `otp(userId, OtpOptions?)`
+- `smartCredential(userId, SmartCredentialOptions?)`
+- `faceBiometric(userId, FaceBiometricOptions?)`
+- `magicLink(userId)`
 - `submit(AuthenticationSubmissionParams?)`
 - `logout()`
 - `poll()`

@@ -10,16 +10,16 @@ Under the hood each helper calls into `IdaasClient.rba` to request, submit, poll
 
 | Method                                          | Description                                         | Handles Submission?                                                        | 
 | ----------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------- |
-| `authenticatePassword(userId, password)`        | Password-only authentication.                       | ✅                                                                         |
-| `authenticateOtp(userId, options?)`             | Requests an OTP challenge.                          | ❌ Call `auth.submit({ response })` with the code.                         |
-| `authenticateSoftToken(userId, options?)`       | Soft token OTP or push.                             | ⚠️ Push (no mutual challenge) auto-polls; other modes require submit poll. |
-| `authenticateGrid(userId)`                      | Grid challenge.                                     | ❌ Collect grid values then `auth.submit({ response })`.                   |
-| `authenticatePasskey(userId?)`                  | WebAuthn/FIDO or usernameless passkey.              | ✅                                                                         |
-| `authenticateKba(userId)`                       | Knowledge-based questions.                          | ❌ Supply answers in same order as questions array via `auth.submit({ kbaChallengeAnswers })`.      |
-| `authenticateTempAccessCode(userId, code)`      | Temporary access code.                              | ✅                                                                         |
-| `authenticateMagicLink(userId)`                 | Magic link                                          | ✅                                                                         |
-| `authenticateSmartCredential(userId, options?)` | Smart Credential push.                              | ✅                                                                         | 
-| `authenticateFaceBiometric(userId, options?)`   | Face biometrics via Onfido.                         | ✅                                                                         |
+| `password(userId, password)`        | Password-only authentication.                       | ✅                                                                         |
+| `otp(userId, options?)`             | Requests an OTP challenge.                          | ❌ Call `auth.submit({ response })` with the code.                         |
+| `softToken(userId, options?)`       | Soft token OTP or push.                             | ⚠️ Push (no mutual challenge) auto-polls; other modes require submit poll. |
+| `grid(userId)`                      | Grid challenge.                                     | ❌ Collect grid values then `auth.submit({ response })`.                   |
+| `passkey(userId?)`                  | WebAuthn/FIDO or usernameless passkey.              | ✅                                                                         |
+| `kba(userId)`                       | Knowledge-based questions.                          | ❌ Supply answers in same order as questions array via `auth.submit({ kbaChallengeAnswers })`.      |
+| `tempAccessCode(userId, code)`      | Temporary access code.                              | ✅                                                                         |
+| `magicLink(userId)`                 | Magic link                                          | ✅                                                                         |
+| `smartCredential(userId, options?)` | Smart Credential push.                              | ✅                                                                         | 
+| `faceBiometric(userId, options?)`   | Face biometrics via Onfido.                         | ✅                                                                         |
 
 > If you need full control over the challenge lifecycle, use the lower-level [`IdaasClient.rba`](rba.md) API.
 
@@ -58,19 +58,19 @@ The `auth` helpers inherit token defaults from the second constructor parameter.
 ## Password authentication
 
 ```typescript
-const result = await idaas.auth.authenticatePassword("user@example.com", "PA$$w0rd!");
+const result = await idaas.auth.password("user@example.com", "PA$$w0rd!");
 
 if (result.authenticationCompleted) {
   const accessToken = await idaas.getAccessToken();
 }
 ```
 
-`authenticatePassword` requests a password challenge and immediately submits the provided password.
+`password` requests a password challenge and immediately submits the provided password.
 
 ## OTP authentication
 
 ```typescript
-const challenge = await idaas.auth.authenticateOtp("user@example.com", {
+const challenge = await idaas.auth.otp("user@example.com", {
   otpDeliveryType: "SMS",
   otpDeliveryAttribute: "work-phone",
 });
@@ -85,7 +85,7 @@ await idaas.auth.submit({ response: otpCode });
 
 ```typescript
 // Push with mutual challenge
-const { pushMutualChallenge } = await idaas.auth.authenticateSoftToken("user@example.com", {
+const { pushMutualChallenge } = await idaas.auth.softToken("user@example.com", {
   push: true,
   mutualChallenge: true,
 });
@@ -96,14 +96,14 @@ const final = await idaas.auth.poll();
 
 ```typescript
 // Plain push (auto-polls internally)
-const final = await idaas.auth.authenticateSoftToken("user@example.com", {
+const final = await idaas.auth.softToken("user@example.com", {
   push: true,
 });
 ```
 
 ```typescript
 // OTP (manual entry)
-const challenge = await idaas.auth.authenticateSoftToken("user@example.com");
+const challenge = await idaas.auth.softToken("user@example.com");
 await idaas.auth.submit({ response: softTokenCode });
 ```
 
@@ -112,8 +112,8 @@ await idaas.auth.submit({ response: softTokenCode });
 ## Passkey (WebAuthn)
 
 ```typescript
-const result = await idaas.auth.authenticatePasskey();
-// or authenticatePasskey("user@example.com") for FIDO with known username
+const result = await idaas.auth.passkey();
+// or passkey("user@example.com") for FIDO with known username
 ```
 
 - Throws if the browser lacks WebAuthn support.
@@ -122,7 +122,7 @@ const result = await idaas.auth.authenticatePasskey();
 ## Grid authentication
 
 ```typescript
-const challenge = await idaas.auth.authenticateGrid("user@example.com");
+const challenge = await idaas.auth.grid("user@example.com");
 
 // challenge.gridChallenge.challenge → [{ row, column }, ...]
 const userResponse = collectGridValues(challenge.gridChallenge);
@@ -132,7 +132,7 @@ await idaas.auth.submit({ response: userResponse });
 ## Knowledge-based authentication (KBA)
 
 ```typescript
-const challenge = await idaas.auth.authenticateKba("user@example.com");
+const challenge = await idaas.auth.kba("user@example.com");
 
 // challenge.kbaChallenge.userQuestions → [{ question }, ...]
 const answers = await promptForAnswers(challenge.kbaChallenge);
@@ -144,23 +144,23 @@ Answers array must match the order of the questions array.
 ## Temporary access code
 
 ```typescript
-const result = await idaas.auth.authenticateTempAccessCode("user@example.com", "ABC123");
+const result = await idaas.auth.tempAccessCode("user@example.com", "ABC123");
 ```
 
-`authenticateTempAccessCode` requests a temporary access code challenge and immediately submits the provided code.
+`tempAccessCode` requests a temporary access code challenge and immediately submits the provided code.
 
 ## Magic link
 
 ```typescript
-const result = await idaas.auth.authenticateMagicLink("user@example.com");
+const result = await idaas.auth.magicLink("user@example.com");
 ```
 
-The authenticateMagicLink immediately polls for completion.
+The magicLink immediately polls for completion.
 
 ## Smart Credential push
 
 ```typescript
-const result = await idaas.auth.authenticateSmartCredential("user@example.com", {
+const result = await idaas.auth.smartCredential("user@example.com", {
   summary: "Approve login to Example App",
   pushMessageIdentifier: "example-app-login",
 });
@@ -172,7 +172,7 @@ const result = await idaas.auth.authenticateSmartCredential("user@example.com", 
 ## Face (Onfido)
 
 ```typescript
-const result = await idaas.auth.authenticateFaceBiometric("user@example.com", {
+const result = await idaas.auth.faceBiometric("user@example.com", {
   mutualChallenge: true,
 });
 // Display the mutual challenge stored in result.pushMutualChallenge
@@ -213,7 +213,7 @@ Enclose each helper in `try/catch`:
 
 ```typescript
 try {
-  await idaas.auth.authenticatePasskey();
+  await idaas.auth.passkey();
 } catch (error) {
   console.error("Passkey auth failed", error);
   displayError(extractMessage(error));

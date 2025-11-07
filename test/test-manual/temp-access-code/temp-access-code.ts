@@ -13,7 +13,7 @@ document.getElementById("submit-response")?.addEventListener("click", async () =
   }
 
   try {
-    const submitResponse = await idaasClient.auth.authenticateTempAccessCode(USERNAME, tempAccessCode);
+    const submitResponse = await idaasClient.auth.tempAccessCode(USERNAME, tempAccessCode);
 
     console.log("Submit response:", submitResponse);
     updateSubmitUI(submitResponse);

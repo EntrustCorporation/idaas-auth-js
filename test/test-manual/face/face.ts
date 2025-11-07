@@ -5,7 +5,7 @@ document.getElementById("request-challenge-face")?.addEventListener("click", asy
   hideResponse();
   hideMutualAuthChallenge();
   try {
-    const challengeResponse = await idaasClient.auth.authenticateFaceBiometric(USERNAME);
+    const challengeResponse = await idaasClient.auth.faceBiometric(USERNAME);
 
     console.log("Challenge response:", challengeResponse);
     updateSubmitUI(challengeResponse);
@@ -20,7 +20,7 @@ document.getElementById("request-challenge-face-mobile-mutual")?.addEventListene
   hideResponse();
   console.log("Requesting Face Mobile with Mutual Auth challenge");
   try {
-    const challengeResponse = await idaasClient.auth.authenticateFaceBiometric(USERNAME, { mutualChallenge: true });
+    const challengeResponse = await idaasClient.auth.faceBiometric(USERNAME, { mutualChallenge: true });
     console.log("Challenge response:", challengeResponse);
     showMutualAuthChallenge(challengeResponse.pushMutualChallenge || "");
     updateChallengeUI(challengeResponse);

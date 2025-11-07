@@ -12,7 +12,7 @@ document.getElementById("request-challenge-passkey")?.addEventListener("click", 
   hideResponse();
 
   try {
-    const challengeResponse = await idaasClient.auth.authenticatePasskey(userId);
+    const challengeResponse = await idaasClient.auth.passkey(userId);
 
     console.log("Challenge response:", challengeResponse);
     updateSubmitUI(challengeResponse);

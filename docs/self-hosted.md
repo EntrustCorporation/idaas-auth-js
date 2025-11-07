@@ -15,7 +15,7 @@ This document provides complete examples for building your own login UI using th
 ```typescript
 async function startOtp(userId: string) {
   try {
-    const challenge = await idaas.auth.authenticateOtp(userId, {
+    const challenge = await idaas.auth.otp(userId, {
       otpDeliveryType: "SMS",
       otpDeliveryAttribute: "work-phone",
     });
@@ -39,7 +39,7 @@ async function startOtp(userId: string) {
 ```typescript
 async function startPasskey(userId?: string) {
   try {
-    const result = await idaas.auth.authenticatePasskey(userId);
+    const result = await idaas.auth.passkey(userId);
 
     if (result?.authenticationCompleted) {
       console.log("Passkey authentication complete!");
@@ -60,7 +60,7 @@ async function startPasskey(userId?: string) {
 ```typescript
 async function startSoftTokenPush(userId: string) {
   try {
-    const initial = await idaas.auth.authenticateSoftToken(userId, {
+    const initial = await idaas.auth.softToken(userId, {
       push: true,
       mutualChallenge: true,
     });
@@ -90,7 +90,7 @@ async function startSoftTokenPush(userId: string) {
 ```typescript
 async function startGrid(userId: string) {
   try {
-    const challenge = await idaas.auth.authenticateGrid(userId);
+    const challenge = await idaas.auth.grid(userId);
 
     // Display challenge.gridChallenge.challenge (e.g., [{ row: "A", column: 3 }, ...])
     const answers = collectGridAnswersFromForm(); // your UI collects answers in order
@@ -113,7 +113,7 @@ async function startGrid(userId: string) {
 ```typescript
 async function startKba(userId: string) {
   try {
-    const challenge = await idaas.auth.authenticateKba(userId);
+    const challenge = await idaas.auth.kba(userId);
 
     // Show challenge.kbaChallenge.userQuestions to the user
     const answers = collectKbaAnswersFromForm(); // e.g., ["Fluffy", "Lincoln Elementary"]
@@ -137,7 +137,7 @@ async function startTempAccessCode(userId: string) {
   try {
     const code = (document.getElementById("temp-code") as HTMLInputElement).value;
 
-    const final = await idaas.auth.authenticateTempAccessCode(userId, code);
+    const final = await idaas.auth.tempAccessCode(userId, code);
 
     if(final.authenticationCompleted){
       console.log("Temporary access code accepted!");
@@ -155,7 +155,7 @@ async function startTempAccessCode(userId: string) {
 ```typescript
 async function startMagicLink(userId: string) {
   try {
-    const initial = await idaas.auth.authenticateMagicLink(userId);
+    const initial = await idaas.auth.magicLink(userId);
 
     if(initial.authenticationCompleted){
       console.log("Magic link redeemed!");
@@ -174,7 +174,7 @@ async function startMagicLink(userId: string) {
 ```typescript
 async function startSmartCredential(userId: string) {
   try {
-    const initial = await idaas.auth.authenticateSmartCredential(userId, {
+    const initial = await idaas.auth.smartCredential(userId, {
       summary: "Approve login to Example App",
       pushMessageIdentifier: "example-app-login",
     });
@@ -198,7 +198,7 @@ import Onfido from "onfido-sdk-ui";
 // ensure <div id="onfido-mount"></div> exists
 async function startFace(userId: string) {
   try {
-    const initial = await idaas.auth.authenticateFaceBiometric(userId, {
+    const initial = await idaas.auth.faceBiometric(userId, {
       mutualChallenge: true,
     });
 

@@ -91,16 +91,16 @@ The SDK is organized around several main client classes:
 - **Location:** `src/AuthClient.ts`
 - **Purpose:** Convenience methods for common authentication flows
 - **Key Methods:**
-  - `authenticatePassword(userId, password)`: Password authentication
-  - `authenticateSoftToken(userId, options)`: Soft token (OTP/push)
-  - `authenticatePasskey(userId?)`: WebAuthn/FIDO/Passkey authentication
-  - `authenticateGrid(userId)`: Grid card challenge
-  - `authenticateKba(userId)`: Knowledge-based authentication
-  - `authenticateTempAccessCode(userId, code)`: Temporary access code
-  - `authenticateOtp(userId, options)`: One-time password
-  - `authenticateMagicLink(userId)`: Magic link authentication
-  - `authenticateSmartCredential(userId, options)`: Smart credential push
-  - `authenticateFaceBiometric(userId, options)`: Face biometric (requires onfido-sdk-ui)
+  - `password(userId, password)`: Password authentication
+  - `softToken(userId, options)`: Soft token (OTP/push)
+  - `passkey(userId?)`: WebAuthn/FIDO/Passkey authentication
+  - `grid(userId)`: Grid card challenge
+  - `kba(userId)`: Knowledge-based authentication
+  - `tempAccessCode(userId, code)`: Temporary access code
+  - `otp(userId, options)`: One-time password
+  - `magicLink(userId)`: Magic link authentication
+  - `smartCredential(userId, options)`: Smart credential push
+  - `faceBiometric(userId, options)`: Face biometric (requires onfido-sdk-ui)
   - `submit(params)`: Submit challenge response
   - `poll()`: Poll for async authentication completion
   - `cancel()`: Cancel ongoing authentication
@@ -465,21 +465,21 @@ The `AuthClient` provides simplified methods for common authentication flows:
 
 ```typescript
 // Password authentication
-await client.auth.authenticatePassword("user@example.com", "password123");
+await client.auth.password("user@example.com", "password123");
 
 // Soft token with push
-await client.auth.authenticateSoftToken("user@example.com", { push: true });
+await client.auth.softToken("user@example.com", { push: true });
 
 // Passkey (usernameless)
-await client.auth.authenticatePasskey();
+await client.auth.passkey();
 
 // OTP with custom delivery
-await client.auth.authenticateOtp("user@example.com", {
+await client.auth.otp("user@example.com", {
   otpDeliveryType: "EMAIL",
 });
 
 // Face biometric (requires onfido-sdk-ui and <div id="onfido-mount"></div>)
-await client.auth.authenticateFaceBiometric("user@example.com");
+await client.auth.faceBiometric("user@example.com");
 ```
 
 ## Utilities Reference

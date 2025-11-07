@@ -81,7 +81,7 @@ export class IdaasClient {
 
   /**
    * Provides access to self hosted auth convenience methods.
-   * Contains authenticatePassword.
+   * Contains password.
    */
   public get auth() {
     return this._authClient;

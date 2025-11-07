@@ -42,7 +42,7 @@ export class AuthClient {
    * @param password The user's password.
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
-  public async authenticatePassword(userId: string, password: string): Promise<AuthenticationResponse> {
+  public async password(userId: string, password: string): Promise<AuthenticationResponse> {
     await this.rbaClient.requestChallenge({
       userId,
       strict: true,
@@ -74,7 +74,7 @@ export class AuthClient {
    *   - Initial challenge response for TOKEN (requires submitChallenge with OTP).
    * @throws On request/poll errors.
    */
-  public async authenticateSoftToken(
+  public async softToken(
     userId: string,
     { mutualChallenge, push }: SoftTokenOptions = {},
   ): Promise<AuthenticationResponse> {
@@ -112,7 +112,7 @@ export class AuthClient {
    * @param userId The user ID to authenticate.
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the gridChallenge to display to the user.
    */
-  public async authenticateGrid(userId: string): Promise<AuthenticationResponse> {
+  public async grid(userId: string): Promise<AuthenticationResponse> {
     return await this.rbaClient.requestChallenge({
       userId,
       strict: true,
@@ -136,7 +136,7 @@ export class AuthClient {
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    * @throws On unexpected WebAuthn (navigator.credentials.get) errors or if user cancels passkey ceremony.
    */
-  public async authenticatePasskey(userId?: string): Promise<AuthenticationResponse | undefined> {
+  public async passkey(userId?: string): Promise<AuthenticationResponse | undefined> {
     const browserSupported = await browserSupportsPasskey();
     if (!browserSupported) {
       throw new Error("This browser does not support passkey");
@@ -174,7 +174,7 @@ export class AuthClient {
    * @param userId The user ID to authenticate.
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the KBA challenge questions to display to the user.
    */
-  public async authenticateKba(userId: string): Promise<AuthenticationResponse> {
+  public async kba(userId: string): Promise<AuthenticationResponse> {
     return await this.rbaClient.requestChallenge({
       userId,
       strict: true,
@@ -190,7 +190,7 @@ export class AuthClient {
    * @param tempAccessCode The temporary access code to submit.
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
-  public async authenticateTempAccessCode(userId: string, tempAccessCode: string): Promise<AuthenticationResponse> {
+  public async tempAccessCode(userId: string, tempAccessCode: string): Promise<AuthenticationResponse> {
     await this.rbaClient.requestChallenge({
       userId,
       strict: true,
@@ -210,7 +210,7 @@ export class AuthClient {
    * @param otpDeliveryAttribute The delivery attribute for the OTP (e.g., "business-email"). If not set will use the default delivery attribute.
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
-  public async authenticateOtp(
+  public async otp(
     userId: string,
     { otpDeliveryType, otpDeliveryAttribute }: OtpOptions = {},
   ): Promise<AuthenticationResponse> {
@@ -229,7 +229,7 @@ export class AuthClient {
    * @param userId The user ID to authenticate.
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
-  public async authenticateMagicLink(userId: string): Promise<AuthenticationResponse> {
+  public async magicLink(userId: string): Promise<AuthenticationResponse> {
     await this.rbaClient.requestChallenge({
       userId,
       strict: true,
@@ -248,7 +248,7 @@ export class AuthClient {
    * @param pushMessageIdentifier The identifier to retrieve customized SDK push message configuration.
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
-  public async authenticateSmartCredential(
+  public async smartCredential(
     userId: string,
     { summary, pushMessageIdentifier }: SmartCredentialOptions = {},
   ): Promise<AuthenticationResponse> {
@@ -285,7 +285,7 @@ export class AuthClient {
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    * @throws If faceChallenge is missing, Onfido initialization fails, or polling fails.
    */
-  public async authenticateFaceBiometric(
+  public async faceBiometric(
     userId: string,
     { mutualChallenge }: FaceBiometricOptions = {},
   ): Promise<AuthenticationResponse> {
