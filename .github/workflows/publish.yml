@@ -1,0 +1,86 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - stable
+          - beta
+        default: 'stable'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔧 Generate API types
+        run: bun run api:generate
+
+      - name: 🏗️ Build
+        run: bun run build
+
+      - name: 🧹 Lint
+        run: bun run lint
+
+      - name: 🔍 Type check
+        run: bun run lint:types
+
+      - name: 🎭 Install Playwright browsers
+        run: bunx playwright install --with-deps
+
+      - name: 🧪 Run unit tests
+        run: bun run test:unit
+
+      - name: 🧪 Run E2E tests
+        run: bun run test:e2e
+
+      - name: 📦 Publish Beta to npm
+        if: inputs.release-type == 'beta'
+        run: npm publish --tag beta --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: 📦 Publish Stable to npm
+        if: inputs.release-type == 'stable'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: 📝 Create GitHub Release
+        if: inputs.release-type == 'stable'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.package-version.outputs.version }}
+          release_name: Release v${{ steps.package-version.outputs.version }}
+          draft: false
+          prerelease: false
+
+      - name: 📋 Get package version
+        id: package-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
