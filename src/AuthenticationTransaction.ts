@@ -492,6 +492,8 @@ export class AuthenticationTransaction {
           this.authenticationRequestParams?.faceBiometricOptions?.mutualChallenge;
         break;
       case "FIDO":
+        requestBody.origin = window.location.origin;
+        break;
       case "PASSKEY":
         requestBody.rpId = window.location.origin;
         break;
