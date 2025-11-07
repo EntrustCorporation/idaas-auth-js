@@ -18,7 +18,7 @@ const idaas = new IdaasClient(options, tokenOptions);
 | ------------- | ------------------------------ | -------------------------------------------------------------- | ---------- |
 | `issuerUrl`   | `string`                       | Entrust IDaaS issuer URL (`https://example.trustedauth.com`).  | —          |
 | `clientId`    | `string`                       | Registered application/client identifier.                      | —          |
-| `storageType` | `"memory" \| "localstorage"?`  | Token persistence strategy.                                    | `"memory"` |
+| `storageType?` | `"memory" \| "localstorage"`  | Token persistence strategy.                                    | `"memory"` |
 
 ### `tokenOptions` (Second Parameter - Optional)
 
@@ -104,66 +104,66 @@ Returns the user claims from the OpenId Provider using the userinfo endpoint or 
 
 Used by OIDC/RBA helpers for per-request overrides. When not provided, values default to those set in the IdaasClient constructor.
 
-| Property          | Type        | Description                                                              |
-| ----------------- | ----------- | ------------------------------------------------------------------------ |
-| `audience`        | `string?`   | API audience for access tokens.                                          |
-| `scope`           | `string?`   | Space-delimited scopes.                                                  |
-| `useRefreshToken` | `boolean?`  | Request a refresh token.                                                 |
-| `maxAge`          | `number?`   | Require reauthentication if the session is older than this many seconds. |
-| `acrValues`       | `string[]?` | Requested ACR values.                                                    |
+| Property           | Type       | Description                                                              |
+| ------------------ | ---------- | ------------------------------------------------------------------------ |
+| `audience?`        | `string`   | API audience for access tokens.                                          |
+| `scope?`           | `string`   | Space-delimited scopes.                                                  |
+| `useRefreshToken?` | `boolean`  | Request a refresh token.                                                 |
+| `maxAge?`          | `number`   | Require reauthentication if the session is older than this many seconds. |
+| `acrValues?`       | `string[]` | Requested ACR values.                                                    |
 
 ### `OidcLoginOptions`
 
-| Property      | Type       | Description                                      |
-| ------------- | ---------- | ------------------------------------------------ |
-| `popup`       | `boolean?` | Use hosted popup (`true`) or redirect (`false`). |
-| `redirectUri` | `string?`  | Callback URI for redirect/popup flows.           |
+| Property       | Type      | Description                                      |
+| -------------- | --------- | ------------------------------------------------ |
+| `popup?`       | `boolean` | Use hosted popup (`true`) or redirect (`false`). |
+| `redirectUri?` | `string`  | Callback URI for redirect/popup flows.           |
 
 ### `OidcLogoutOptions`
 
-| Property      | Type      | Description                                    |
-| ------------- | --------- | ---------------------------------------------- |
-| `redirectUri` | `string?` | Post-logout redirect URI (must be registered). |
+| Property       | Type     | Description                                    |
+| -------------- | -------- | ---------------------------------------------- |
+| `redirectUri?` | `string` | Post-logout redirect URI (must be registered). |
 
 ### `SmartCredentialOptions`
 
-| Property                | Type      | Description                              |
-| ----------------------- | --------- | ---------------------------------------- |
-| `summary`               | `string?` | Text displayed in Smart Credential push. |
-| `pushMessageIdentifier` | `string?` | Identifier for custom push templates.    |
+| Property                 | Type     | Description                              |
+| ------------------------ | -------- | ---------------------------------------- |
+| `summary?`               | `string` | Text displayed in Smart Credential push. |
+| `pushMessageIdentifier?` | `string` | Identifier for custom push templates.    |
 
 ### `SoftTokenOptions`
 
-| Property          | Type       | Description                                                                                      |
-| ----------------- | ---------- | ------------------------------------------------------------------------------------------------ |
-| `mutualChallenge` | `boolean?` | Determines if the user must answer a mutual challenge for the TOKENPUSH authenticator.           |
-| `push`            | `boolean?` | Determines if push authentication (true) or standard token authentication (false) should be used |
+| Property           | Type      | Description                                                                                      |
+| ------------------ | --------- | ------------------------------------------------------------------------------------------------ |
+| `mutualChallenge?` | `boolean` | Determines if the user must answer a mutual challenge for the TOKENPUSH authenticator.           |
+| `push?`            | `boolean` | Determines if push authentication (true) or standard token authentication (false) should be used |
 
 ### `SoftTokenPushOptions`
 
-| Property          | Type       | Description                                                                            |
-| ----------------- | ---------- | -------------------------------------------------------------------------------------- |
-| `mutualChallenge` | `boolean?` | Determines if the user must answer a mutual challenge for the TOKENPUSH authenticator. |
+| Property           | Type      | Description                                                                            |
+| ------------------ | --------- | -------------------------------------------------------------------------------------- |
+| `mutualChallenge?` | `boolean` | Determines if the user must answer a mutual challenge for the TOKENPUSH authenticator. |
 
 ### `FaceBiometricOptions`
 
-| Property          | Type       | Description                                                                       |
-| ----------------- | ---------- | --------------------------------------------------------------------------------- |
-| `mutualChallenge` | `boolean?` | Determines if the user must answer a mutual challenge for the FACE authenticator. |
+| Property           | Type      | Description                                                                       |
+| ------------------ | --------- | --------------------------------------------------------------------------------- |
+| `mutualChallenge?` | `boolean` | Determines if the user must answer a mutual challenge for the FACE authenticator. |
 
 ### `OtpOptions`
 
-| Property               | Type                                                     | Description                                                                                  |
-| ---------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `otpDeliveryType`      | `"SMS" \| "EMAIL" \| "VOICE" \| "WECHAT" \| "WHATSAPP"?` | The delivery type for the OTP challenge.                                                     |
-| `otpDeliveryAttribute` | `string?`                                                | The name of the delivery attribute to use for the OTP challenge, such as a "business-email". |
+| Property                | Type                                                    | Description                                                                                  |
+| ----------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `otpDeliveryType?`      | `"SMS" \| "EMAIL" \| "VOICE" \| "WECHAT" \| "WHATSAPP"` | The delivery type for the OTP challenge.                                                     |
+| `otpDeliveryAttribute?` | `string`                                                | The name of the delivery attribute to use for the OTP challenge, such as a "business-email". |
 
 ### `TransactionDetail`
 
-| Property | Type      | Description                   |
-| -------- | --------- | ----------------------------- |
-| `detail` | `string?` | The transaction detail name.  |
-| `value`  | `string?` | The transaction detail value. |
+| Property  | Type     | Description                   |
+| --------- | -------- | ----------------------------- |
+| `detail?` | `string` | The transaction detail name.  |
+| `value?`  | `string` | The transaction detail value. |
 
 ### `IdaasAuthenticationMethod`
 
@@ -171,42 +171,42 @@ Used by OIDC/RBA helpers for per-request overrides. When not provided, values de
 
 ### `AuthenticationRequestParams`
 
-| Property                        | Type                         | Description                                                     |
-| --------------------------------| ---------------------------- | --------------------------------------------------------------- |
-| `userId`                        | `string?`                    | The user ID of the user to request the challenge for.           |
-| `password`                      | `string?`                    | The user's password to submit for MFA flows.                    |
-| `preferredAuthenticationMethod` | `IdaasAuthenticationMethod?` | The preferred method of authentication.                         |
-| `strict`                        | `boolean?`                   | Determines if the preferred authentication method must be used. |
-| `otpOptions`                    | `OtpOptions?`                | Options available during OTP authentication.                    |
-| `softTokenPushOptions`          | `SoftTokenPushOptions?`      | Options available during TOKENPUSH authentication.              |
-| `smartCredentialOptions`        | `SmartCredentialOptions?`    | Options available during SMARTCREDENTIALPUSH authentication.    |
-| `faceBiometricOptions`          | `FaceBiometricOptions?`      | Options available during FACE authentication.                   |
-| `transactionDetails`            | `TransactionDetail[]?`       | The transaction details of the request.                         |
+| Property                         | Type                        | Description                                                     |
+| -------------------------------- | --------------------------- | --------------------------------------------------------------- |
+| `userId?`                        | `string`                    | The user ID of the user to request the challenge for.           |
+| `password?`                      | `string`                    | The user's password to submit for MFA flows.                    |
+| `preferredAuthenticationMethod?` | `IdaasAuthenticationMethod` | The preferred method of authentication.                         |
+| `strict?`                        | `boolean`                   | Determines if the preferred authentication method must be used. |
+| `otpOptions?`                    | `OtpOptions`                | Options available during OTP authentication.                    |
+| `softTokenPushOptions?`          | `SoftTokenPushOptions`      | Options available during TOKENPUSH authentication.              |
+| `smartCredentialOptions?`        | `SmartCredentialOptions`    | Options available during SMARTCREDENTIALPUSH authentication.    |
+| `faceBiometricOptions?`          | `FaceBiometricOptions`      | Options available during FACE authentication.                   |
+| `transactionDetails?`            | `TransactionDetail[]`       | The transaction details of the request.                         |
 
 ### `AuthenticationResponse`
 
-| Property                  | Type                                 | Description                                                                                                       |
-| ------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `token`                   | `string?`                            | The Authenticated/unauthenticated authorization token.                                                            |
-| `authenticationCompleted` | `boolean?`                           | A flag indicating if authentication has been completed.                                                           |
-| `secondFactorMethod`      | `IdaasAuthenticationMethod?`         | The second factor authenticator that will be used.                                                                |
-| `method`                  | `IdaasAuthenticationMethod?`         | The method of authentication that will be used.                                                                   |
-| `pollForCompletion`       | `boolean?`                           | A flag indicating if `poll` should be called.                                                                     |
-| `userId`                  | `string?`                            | The user ID of the authenticated user/user to authenticate.                                                       |
-| `gridChallenge`           | `GridChallenge?`                     | Parameters required for completing the `GRID` authentication method.                                              |
-| `kbaChallenge`            | `KbaChallenge?`                      | Parameters required for completing the `KBA` authentication method.                                               |
-| `faceChallenge`           | `FaceChallenge?`                     | Parameters required for completing the `FACE` authentication method.                                              |
-| `tempAccessCodeChallenge` | `TempAccessCodeChallenge?`           | Parameters defining the behaviour of the `TEMP_ACCESS_CODE` authentication method.                                |
-| `pushMutualChallenge`     | `string?`                            | Push authentication mutual challenge for token or Face Biometric.                                                 |
-| `passkeyChallenge`        | `PublicKeyCredentialRequestOptions?` | The PublicKeyCredentialRequestOptions to be passed in the publicKey field to the navigator.credential.get() call. |
+| Property                   | Type                                | Description                                                                                                       |
+| -------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `token?`                   | `string`                            | The Authenticated/unauthenticated authorization token.                                                            |
+| `authenticationCompleted?` | `boolean`                           | A flag indicating if authentication has been completed.                                                           |
+| `secondFactorMethod?`      | `IdaasAuthenticationMethod`         | The second factor authenticator that will be used.                                                                |
+| `method?`                  | `IdaasAuthenticationMethod`         | The method of authentication that will be used.                                                                   |
+| `pollForCompletion?`       | `boolean`                           | A flag indicating if `poll` should be called.                                                                     |
+| `userId?`                  | `string`                            | The user ID of the authenticated user/user to authenticate.                                                       |
+| `gridChallenge?`           | `GridChallenge`                     | Parameters required for completing the `GRID` authentication method.                                              |
+| `kbaChallenge?`            | `KbaChallenge`                      | Parameters required for completing the `KBA` authentication method.                                               |
+| `faceChallenge?`           | `FaceChallenge`                     | Parameters required for completing the `FACE` authentication method.                                              |
+| `tempAccessCodeChallenge?` | `TempAccessCodeChallenge`           | Parameters defining the behaviour of the `TEMP_ACCESS_CODE` authentication method.                                |
+| `pushMutualChallenge?`     | `string`                            | Push authentication mutual challenge for token or Face Biometric.                                                 |
+| `passkeyChallenge?`        | `PublicKeyCredentialRequestOptions` | The PublicKeyCredentialRequestOptions to be passed in the publicKey field to the navigator.credential.get() call. |
 
 ### `AuthenticationSubmissionParams`
 
-| Property              | Type                  | Description                                                                                                                             |
-| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `response`            | `string?`              | The user's response to the authentication challenge.                                                                                    |
-| `kbaChallengeAnswers` | `string[]?`            | The user's answers to the KBA challenge questions. Answers must be in the order of the questions returned when requesting the challenge.|
-| `passkeyResponse`     | `PublicKeyCredential?` | The credential returned from `navigator.credentials.get(credentialRequestOptions)`.                                                     |
+| Property               | Type                  | Description                                                                                                                              |
+| ---------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `response?`            | `string`              | The user's response to the authentication challenge.                                                                                     |
+| `kbaChallengeAnswers?` | `string[]`            | The user's answers to the KBA challenge questions. Answers must be in the order of the questions returned when requesting the challenge. |
+| `passkeyResponse?`     | `PublicKeyCredential` | The credential returned from `navigator.credentials.get(credentialRequestOptions)`.                                                      |
 
 ---
 
@@ -218,13 +218,13 @@ The following challenge types provide additional context for specific authentica
 
 Returned when using FIDO/WebAuthn authentication with a specific user.
 
-| Property           | Type        | Description                                                                  |
-| ------------------ | ----------- | ---------------------------------------------------------------------------- |
-| `allowCredentials` | `string[]?` | List of IDs of the FIDO tokens registered for the user (base-64 encoded).    |
-| `challenge`        | `string`    | Random challenge for the FIDO token (base-64 encoded).                       |
-| `timeout`          | `number?`   | Number of seconds the client will wait for the FIDO token to respond.        |
-| `rpId`             | `string?`   | Relying Party identifier.                                                    |
-| `userVerification` | `string?`   | User verification requirement (`"required"`, `"preferred"`, `"discouraged"`).|
+| Property            | Type       | Description                                                                  |
+| ------------------- | ---------- | ---------------------------------------------------------------------------- |
+| `allowCredentials?` | `string[]` | List of IDs of the FIDO tokens registered for the user (base-64 encoded).    |
+| `challenge`         | `string`   | Random challenge for the FIDO token (base-64 encoded).                       |
+| `timeout?`          | `number`   | Number of seconds the client will wait for the FIDO token to respond.        |
+| `rpId?`             | `string`   | Relying Party identifier.                                                    |
+| `userVerification?` | `string`   | User verification requirement (`"required"`, `"preferred"`, `"discouraged"`).|
 
 ### `GridChallenge`
 
@@ -246,20 +246,20 @@ Returned when using knowledge-based authentication (security questions).
 
 Returned when using face biometric authentication with Onfido.
 
-| Property        | Type      | Description                                          |
-| --------------- | --------- | ---------------------------------------------------- |
-| `sdkToken`      | `string?` | Onfido SDK token for initializing the Onfido UI.     |
-| `workflowRunId` | `string?` | Onfido workflow run identifier.                      |
-| `device`        | `string?` | Target device type (`"WEB"`, `"MOBILE"`, etc.).      |
+| Property         | Type     | Description                                          |
+| ---------------- | -------- | ---------------------------------------------------- |
+| `sdkToken?`      | `string` | Onfido SDK token for initializing the Onfido UI.     |
+| `workflowRunId?` | `string` | Onfido workflow run identifier.                      |
+| `device?`        | `string` | Target device type (`"WEB"`, `"MOBILE"`, etc.).      |
 
 ### `TempAccessCodeChallenge`
 
 Returned when using temporary access code authentication.
 
-| Property             | Type       | Description                                                                                                                 |
-| -------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `adminContact`       | `string?`  | An optional admin contact value (like an admin email address or phone number) to be displayed in the admin contact message. |
-| `enableAdminContact` | `boolean?` | Indicates if the admin contact message should be displayed for this challenge.                                              |
+| Property              | Type      | Description                                                                                                                 |
+| --------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `adminContact?`       | `string`  | An optional admin contact value (like an admin email address or phone number) to be displayed in the admin contact message. |
+| `enableAdminContact?` | `boolean` | Indicates if the admin contact message should be displayed for this challenge.                                              |
 
 ---
 
