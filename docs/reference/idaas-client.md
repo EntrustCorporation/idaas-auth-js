@@ -18,7 +18,7 @@ const idaas = new IdaasClient(options, tokenOptions);
 | ------------- | ------------------------------ | -------------------------------------------------------------- | ---------- |
 | `issuerUrl`   | `string`                       | Entrust IDaaS issuer URL (`https://example.trustedauth.com`).  | —          |
 | `clientId`    | `string`                       | Registered application/client identifier.                      | —          |
-| `storageType` | `"memory?" \| "localstorage?"` | Token persistence strategy.                                    | `"memory"` |
+| `storageType` | `"memory" \| "localstorage"?`  | Token persistence strategy.                                    | `"memory"` |
 
 ### `tokenOptions` (Second Parameter - Optional)
 
