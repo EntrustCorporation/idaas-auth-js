@@ -167,13 +167,6 @@ export interface AuthenticationTransactionOptions {
    * The configurable options when requesting an AccessToken.
    */
   tokenOptions: TokenOptions;
-
-  /**
-   * Determines whether the token obtained from this login request can use refresh tokens.  This defaults to the `globalUseRefreshToken` set in your `IdaasClientOptions` if not set.
-   *
-   * Note: Use of refresh tokens must be enabled on your IDaaS client application.
-   */
-  useRefreshToken: boolean;
 }
 
 /**

@@ -37,7 +37,7 @@ export class OidcClient {
    * */
   public async login(
     { redirectUri, popup }: OidcLoginOptions = {},
-    { audience, scope, useRefreshToken, acrValues, maxAge }: TokenOptions = {},
+    tokenOptions: TokenOptions = {},
   ): Promise<string | null> {
     if (popup) {
       const popupWindow = openPopup("");
@@ -47,24 +47,10 @@ export class OidcClient {
         popupWindow.close();
         throw new Error("Attempted to use popup but web_message is not supported by OpenID provider.");
       }
-      return await this.loginWithPopup({
-        audience,
-        scope,
-        redirectUri,
-        useRefreshToken,
-        acrValues,
-        maxAge,
-      });
+      return await this.loginWithPopup({ redirectUri }, tokenOptions);
     }
 
-    await this.loginWithRedirect({
-      audience,
-      scope,
-      redirectUri,
-      useRefreshToken,
-      acrValues,
-      maxAge,
-    });
+    await this.loginWithRedirect({ redirectUri }, tokenOptions);
 
     return null;
   }
@@ -259,14 +245,7 @@ export class OidcClient {
   /**
    * Perform the authorization code flow using a new popup window at the OpenID Provider (OP) to authenticate the user.
    */
-  private async loginWithPopup({
-    audience,
-    scope,
-    redirectUri,
-    useRefreshToken,
-    acrValues,
-    maxAge,
-  }: OidcLoginOptions & TokenOptions): Promise<string | null> {
+  private async loginWithPopup({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<string | null> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
 
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
@@ -277,22 +256,19 @@ export class OidcClient {
         responseMode: "web_message",
         redirectUri: finalRedirectUri,
         tokenOptions: {
-          useRefreshToken: useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
-          scope: scope ?? this.context.tokenOptions.scope,
-          audience: audience ?? this.context.tokenOptions.audience,
-          acrValues: acrValues ?? this.context.tokenOptions.acrValues,
-          maxAge: maxAge ?? this.context.tokenOptions.maxAge,
+          ...this.context.tokenOptions,
+          ...tokenOptions,
         },
       },
     );
 
     const tokenParams: TokenParams = {
-      audience: audience ?? this.context.tokenOptions.audience,
+      audience: tokenOptions.audience ?? this.context.tokenOptions.audience,
       scope: usedScope,
     };
 
-    if (maxAge && maxAge >= 0) {
-      tokenParams.maxAge = maxAge;
+    if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
+      tokenParams.maxAge = tokenOptions.maxAge;
     }
 
     this.storageManager.saveTokenParams(tokenParams);
@@ -321,14 +297,7 @@ export class OidcClient {
    * Perform the authorization code flow by redirecting to the OpenID Provider (OP) to authenticate the user and then redirect
    * with the necessary state and code.
    */
-  private async loginWithRedirect({
-    audience,
-    scope,
-    redirectUri,
-    useRefreshToken,
-    acrValues,
-    maxAge,
-  }: OidcLoginOptions & TokenOptions): Promise<void> {
+  private async loginWithRedirect({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<void> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
       await this.context.getConfig(),
@@ -338,22 +307,19 @@ export class OidcClient {
         responseMode: "query",
         redirectUri: finalRedirectUri,
         tokenOptions: {
-          useRefreshToken: useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
-          scope: scope ?? this.context.tokenOptions.scope,
-          audience: audience ?? this.context.tokenOptions.audience,
-          acrValues: acrValues ?? this.context.tokenOptions.acrValues,
-          maxAge: maxAge ?? this.context.tokenOptions.maxAge,
+          ...this.context.tokenOptions,
+          ...tokenOptions,
         },
       },
     );
 
     const tokenParams: TokenParams = {
-      audience: audience ?? this.context.tokenOptions.audience,
+      audience: tokenOptions.audience ?? this.context.tokenOptions.audience,
       scope: usedScope,
     };
 
-    if (maxAge && maxAge >= 0) {
-      tokenParams.maxAge = maxAge;
+    if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
+      tokenParams.maxAge = tokenOptions.maxAge;
     }
 
     this.storageManager.saveTokenParams(tokenParams);

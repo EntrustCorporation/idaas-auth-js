@@ -131,11 +131,12 @@ export class RbaClient {
     this.authenticationTransaction = new AuthenticationTransaction({
       oidcConfig,
       authenticationRequestParams,
-      useRefreshToken: tokenOptions?.useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
       tokenOptions: {
         audience: tokenOptions?.audience ?? this.context.tokenOptions.audience,
         scope: tokenOptions?.scope ?? this.context.tokenOptions.scope,
         acrValues: tokenOptions?.acrValues,
+        useRefreshToken: tokenOptions?.useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
+        maxAge: tokenOptions?.maxAge ?? this.context.tokenOptions.maxAge,
       },
       clientId: this.context.clientId,
     });
