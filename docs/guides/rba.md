@@ -76,17 +76,7 @@ For available options types (`otpOptions`, `softTokenPushOptions`, `smartCredent
 
 #### `TokenOptions` (second argument)
 
-The second parameter to `requestChallenge()` allows you to override default token settings:
-
-| Property          | Description                                                    | Default                                                       |
-| ----------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
-| `audience`        | API audience for issued access tokens.                         | Constructor `audience` (omitted if `undefined`)                     |
-| `scope`           | Space-delimited scopes.                                        | Constructor `scope` (`"openid profile email"` if not set) |
-| `useRefreshToken` | Request refresh tokens for this transaction.                   | Constructor `useRefreshToken` (or `false`)                          |
-| `maxAge`          | Session age limit (seconds) before reauthentication is forced. | `-1`                                                            |
-| `acrValues`       | Array of acceptable ACRs to satisfy.                           | Not sent                                                      |
-
-For complete details, see the [API Reference](../reference/idaas-client.md#tokenoptions).
+See the [TokenOptions reference](../reference/idaas-client.md#tokenoptions) for complete details on all available options and their defaults.
 
 ## Rendering the challenge
 

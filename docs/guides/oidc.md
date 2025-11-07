@@ -38,17 +38,7 @@ const idaas = new IdaasClient(
 
 ### Token Options
 
-When calling `login()`, you can optionally provide a second `TokenOptions` parameter to override the defaults set during client initialization:
-
-| Option            | Description                                                                                              |
-| ----------------- | -------------------------------------------------------------------------------------------------------- |
-| `scope`           | Space-delimited scopes; defaults to constructor `scope` or `"openid profile email"` if not set.          |
-| `audience`        | The protected resource to be accessed with access tokens.                                                |
-| `maxAge`          | Forces reauthentication if the session age exceeds the value (seconds).                                  |
-| `acrValues`       | Array of Authentication Context Class References (ACR) to request.                                       |
-| `useRefreshToken` | Request a refresh token during the authorization-code exchange.                                          |
-
-For complete details, see the [API Reference](../reference/idaas-client.md#tokenoptions).
+See the [TokenOptions reference](../reference/idaas-client.md#tokenoptions) for complete details on all available options and their defaults.
 
 ### Popup (recommended for SPAs)
 
