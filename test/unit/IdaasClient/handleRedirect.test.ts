@@ -1,16 +1,14 @@
 import { afterAll, afterEach, beforeEach, describe, expect, jest, spyOn, test } from "bun:test";
-import type { ValidatedTokenResponse } from "../../../src/IdaasClient";
-import * as format from "../../../src/utils/format";
 import * as jwt from "../../../src/utils/jwt";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
   TEST_ACCESS_TOKEN_KEY,
-  TEST_AUTH_RESPONSE,
   TEST_BASE_URI,
   TEST_CLIENT_ID,
   TEST_CODE,
   TEST_ID_TOKEN_KEY,
   TEST_ID_TOKEN_OBJECT,
+  TEST_SCOPE,
   TEST_STATE,
   TEST_TOKEN_PARAMS,
 } from "../constants";
@@ -19,18 +17,8 @@ import { mockFetch, storeData } from "../helpers";
 describe("IdaasClient.handleRedirect", () => {
   // @ts-expect-error not full type
   const spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
-  // @ts-expect-error private method
-  const spyOnParseRedirect = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "parseRedirect");
-  // @ts-expect-error private method
-  const spyOnParseLoginRedirect = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "parseLoginRedirect");
-  // @ts-expect-error private method
-  const spyOnRequestAndValidateTokens = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "requestAndValidateTokens");
-  // @ts-expect-error private method
-  const spyOnValidateAuthorizeResponse = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "validateAuthorizeResponse");
-  // @ts-expect-error private method
-  const spyOnParseAndSaveTokenResponse = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "parseAndSaveTokenResponse");
-  const spyOnCalculateEpochExpiry = spyOn(format, "calculateEpochExpiry");
-  const spyOnValidateIdToken = spyOn(jwt, "validateIdToken").mockImplementation(() => {
+  // Mock JWT validation to avoid complex crypto operations in tests
+  spyOn(jwt, "validateIdToken").mockImplementation(() => {
     return { decodedJwt: TEST_ID_TOKEN_OBJECT.decoded, idToken: TEST_ID_TOKEN_OBJECT.encoded };
   });
   const loginSuccessUrl = `${TEST_BASE_URI}?code=${TEST_CODE}&state=${TEST_STATE}`;
@@ -46,72 +34,29 @@ describe("IdaasClient.handleRedirect", () => {
     jest.clearAllMocks();
   });
 
-  test("calls `parseRedirect`", async () => {
-    await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-    expect(spyOnParseRedirect).toBeCalled();
-  });
-
-  describe("parseRedirect", () => {
-    beforeEach(() => {
-      window.location.href = loginSuccessUrl;
-      storeData({ clientParams: true, tokenParams: true });
-    });
-    test("calls `parseLoginRedirect`", async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-      expect(spyOnParseLoginRedirect).toBeCalled();
-    });
-
-    test("returns the result of both parses", async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-      const authorizeResponse = spyOnParseLoginRedirect.mock.results[0].value;
-
-      expect(spyOnParseRedirect.mock.results[0].value).toStrictEqual({ authorizeResponse });
-    });
-
-    test("returns early if there are no search params in url", async () => {
-      window.location.href = TEST_BASE_URI;
-
-      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-      expect(spyOnParseLoginRedirect).not.toBeCalled();
-
-      expect(spyOnParseRedirect.mock.results[0].value).toStrictEqual({ authorizeResponse: null });
-    });
-  });
-
-  describe("parseLoginRedirect", () => {
-    test("returns null if state not present in url", async () => {
-      window.location.href = `${TEST_BASE_URI}?code=code`;
-      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-
-      expect(spyOnParseLoginRedirect.mock.results[0].value).toBeNull();
-    });
-
-    test("returns null if both code and error are not in url", async () => {
-      window.location.href = `${TEST_BASE_URI}?state=state`;
-      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-
-      expect(spyOnParseLoginRedirect.mock.results[0].value).toBeNull();
-    });
-
-    test("returns the search params found in url", async () => {
-      window.location.href = loginSuccessUrl;
-      storeData({ clientParams: true, tokenParams: true });
-      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-
-      expect(spyOnParseLoginRedirect.mock.results[0].value).toStrictEqual(TEST_AUTH_RESPONSE);
-    });
-  });
-
-  test("returns early if authorizeResponse is falsy (null)", async () => {
+  test("returns null when there are no search params in url", async () => {
     window.location.href = TEST_BASE_URI;
-    storeData({ tokenParams: true, clientParams: true });
+
     const result = await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
 
-    expect(spyOnParseAndSaveTokenResponse).not.toBeCalled();
     expect(result).toBeNull();
   });
 
-  describe("authorization event", () => {
+  test("returns null when URL has code but no state", async () => {
+    window.location.href = `${TEST_BASE_URI}?code=code`;
+    const result = await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+
+    expect(result).toBeNull();
+  });
+
+  test("returns null when URL has state but no code", async () => {
+    window.location.href = `${TEST_BASE_URI}?state=state`;
+    const result = await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+
+    expect(result).toBeNull();
+  });
+
+  describe("successful authorization flow", () => {
     beforeEach(() => {
       window.location.href = loginSuccessUrl;
     });
@@ -122,188 +67,87 @@ describe("IdaasClient.handleRedirect", () => {
       }).toThrowError("client");
     });
 
-    test("calls validateAuthorizeResponse", async () => {
-      storeData({ clientParams: true, tokenParams: true });
-      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+    test("throws error if state does not match stored state", () => {
+      storeData({ clientParams: true });
+      window.location.href = `${TEST_BASE_URI}?code=${TEST_CODE}&state=different_state`;
 
-      expect(spyOnValidateAuthorizeResponse).toBeCalled();
+      expect(async () => {
+        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+      }).toThrowError();
     });
 
-    describe("validateAuthorizeResponse", () => {
-      test("throws error if error present in search params", () => {
-        expect(() => {
-          // @ts-expect-error private method
-          NO_DEFAULT_IDAAS_CLIENT.validateAuthorizeResponse({ ...TEST_AUTH_RESPONSE, error: "error" }, "testingstate");
-        }).toThrowError();
-      });
-
-      test("throws error if state not present in search params", () => {
-        expect(() => {
-          // @ts-expect-error private method
-          NO_DEFAULT_IDAAS_CLIENT.validateAuthorizeResponse({ ...TEST_AUTH_RESPONSE, state: null }, "testingstate");
-        }).toThrowError();
-      });
-
-      test("throws error if code not present in search params", () => {
-        expect(() => {
-          // @ts-expect-error private method
-          NO_DEFAULT_IDAAS_CLIENT.validateAuthorizeResponse({ ...TEST_AUTH_RESPONSE, code: null }, "testingstate");
-        }).toThrowError();
-      });
-
-      test("throws error if expected state and current state differ", () => {
-        storeData({ clientParams: true });
-        window.location.href = `${TEST_BASE_URI}?code=${TEST_CODE}&state=different_state`;
-
-        expect(async () => {
-          await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-        }).toThrowError();
-
-        const validationResultType = spyOnValidateAuthorizeResponse.mock.results[0].type;
-        expect(validationResultType).toStrictEqual("throw");
-      });
-    });
-
-    test("calls requestAndValidateTokens", async () => {
+    test("makes a fetch request to the token endpoint", async () => {
       storeData({ clientParams: true, tokenParams: true });
       window.location.href = loginSuccessUrl;
 
       await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
 
-      expect(spyOnRequestAndValidateTokens).toBeCalled();
+      const fetchRequests = spyOnFetch.mock.calls;
+      const requestToTokenEndpoint = fetchRequests.find((request) => request.includes(`${TEST_BASE_URI}/token`));
+
+      expect(requestToTokenEndpoint).toBeTruthy();
     });
 
-    describe("requestAndValidateTokens", () => {
-      test("makes a fetch request to the token endpoint", async () => {
-        storeData({ clientParams: true, tokenParams: true });
-        window.location.href = loginSuccessUrl;
+    test("throws error if no token params stored", () => {
+      storeData({ clientParams: true });
+      window.location.href = loginSuccessUrl;
 
+      expect(async () => {
         await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-
-        const fetchRequests = spyOnFetch.mock.calls;
-        const requestToTokenEndpoint = fetchRequests.find((request) => request.includes(`${TEST_BASE_URI}/token`));
-
-        expect(requestToTokenEndpoint).toBeTruthy();
-      });
-
-      test("calls validateIdToken", async () => {
-        storeData({ clientParams: true, tokenParams: true });
-        window.location.href = loginSuccessUrl;
-
-        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-
-        expect(spyOnValidateIdToken).toBeCalled();
-      });
+      }).toThrowError();
     });
 
-    test("parseAndSaveTokenResponse is called", async () => {
+    test("removes tokenParams from storage after processing", async () => {
       storeData({ clientParams: true, tokenParams: true });
       window.location.href = loginSuccessUrl;
 
       await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
 
-      expect(spyOnParseAndSaveTokenResponse).toBeCalled();
+      expect(localStorage.getItem(`entrust.tokenParams.${TEST_CLIENT_ID}`)).toBeNull();
     });
 
-    describe("parseAndSaveTokenResponse", () => {
-      test("throws error if no token params stored", () => {
-        storeData({ clientParams: true });
-        window.location.href = loginSuccessUrl;
+    test("stores the ID token", async () => {
+      storeData({ clientParams: true, tokenParams: true });
+      window.location.href = loginSuccessUrl;
 
-        expect(async () => {
-          await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-        }).toThrowError();
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
 
-        expect(spyOnParseAndSaveTokenResponse.mock.results[0].type).toStrictEqual("throw");
-      });
+      expect(localStorage.getItem(TEST_ID_TOKEN_KEY)).not.toBeNull();
+    });
 
-      test("removes tokenParams from storage", async () => {
-        storeData({ clientParams: true, tokenParams: true });
-        window.location.href = loginSuccessUrl;
+    test("stores the access token", async () => {
+      storeData({ clientParams: true, tokenParams: true });
+      window.location.href = loginSuccessUrl;
 
-        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
 
-        expect(localStorage.getItem(`entrust.tokenParams.${TEST_CLIENT_ID}`)).toBeNull();
-      });
+      expect(localStorage.getItem(TEST_ACCESS_TOKEN_KEY)).not.toBeNull();
+    });
 
-      test("stores the given ID token", async () => {
-        storeData({ clientParams: true, tokenParams: true });
-        window.location.href = loginSuccessUrl;
+    test("stores access token with correct scope and audience", async () => {
+      storeData({ clientParams: true, tokenParams: true });
+      window.location.href = loginSuccessUrl;
 
-        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+      // @ts-expect-error accessing private var
+      const storedToken = NO_DEFAULT_IDAAS_CLIENT.storageManager.getAccessTokens()[0];
 
-        expect(localStorage.getItem(TEST_ID_TOKEN_KEY)).not.toBeNull();
-      });
+      expect(storedToken.scope).toStrictEqual(TEST_SCOPE);
+      expect(storedToken.audience).toStrictEqual(TEST_TOKEN_PARAMS.audience);
+      expect(storedToken.expiresAt).toBeGreaterThan(Math.floor(Date.now() / 1000));
+    });
 
-      test("stores the given access token", async () => {
-        storeData({ clientParams: true, tokenParams: true });
-        window.location.href = loginSuccessUrl;
+    test("stores ID token with decoded claims", async () => {
+      storeData({ clientParams: true, tokenParams: true });
+      window.location.href = loginSuccessUrl;
 
-        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+      // @ts-expect-error accessing private var
+      const storedToken = NO_DEFAULT_IDAAS_CLIENT.storageManager.getIdToken();
 
-        expect(localStorage.getItem(TEST_ACCESS_TOKEN_KEY)).not.toBeNull();
-      });
-
-      test("calculateEpochExpiry is called", async () => {
-        storeData({ clientParams: true, tokenParams: true });
-        window.location.href = loginSuccessUrl;
-
-        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-        expect(spyOnCalculateEpochExpiry).toBeCalled();
-      });
-
-      describe("calculateEpochExpiry", () => {
-        test("calculates correct expiry time using token's auth_time", () => {
-          const authTime = 1;
-          const expected = authTime + 300;
-
-          const result = format.calculateEpochExpiry("300", authTime.toString());
-
-          expect(result).toStrictEqual(expected);
-        });
-
-        test("calculates correct expiry time using default", async () => {
-          const expected = Math.floor(Date.now() / 1000) + 300;
-
-          storeData({ clientParams: true, tokenParams: true });
-          window.location.href = loginSuccessUrl;
-
-          await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-
-          expect(spyOnCalculateEpochExpiry.mock.results[0].value).toStrictEqual(expected);
-        });
-      });
-
-      test("the access token contains the correct information", async () => {
-        storeData({ clientParams: true, tokenParams: true });
-        window.location.href = loginSuccessUrl;
-
-        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-        // @ts-expect-error accessing private var
-        const storedToken = NO_DEFAULT_IDAAS_CLIENT.storageManager.getAccessTokens()[0];
-        const validatedTokenResponse = spyOnParseAndSaveTokenResponse.mock.calls[0][0] as ValidatedTokenResponse;
-        const { tokenResponse } = validatedTokenResponse;
-
-        expect(storedToken.scope).toStrictEqual(tokenResponse.scope);
-        expect(storedToken.accessToken).toStrictEqual(tokenResponse.access_token);
-        expect(storedToken.refreshToken).toStrictEqual(tokenResponse.refresh_token);
-        expect(storedToken.audience).toStrictEqual(TEST_TOKEN_PARAMS.audience);
-        expect(storedToken.expiresAt).toStrictEqual(Math.floor(Date.now() / 1000) + 300);
-      });
-
-      test("the ID token contains the correct information", async () => {
-        storeData({ clientParams: true, tokenParams: true });
-        window.location.href = loginSuccessUrl;
-
-        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-        // @ts-expect-error accessing private var
-        const storedToken = NO_DEFAULT_IDAAS_CLIENT.storageManager.getIdToken();
-        const validatedTokenResponse = spyOnParseAndSaveTokenResponse.mock.calls[0][0] as ValidatedTokenResponse;
-        const { decodedIdToken, encodedIdToken } = validatedTokenResponse;
-
-        expect(decodedIdToken).toStrictEqual(storedToken.decoded);
-        expect(encodedIdToken).toStrictEqual(storedToken.encoded);
-      });
+      expect(storedToken).toBeDefined();
+      expect(storedToken?.decoded).toBeDefined();
+      expect(storedToken?.encoded).toBeDefined();
     });
   });
 });

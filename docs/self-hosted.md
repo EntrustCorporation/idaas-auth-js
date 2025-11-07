@@ -17,7 +17,7 @@ async function startOtp(userId: string) {
   try {
     const challenge = await idaas.auth.otp(userId, {
       otpDeliveryType: "SMS",
-      otpDeliveryAttribute: "work-phone",
+      otpDeliveryAttribute: "work-phone"
     });
 
     // Prompt user for the code they received
@@ -62,7 +62,7 @@ async function startSoftTokenPush(userId: string) {
   try {
     const initial = await idaas.auth.softToken(userId, {
       push: true,
-      mutualChallenge: true,
+      mutualChallenge: true
     });
 
     if (initial.pushMutualChallenge) {
@@ -76,7 +76,6 @@ async function startSoftTokenPush(userId: string) {
     } else {
       console.log("Soft token push did not complete.");
     }
-    
   } catch (error) {
     console.error("Soft token push failed", error);
   }
@@ -97,7 +96,7 @@ async function startGrid(userId: string) {
 
     const final = await idaas.auth.submit({ response: answers });
 
-    if(final.authenticationCompleted){
+    if (final.authenticationCompleted) {
       console.log("Grid challenge satisfied!");
     }
   } catch (error) {
@@ -119,7 +118,7 @@ async function startKba(userId: string) {
     const answers = collectKbaAnswersFromForm(); // e.g., ["Fluffy", "Lincoln Elementary"]
 
     const final = await idaas.auth.submit({ kbaChallengeAnswers: answers });
-    if(final.authenticationCompleted){
+    if (final.authenticationCompleted) {
       console.log("KBA passed!");
     }
   } catch (error) {
@@ -139,7 +138,7 @@ async function startTempAccessCode(userId: string) {
 
     const final = await idaas.auth.tempAccessCode(userId, code);
 
-    if(final.authenticationCompleted){
+    if (final.authenticationCompleted) {
       console.log("Temporary access code accepted!");
     }
   } catch (error) {
@@ -157,10 +156,9 @@ async function startMagicLink(userId: string) {
   try {
     const initial = await idaas.auth.magicLink(userId);
 
-    if(initial.authenticationCompleted){
+    if (initial.authenticationCompleted) {
       console.log("Magic link redeemed!");
     }
-
   } catch (error) {
     console.error("Magic link failed", error);
   }
@@ -176,13 +174,12 @@ async function startSmartCredential(userId: string) {
   try {
     const initial = await idaas.auth.smartCredential(userId, {
       summary: "Approve login to Example App",
-      pushMessageIdentifier: "example-app-login",
+      pushMessageIdentifier: "example-app-login"
     });
 
-    if(initial.authenticationCompleted){
+    if (initial.authenticationCompleted) {
       console.log("Smart Credential approved!");
     }
-
   } catch (error) {
     console.error("Smart Credential push failed", error);
   }
@@ -199,10 +196,10 @@ import Onfido from "onfido-sdk-ui";
 async function startFace(userId: string) {
   try {
     const initial = await idaas.auth.faceBiometric(userId, {
-      mutualChallenge: true,
+      mutualChallenge: true
     });
 
-    if(initial.authenticationCompleted){
+    if (initial.authenticationCompleted) {
       console.log("Face verification succeeded!");
     }
   } catch (error) {

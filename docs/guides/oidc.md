@@ -17,12 +17,12 @@ const idaas = new IdaasClient(
   {
     issuerUrl: "https://example.trustedauth.com",
     clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    storageType: "localstorage",
+    storageType: "localstorage"
   },
   {
     scope: "openid profile email",
     audience: "https://api.example.com",
-    useRefreshToken: true,
+    useRefreshToken: true
   }
 );
 ```
@@ -45,7 +45,7 @@ await idaas.oidc.login(
   {
     scope: "openid profile email",
     audience: "https://api.example.com",
-    maxAge: 900,
+    maxAge: 900
   }
 );
 ```
@@ -57,19 +57,19 @@ await idaas.oidc.login(
 ### Redirect
 
 ```typescript
-await idaas.oidc.login(
-  {
-    popup: false,
-    redirectUri: "https://app.example.com/callback",
-  }
-);
+await idaas.oidc.login({
+  popup: false,
+  redirectUri: "https://app.example.com/callback"
+});
 ```
 
 - Navigates the browser to the hosted login page.
 - Requires handling the callback at the configured `redirectUri`.
 
 #### Handling the callback
+
 Ensure the page that users are redirected to after signing in on the IDaaS page makes a call to `handleRedirect` to complete the login ceremony.
+
 ```typescript
 // callback.ts
 await idaas.oidc.handleRedirect();
@@ -84,7 +84,7 @@ const accessToken = await idaas.getAccessToken();
 const idTokenClaims = idaas.getIdTokenClaims();
 
 await fetch("https://api.example.com/me", {
-  headers: { Authorization: `Bearer ${accessToken}` },
+  headers: { Authorization: `Bearer ${accessToken}` }
 });
 ```
 
@@ -96,7 +96,7 @@ await fetch("https://api.example.com/me", {
 
 ```typescript
 await idaas.oidc.logout({
-  redirectUri: "https://app.example.com/post-logout",
+  redirectUri: "https://app.example.com/post-logout"
 });
 ```
 

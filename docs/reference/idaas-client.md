@@ -14,11 +14,11 @@ const idaas = new IdaasClient(options, tokenOptions);
 
 ### `IdaasClientOptions` (First Parameter)
 
-| Property      | Type                           | Description                                                    | Default    |
-| ------------- | ------------------------------ | -------------------------------------------------------------- | ---------- |
-| `issuerUrl`   | `string`                       | Entrust IDaaS issuer URL (`https://example.trustedauth.com`).  | —          |
-| `clientId`    | `string`                       | Registered application/client identifier.                      | —          |
-| `storageType?` | `"memory" \| "localstorage"`  | Token persistence strategy.                                    | `"memory"` |
+| Property       | Type                         | Description                                                   | Default    |
+| -------------- | ---------------------------- | ------------------------------------------------------------- | ---------- |
+| `issuerUrl`    | `string`                     | Entrust IDaaS issuer URL (`https://example.trustedauth.com`). | —          |
+| `clientId`     | `string`                     | Registered application/client identifier.                     | —          |
+| `storageType?` | `"memory" \| "localstorage"` | Token persistence strategy.                                   | `"memory"` |
 
 ### `tokenOptions` (Second Parameter - Optional)
 
@@ -218,39 +218,39 @@ The following challenge types provide additional context for specific authentica
 
 Returned when using FIDO/WebAuthn authentication with a specific user.
 
-| Property            | Type       | Description                                                                  |
-| ------------------- | ---------- | ---------------------------------------------------------------------------- |
-| `allowCredentials?` | `string[]` | List of IDs of the FIDO tokens registered for the user (base-64 encoded).    |
-| `challenge`         | `string`   | Random challenge for the FIDO token (base-64 encoded).                       |
-| `timeout?`          | `number`   | Number of seconds the client will wait for the FIDO token to respond.        |
-| `rpId?`             | `string`   | Relying Party identifier.                                                    |
-| `userVerification?` | `string`   | User verification requirement (`"required"`, `"preferred"`, `"discouraged"`).|
+| Property            | Type       | Description                                                                   |
+| ------------------- | ---------- | ----------------------------------------------------------------------------- |
+| `allowCredentials?` | `string[]` | List of IDs of the FIDO tokens registered for the user (base-64 encoded).     |
+| `challenge`         | `string`   | Random challenge for the FIDO token (base-64 encoded).                        |
+| `timeout?`          | `number`   | Number of seconds the client will wait for the FIDO token to respond.         |
+| `rpId?`             | `string`   | Relying Party identifier.                                                     |
+| `userVerification?` | `string`   | User verification requirement (`"required"`, `"preferred"`, `"discouraged"`). |
 
 ### `GridChallenge`
 
 Returned when using grid card authentication.
 
-| Property    | Type                                   | Description                                          |
-| ----------- | -------------------------------------- | ---------------------------------------------------- |
-| `challenge` | `Array<{row: number, column: number}>` | List of grid coordinates the user must provide.      |
+| Property    | Type                                   | Description                                     |
+| ----------- | -------------------------------------- | ----------------------------------------------- |
+| `challenge` | `Array<{row: number, column: number}>` | List of grid coordinates the user must provide. |
 
 ### `KbaChallenge`
 
 Returned when using knowledge-based authentication (security questions).
 
-| Property        | Type                          | Description                              |
-| --------------- | ----------------------------- | ---------------------------------------- |
-| `userQuestions` | `Array<{question: string}>`   | List of questions the user must answer.  |
+| Property        | Type                        | Description                             |
+| --------------- | --------------------------- | --------------------------------------- |
+| `userQuestions` | `Array<{question: string}>` | List of questions the user must answer. |
 
 ### `FaceChallenge`
 
 Returned when using face biometric authentication with Onfido.
 
-| Property         | Type     | Description                                          |
-| ---------------- | -------- | ---------------------------------------------------- |
-| `sdkToken?`      | `string` | Onfido SDK token for initializing the Onfido UI.     |
-| `workflowRunId?` | `string` | Onfido workflow run identifier.                      |
-| `device?`        | `string` | Target device type (`"WEB"`, `"MOBILE"`, etc.).      |
+| Property         | Type     | Description                                      |
+| ---------------- | -------- | ------------------------------------------------ |
+| `sdkToken?`      | `string` | Onfido SDK token for initializing the Onfido UI. |
+| `workflowRunId?` | `string` | Onfido workflow run identifier.                  |
+| `device?`        | `string` | Target device type (`"WEB"`, `"MOBILE"`, etc.).  |
 
 ### `TempAccessCodeChallenge`
 

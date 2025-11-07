@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          fetch-depth: 0 # Fetch all history for commitlint
+
+      - name: 🏗️ Setup Bun
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2
+        with:
+          bun-version: latest
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔍 Lint commit messages (PR)
+        if: github.event_name == 'pull_request'
+        run: bunx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      - name: 🔍 Lint commit messages (Push)
+        if: github.event_name == 'push'
+        run: bun run lint:commits
+
+      - name: 🔧 Generate API types
+        run: bun run api:generate
+
+      - name: 🧹 Format check
+        run: bun run format
+
+      - name: 🧹 Lint
+        run: bun run lint
+
+      - name: 🏗️ Build (includes publint via rslib plugin)
+        run: bun run build
+
+      - name: 🔍 Type check
+        run: bun run lint:types
+
+      - name: 🧪 Run unit tests
+        run: bun run test:unit
+
+      - name: 🎭 Install Playwright browsers
+        run: bunx playwright install --with-deps
+
+      - name: 🧪 Run E2E tests
+        run: bun run test:e2e
+
+      - name: 📦 Verify package contents
+        run: npm pack --dry-run

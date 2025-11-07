@@ -6,7 +6,11 @@
   "homepage": "https://github.com/EntrustCorporation/idaas-auth-spa",
   "license": "Apache-2.0",
   "type": "module",
-  "files": ["dist", "LICENSE", "README.md"],
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/EntrustCorporation/idaas-auth-spa.git"
@@ -14,7 +18,15 @@
   "bugs": {
     "url": "https://github.com/EntrustCorporation/idaas-auth-spa/issues"
   },
-  "keywords": ["Entrust", "authentication", "authorization", "auth", "oidc", "spa", "pkce"],
+  "keywords": [
+    "Entrust",
+    "authentication",
+    "authorization",
+    "auth",
+    "oidc",
+    "spa",
+    "pkce"
+  ],
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -39,10 +51,13 @@
     "ci": "biome ci . && bun run build",
     "ci:fix": "bun run format --write && bun run lint --write",
     "format": "biome format .",
-    "lint": "biome check .",
+    "lint": "bun run lint:js && bun run lint:md",
+    "lint:js": "biome ci .",
+    "lint:md": "prettier --check '**/*.{md,mdx}'",
     "lint:types": "attw .",
-    "test:unit": "bun test test/unit/url.test.ts",
-    "test:e2e": "bunx playwright test",
+    "lint:commits": "commitlint --from HEAD~10 --to HEAD --verbose",
+    "test:unit": "bun test",
+    "test:e2e": "playwright test",
     "test:manual": "bun run test/test-manual/app.ts"
   },
   "dependencies": {
@@ -59,6 +74,8 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
     "@biomejs/biome": "2.3.2",
+    "@commitlint/cli": "19.0.0",
+    "@commitlint/config-conventional": "19.0.0",
     "@happy-dom/global-registrator": "20.0.10",
     "@hey-api/client-fetch": "0.13.1",
     "@hey-api/openapi-ts": "0.86.11",
@@ -72,6 +89,7 @@
     "@types/web": "0.0.289",
     "oidc-provider": "9.5.2",
     "onfido-sdk-ui": "14.55.0",
+    "prettier": "3.6.2",
     "rsbuild-plugin-publint": "0.3.3",
     "typescript": "5.9.3"
   }

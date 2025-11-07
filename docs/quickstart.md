@@ -24,14 +24,14 @@ import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
 const idaas = new IdaasClient(
   {
-    issuerUrl: "https://example.trustedauth.com",     // OIDC issuer from your tenant
+    issuerUrl: "https://example.trustedauth.com", // OIDC issuer from your tenant
     clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", // Your application's client ID
-    storageType: "localstorage",                      // "memory" | "localstorage"
+    storageType: "localstorage" // "memory" | "localstorage"
   },
   {
-    scope: "openid profile email",                    // defaults provided; override as needed
-    audience: "https://api.example.com",              // The resource you want the access token to grant access to
-    useRefreshToken: true,                            // request refresh tokens by default
+    scope: "openid profile email", // defaults provided; override as needed
+    audience: "https://api.example.com", // The resource you want the access token to grant access to
+    useRefreshToken: true // request refresh tokens by default
   }
 );
 ```
@@ -61,7 +61,7 @@ await idaas.oidc.login(
   { popup: true },
   {
     scope: "openid profile email offline_access",
-    audience: "https://different-api.example.com",
+    audience: "https://different-api.example.com"
   }
 );
 ```
@@ -72,7 +72,7 @@ await idaas.oidc.login(
 // Begin the flow
 await idaas.oidc.login({
   popup: false,
-  redirectUri: "https://app.example.com/callback",
+  redirectUri: "https://app.example.com/callback"
 });
 
 // Later, in your callback route
@@ -89,7 +89,7 @@ const idTokenClaims = idaas.getIdTokenClaims();
 
 // Example: call your API
 await fetch("https://api.example.com/me", {
-  headers: { Authorization: `Bearer ${accessToken}` },
+  headers: { Authorization: `Bearer ${accessToken}` }
 });
 ```
 
@@ -97,7 +97,7 @@ await fetch("https://api.example.com/me", {
 
 ```typescript
 await idaas.oidc.logout({
-  redirectUri: "https://app.example.com/post-logout",
+  redirectUri: "https://app.example.com/post-logout"
 });
 ```
 

@@ -25,20 +25,12 @@ describe("IdaasClient.getAccessToken", () => {
     jest.clearAllMocks();
   });
 
-  // @ts-expect-error private
-  const spyOnPersistenceGetAccessTokens = spyOn(NO_DEFAULT_IDAAS_CLIENT.storageManager, "getAccessTokens");
   // @ts-expect-error not full type
   const spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
   const storeToken = (token: AccessToken) => {
     // @ts-expect-error private method call
     NO_DEFAULT_IDAAS_CLIENT.storageManager.saveAccessToken(token);
   };
-
-  test("fetches stored access tokens from storageManager", async () => {
-    storeToken(TEST_ACCESS_TOKEN_OBJECT);
-    await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE });
-    expect(spyOnPersistenceGetAccessTokens).toBeCalled();
-  });
 
   test("uses audience provided if present", async () => {
     storeToken({
@@ -120,13 +112,14 @@ describe("IdaasClient.getAccessToken", () => {
 
     const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ scope: "1", audience: TEST_AUDIENCE });
 
-    expect(spyOnFetch).toBeCalled();
-    // First call is to token endpoint for refresh
-    const fetchCall = spyOnFetch.mock.calls[0];
-    expect(fetchCall?.[0]).toStrictEqual(`${TEST_BASE_URI}/token`);
-    const body = fetchCall?.[1]?.body?.toString();
+    // Verify API contract: refresh endpoint was called with correct grant type
+    const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
+    expect(tokenEndpointCall).toBeDefined();
+    expect(tokenEndpointCall?.[0]).toStrictEqual(`${TEST_BASE_URI}/token`);
+    const body = tokenEndpointCall?.[1]?.body?.toString();
     expect(body).toContain("grant_type=refresh_token");
 
+    // Verify outcome: token was refreshed and returned correctly
     const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_PAIR.key) as string);
     expect(storedTokens.length).toBe(2);
     expect(token).toStrictEqual(TEST_ACCESS_TOKEN);

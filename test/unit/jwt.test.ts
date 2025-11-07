@@ -153,6 +153,12 @@ describe("jwt.ts", () => {
     });
 
     test("returns the JWT payload if no errors raised from jwtVerify", async () => {
+      // Mock createRemoteJWKSet to avoid actual network requests to JWKS endpoint
+      // @ts-expect-error - Mocking with simplified implementation for testing
+      const _spyOnCreateRemoteJWKSet = spyOn(jose, "createRemoteJWKSet").mockImplementationOnce(() => {
+        return async () => ({ keys: [] });
+      });
+
       const _spyOnJwtVerify = spyOn(jose, "jwtVerify").mockImplementationOnce(
         // @ts-expect-error not full return type
         async (userInfoToken) => ({ payload: jose.decodeJwt(userInfoToken) }),

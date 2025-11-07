@@ -5,10 +5,6 @@ import { getUrlParams, mockFetch, storeData } from "../helpers";
 describe("IdaasClient.oidc.logout", () => {
   // @ts-expect-error not full type
   const _spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
-  // @ts-expect-error accessing context
-  const spyOnGetConfig = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc.context, "getConfig");
-  // @ts-expect-error private method
-  const spyOnGenerateLogoutUrl = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "generateLogoutUrl");
   const startLocation = window.location.href;
 
   afterAll(() => {
@@ -26,9 +22,10 @@ describe("IdaasClient.oidc.logout", () => {
 
     await NO_DEFAULT_IDAAS_CLIENT.oidc.logout();
 
-    expect(spyOnGenerateLogoutUrl).toBeCalled();
-    expect(spyOnGetConfig).toBeCalled();
+    // Should clear all stored data
     expect(localStorage.length).toBe(0);
+    // Should redirect to end session endpoint
+    expect(window.location.href).toContain("/endsession");
   });
 
   test("removes all stored data, if ID token stored", async () => {
@@ -42,11 +39,6 @@ describe("IdaasClient.oidc.logout", () => {
     storeData({ idToken: true, tokenParams: true, clientParams: true, accessToken: true });
     await NO_DEFAULT_IDAAS_CLIENT.oidc.logout();
 
-    expect(spyOnGenerateLogoutUrl).toBeCalledTimes(1);
-    const generateLogoutCall = spyOnGenerateLogoutUrl.mock.calls[0] as string[];
-    const redirectUri = generateLogoutCall[1];
-    expect(redirectUri).toBeUndefined();
-
     const { client_id, post_logout_redirect_uri } = getUrlParams(window.location.href);
 
     expect(client_id).toStrictEqual(TEST_CLIENT_ID);
@@ -59,20 +51,8 @@ describe("IdaasClient.oidc.logout", () => {
 
     await NO_DEFAULT_IDAAS_CLIENT.oidc.logout({ redirectUri });
 
-    expect(spyOnGenerateLogoutUrl).toBeCalledTimes(1);
-    const generateLogoutCall = spyOnGenerateLogoutUrl.mock.calls[0] as string[];
-    const passedRedirectUri = generateLogoutCall[0];
-    expect(passedRedirectUri).toStrictEqual(redirectUri);
-
     const { client_id, post_logout_redirect_uri } = getUrlParams(window.location.href);
     expect(client_id).toStrictEqual(TEST_CLIENT_ID);
     expect(post_logout_redirect_uri).toStrictEqual(TEST_BASE_URI);
-  });
-
-  test("fetches end session endpoint from config", async () => {
-    storeData({ idToken: true, tokenParams: true, clientParams: true, accessToken: true });
-
-    await NO_DEFAULT_IDAAS_CLIENT.oidc.logout();
-    expect(spyOnGetConfig).toBeCalled();
   });
 });

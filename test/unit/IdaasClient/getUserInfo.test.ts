@@ -1,14 +1,10 @@
 import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
-import type { IdToken } from "../../../src/storage/StorageManager";
-
 import { NO_DEFAULT_IDAAS_CLIENT, TEST_ACCESS_TOKEN, TEST_BASE_URI, TEST_ID_PAIR, TEST_SUB_CLAIM } from "../constants";
 import { mockFetch } from "../helpers";
 
 describe("IdaasClient.getUserInfo", () => {
   // @ts-expect-error not full type
   const spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
-  // @ts-expect-error accessing private var
-  const spyOnGetIdToken = spyOn(NO_DEFAULT_IDAAS_CLIENT.storageManager, "getIdToken");
 
   afterAll(() => {
     jest.restoreAllMocks();
@@ -33,27 +29,24 @@ describe("IdaasClient.getUserInfo", () => {
     expect(userInfoRequest).toBeTruthy();
   });
 
-  test("returns null if the obtained user info sub claim is not equal to the stored id token's sub claim", async () => {
+  test("returns null if the obtained user info sub claim does not match stored id token sub claim", async () => {
+    // Store ID token with different sub claim
     localStorage.setItem(TEST_ID_PAIR.key, JSON.stringify({ ...TEST_ID_PAIR.data, decoded: { sub: "notEqual" } }));
+
     const result = await NO_DEFAULT_IDAAS_CLIENT.getUserInfo(TEST_ACCESS_TOKEN);
 
-    expect(spyOnGetIdToken).toBeCalled();
-    const storedIdToken = spyOnGetIdToken.mock.results[0].value as IdToken;
-    const storedSubClaim = storedIdToken.decoded.sub;
-
-    expect(storedSubClaim).not.toStrictEqual(TEST_SUB_CLAIM);
+    // Test outcome: should return null when sub claims don't match
     expect(result).toBeNull();
   });
 
-  test("returns the user's info if the obtained user info sub claim is equal to the stored id token's sub claim", async () => {
+  test("returns user info when sub claim matches stored id token sub claim", async () => {
+    // Store ID token with matching sub claim
     localStorage.setItem(TEST_ID_PAIR.key, JSON.stringify(TEST_ID_PAIR.data));
+
     const result = await NO_DEFAULT_IDAAS_CLIENT.getUserInfo(TEST_ACCESS_TOKEN);
 
-    expect(spyOnGetIdToken).toBeCalled();
-    const storedIdToken = spyOnGetIdToken.mock.results[0].value as IdToken;
-    const storedSubClaim = storedIdToken.decoded.sub;
-
-    expect(storedSubClaim).toStrictEqual(TEST_SUB_CLAIM);
-    expect(result).not.toBeUndefined();
+    // Test outcome: should return user info object
+    expect(result).toBeDefined();
+    expect(result?.sub).toStrictEqual(TEST_SUB_CLAIM);
   });
 });

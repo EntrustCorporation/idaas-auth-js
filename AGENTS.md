@@ -22,14 +22,19 @@ This SDK simplifies integrating secure authentication into JavaScript SPAs using
 - Passwordless authentication (passkey, biometrics)
 - Single Sign-On (SSO)
 
+**Target Environment:** Browser-only (Single Page Applications running in web browsers)
+
+**Module System:** ESM-only (pure ECMAScript modules, no CommonJS support)
+
 ## Technology Stack
 
 ### Runtime & Build Tools
 
-- **Runtime:** Bun >= 1, Node >= 22
+- **Development Runtime:** Bun >= 1, Node >= 22 (for building and testing only)
+- **Production Runtime:** Modern browsers supporting ES2021
 - **Language:** TypeScript 5.9.3
 - **Build System:** rslib (Rsbuild library build tool)
-- **Module Format:** ESM (ES2021 syntax)
+- **Module Format:** ESM-only (ES2021 syntax, no CJS)
 - **Linter/Formatter:** Biome 2.3.2
 
 ### Core Dependencies
@@ -131,21 +136,25 @@ The SDK is organized around several main client classes:
 The SDK exports the following from `src/index.ts`:
 
 **Main Class:**
+
 - `IdaasClient`: Primary client class
 
 **Configuration Types:**
+
 - `IdaasClientOptions`: Client configuration options
 - `TokenOptions`: Token request options
 - `OidcLoginOptions`: OIDC-specific login options
 - `OidcLogoutOptions`: Logout configuration
 
 **Authentication Types:**
+
 - `AuthenticationRequestParams`: RBA challenge request parameters
 - `AuthenticationResponse`: Authentication challenge/completion response
 - `AuthenticationSubmissionParams`: Challenge submission parameters
 - `IdaasAuthenticationMethod`: Authentication method enum
 
 **Authenticator-Specific Options:**
+
 - `OtpOptions`: OTP authentication options
 - `SoftTokenOptions`: Soft token authentication options
 - `SoftTokenPushOptions`: Soft token push-specific options
@@ -153,6 +162,7 @@ The SDK exports the following from `src/index.ts`:
 - `SmartCredentialOptions`: Smart credential push options
 
 **Challenge Types:**
+
 - `GridChallenge`: Grid card challenge details
 - `KbaChallenge`: Knowledge-based authentication challenge
 - `FaceChallenge`: Face biometric challenge details
@@ -160,6 +170,7 @@ The SDK exports the following from `src/index.ts`:
 - `TempAccessCodeChallenge`: Temporary access code challenge
 
 **User Types:**
+
 - `UserClaims`: OIDC standard user claims
 
 ### Directory Structure
@@ -204,10 +215,14 @@ test/
 ├── e2e/                        # End-to-end tests (Playwright)
 │   ├── initialization.spec.ts
 │   └── login.spec.ts
-├── test-manual/                # Manual testing apps
+├── test-manual/                # Manual testing app and per-authenticator test pages
 │   ├── app.ts                  # Test server
 │   ├── index.html              # Manual test UI
-│   └── [authenticator-type]/   # Per-authenticator test pages
+│   └── [authenticator-type]/   # Per-authenticator pages (password, otp, passkey, etc.)
+├── test-spa/                   # Test SPA for E2E tests
+│   ├── app.ts
+│   ├── index.html
+│   └── index.ts
 └── test-idp/                   # Test OIDC provider
     └── oidc-provider.ts
 ```
@@ -231,11 +246,42 @@ bun run lint
 bun run ci:fix
 ```
 
+### Commit Messages
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) for automated versioning and changelog generation.
+
+**Format**: `<type>[optional scope]: <description>`
+
+**Common types**:
+
+- `feat`: New feature (minor version bump)
+- `fix`: Bug fix (patch version bump)
+- `docs`: Documentation changes
+- `chore`: Maintenance tasks
+- `refactor`: Code refactoring
+- `perf`: Performance improvement
+- `test`: Test changes
+- `ci`: CI/CD changes
+
+**Breaking changes**: Add `!` after type or `BREAKING CHANGE:` in footer for major version bump
+
+**Examples**:
+
+```bash
+feat: add face biometric authentication
+fix: resolve token refresh race condition
+docs: update authentication flow examples
+chore: upgrade dependencies
+feat!: change authentication API interface
+```
+
+**Validation**: Commit messages are validated in CI. Run `bun run lint:commits` to validate locally.
+
 ### Testing
 
 ```bash
 # Run unit tests
-bun test
+bun run test:unit
 
 # Run specific unit test
 bun test test/unit/url.test.ts
@@ -248,8 +294,6 @@ bunx playwright test --ui
 
 # Run E2E tests in a specific browser
 bunx playwright test --project=chromium
-bunx playwright test --project=firefox
-bunx playwright test --project=webkit
 
 # Run manual test server
 bun run test:manual
@@ -261,11 +305,9 @@ The E2E tests use Playwright and automatically start required services:
 
 - **Test OIDC Provider**: Runs on port 3000 (`test/test-idp/oidc-provider.ts`)
 - **Test SPA Application**: Runs on port 8080 (`test/test-spa/app.ts`)
-- **Test Files**: Located in `test/e2e/`
-  - `initialization.spec.ts`: Tests client initialization
-  - `login.spec.ts`: Tests login flows
+- **Test Files**: Located in `test/e2e/` (e.g., `initialization.spec.ts`, `login.spec.ts`)
 
-Configuration is in `playwright.config.ts` with support for Chromium, Firefox, and WebKit browsers.
+Configuration is in `playwright.config.ts` with support for Chromium, Firefox, and WebKit.
 
 ### API Code Generation
 
@@ -285,12 +327,24 @@ Configuration in `openapi-ts.config.ts`.
 
 **rslib.config.ts:**
 
-- Format: ESM
-- Syntax: ES2021
-- Bundled with type declarations
-- Auto-external dependencies
-- Web target
-- Onfido SDK marked as external
+- **Format:** ESM-only (no CJS or UMD variants)
+- **Syntax:** ES2021
+- **Target:** `web` (browser environment)
+- **Bundle:** Single bundled output with tree-shaking
+- **Type Declarations:** Bundled `.d.ts` file
+- **Externalization:** Automatic externalization of dependencies (via `autoExternal: true`)
+- **Peer Dependencies:** `onfido-sdk-ui` marked as external and optional
+- **Plugins:**
+  - `pluginTypeCheck()`: TypeScript type checking during build
+  - `pluginPublint()`: Package validation for npm publishing
+
+**Key Configuration Choices:**
+
+1. **Web Target Only:** Despite Node.js being required for development tooling, the SDK targets `web` exclusively because it runs only in browser SPAs and uses browser-specific APIs (WebCrypto, WebAuthn, window, localStorage) plus OIDC flows requiring browser redirects/popups.
+
+2. **ESM-Only:** Modern bundlers (Vite, Webpack 5+, Rollup) fully support ESM, which provides better tree-shaking, aligns with browser native modules, and simplifies maintenance.
+
+3. **No UMD/IIFE:** Direct CDN usage via `<script>` tags is not supported; users must use modern bundlers.
 
 ### Code Quality Standards
 
@@ -337,7 +391,7 @@ await client.login({ popup: true });
 ```typescript
 // Request challenge
 const { method, pollForCompletion } = await client.requestChallenge({
-  userId: "user@example.com",
+  userId: "user@example.com"
 });
 
 // Submit response (if required)
@@ -375,13 +429,11 @@ Supported authentication methods:
 The SDK manages three types of tokens:
 
 1. **Access Tokens**: Used for API authorization
-
    - Stored with scope, audience, expiry, ACR, and maxAgeExpiry
    - Can be refreshed if refresh token available
    - Retrieved via `getAccessToken()`
 
 2. **ID Tokens**: Contain user identity claims
-
    - JWT format with user information
    - Retrieved via `getIdTokenClaims()`
 
@@ -403,7 +455,6 @@ All OIDC flows use PKCE for security:
 The SDK communicates with two main APIs:
 
 1. **OIDC Provider** (issuerUrl)
-
    - Authorization endpoint: `${issuerUrl}/authorize`
    - Token endpoint: `${issuerUrl}/token`
    - UserInfo endpoint: `${issuerUrl}/userinfo`
@@ -425,13 +476,13 @@ Specify required authentication strength:
 // Require knowledge-based authentication
 await client.login({
   popup: true,
-  acrValues: ["knowledge"], // e.g., password, KBA
+  acrValues: ["knowledge"] // e.g., password, KBA
 });
 
 // Require possession-based authentication
 await client.login({
   popup: true,
-  acrValues: ["possession"], // e.g., OTP, soft token
+  acrValues: ["possession"] // e.g., OTP, soft token
 });
 ```
 
@@ -446,14 +497,14 @@ await client.requestChallenge({
     {
       detail: "IP_ADDRESS",
       value: "192.168.1.1",
-      usage: ["RBA", "TVS"],
+      usage: ["RBA", "TVS"]
     },
     {
       detail: "TRANSACTION_AMOUNT",
       value: "1000.00",
-      usage: ["TVS"],
-    },
-  ],
+      usage: ["TVS"]
+    }
+  ]
 });
 ```
 
@@ -473,7 +524,7 @@ await client.auth.passkey();
 
 // OTP with custom delivery
 await client.auth.otp("user@example.com", {
-  otpDeliveryType: "EMAIL",
+  otpDeliveryType: "EMAIL"
 });
 
 // Face biometric (requires onfido-sdk-ui and <div id="onfido-mount"></div>)
@@ -514,13 +565,16 @@ await client.auth.faceBiometric("user@example.com");
 
 ## Publishing
 
-The package is published to npm under the `@entrustcorp` scope:
+The package is published to npm under the `@entrustcorp` scope using **automated releases with Release Please**.
 
-```bash
-# Build and publish
-bun run build
-npm publish
-```
+### Automated Release Process
+
+1. **Make changes** with conventional commits (see "Development Workflow" section)
+2. **Merge to main**: Release Please automatically creates/updates a release PR
+3. **Review the PR**: Check the auto-generated changelog and version bump
+4. **Merge the release PR**: Publishing happens automatically via GitHub Actions with Trusted Publishing (OIDC)
+
+**Note**: Never manually bump versions, create tags, or run `npm publish` locally. All releases are automated.
 
 **Published Files:**
 
@@ -553,18 +607,58 @@ npm publish
 
 ## CI/CD
 
-**Jenkins Pipeline:**
+This project uses **GitHub Actions** for continuous integration and automated releases.
 
-- Located in `Jenkinsfile`
-- Runs formatting, linting, and build checks
-- Uses `bun run ci` command
+### Workflows
 
-**Pre-commit Checks:**
+#### 1. Build Workflow (`build.yaml`)
 
-- Format: `biome format .`
-- Lint: `biome check .`
-- Build: `rslib build`
-- Type check: `attw .`
+Runs on pull requests and pushes to main:
+
+- **Commit Validation**: Validates conventional commit format using commitlint
+- **API Generation**: Generates TypeScript types from OpenAPI specs
+- **Format Check**: Runs Biome formatter
+- **Lint**: Runs Biome linter
+- **Build**: Compiles TypeScript with rslib (includes publint validation via rsbuild-plugin-publint)
+- **Type Check**: Validates types with `attw`
+- **Tests**: Runs unit tests (Bun) and E2E tests (Playwright)
+- **Package Verification**: Validates npm package contents
+
+#### 2. Release Please Workflow (`release-please.yml`)
+
+Automated release management:
+
+- **Triggers**: On push to main or manual workflow dispatch
+- **Creates Release PRs**: Based on conventional commits
+- **Generates Changelog**: Automatically from commit messages
+- **Auto-publishes**: When release PR is merged
+  - Runs full test suite
+  - Uses npm Trusted Publishing (OIDC, no tokens needed)
+  - Publishes with provenance for supply chain security
+
+### Configuration Files
+
+- `.github/workflows/build.yaml`: Build and test workflow
+- `.github/workflows/release-please.yml`: Automated release workflow
+- `commitlint.config.js`: Conventional commit validation
+- `release-please-config.json`: Release Please configuration
+- `.release-please-manifest.json`: Current version tracking
+
+**Note**: The Jenkins pipeline (`Jenkinsfile`) exists for legacy purposes but GitHub Actions is the primary CI/CD system.
+
+### Local CI Checks
+
+Run the same checks locally before committing:
+
+```bash
+bun run format          # Format code
+bun run lint            # Lint code
+bun run lint:types      # Type check
+bun run lint:commits    # Validate last 10 commit messages
+bun run build           # Build package (includes publint via rslib plugin)
+bun run test:unit       # Run unit tests
+bun run test:e2e        # Run E2E tests
+```
 
 ## Dependencies Management
 
@@ -684,6 +778,18 @@ Current version: **0.1.43**
 
 This is a pre-1.0 SDK. Expect breaking changes between minor versions until 1.0 is released.
 
+## Important Notes
+
+### Runtime Environment Clarification
+
+Despite `package.json` specifying `"engines": { "bun": ">= 1", "node": ">= 22" }`, this SDK **does not run in Node.js at runtime**. These engine requirements are exclusively for:
+
+- **Development tooling:** Building, testing, linting, and formatting
+- **CI/CD pipelines:** Running automated tests and builds
+- **Code generation:** OpenAPI type generation and validation
+
+**The SDK is browser-only** and relies on browser-specific APIs unavailable in Node.js (WebCrypto, WebAuthn, window, localStorage).
+
 ## Contact & Support
 
 - **Issues:** https://github.com/EntrustCorporation/idaas-auth-spa/issues
@@ -692,4 +798,4 @@ This is a pre-1.0 SDK. Expect breaking changes between minor versions until 1.0 
 
 ---
 
-_Last updated: November 6, 2025_
+_Last updated: November 7, 2025 (reviewed for accuracy, clarity, and removed redundancies)_

@@ -8,29 +8,29 @@ Under the hood each helper calls into `IdaasClient.rba` to request, submit, poll
 
 > **Note:** Unless a helper explicitly states otherwise, the first parameter is the user’s identifier (`userId`). Passkey flows may omit it for discoverable credentials.
 
-| Method                                          | Description                                         | Handles Submission?                                                        | 
-| ----------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------- |
-| `password(userId, password)`        | Password-only authentication.                       | ✅                                                                         |
-| `otp(userId, options?)`             | Requests an OTP challenge.                          | ❌ Call `auth.submit({ response })` with the code.                         |
-| `softToken(userId, options?)`       | Soft token OTP or push.                             | ⚠️ Push (no mutual challenge) auto-polls; other modes require submit poll. |
-| `grid(userId)`                      | Grid challenge.                                     | ❌ Collect grid values then `auth.submit({ response })`.                   |
-| `passkey(userId?)`                  | WebAuthn/FIDO or usernameless passkey.              | ✅                                                                         |
-| `kba(userId)`                       | Knowledge-based questions.                          | ❌ Supply answers in same order as questions array via `auth.submit({ kbaChallengeAnswers })`.      |
-| `tempAccessCode(userId, code)`      | Temporary access code.                              | ✅                                                                         |
-| `magicLink(userId)`                 | Magic link                                          | ✅                                                                         |
-| `smartCredential(userId, options?)` | Smart Credential push.                              | ✅                                                                         | 
-| `faceBiometric(userId, options?)`   | Face biometrics via Onfido.                         | ✅                                                                         |
+| Method                              | Description                            | Handles Submission?                                                                            |
+| ----------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `password(userId, password)`        | Password-only authentication.          | ✅                                                                                             |
+| `otp(userId, options?)`             | Requests an OTP challenge.             | ❌ Call `auth.submit({ response })` with the code.                                             |
+| `softToken(userId, options?)`       | Soft token OTP or push.                | ⚠️ Push (no mutual challenge) auto-polls; other modes require submit poll.                     |
+| `grid(userId)`                      | Grid challenge.                        | ❌ Collect grid values then `auth.submit({ response })`.                                       |
+| `passkey(userId?)`                  | WebAuthn/FIDO or usernameless passkey. | ✅                                                                                             |
+| `kba(userId)`                       | Knowledge-based questions.             | ❌ Supply answers in same order as questions array via `auth.submit({ kbaChallengeAnswers })`. |
+| `tempAccessCode(userId, code)`      | Temporary access code.                 | ✅                                                                                             |
+| `magicLink(userId)`                 | Magic link                             | ✅                                                                                             |
+| `smartCredential(userId, options?)` | Smart Credential push.                 | ✅                                                                                             |
+| `faceBiometric(userId, options?)`   | Face biometrics via Onfido.            | ✅                                                                                             |
 
 > If you need full control over the challenge lifecycle, use the lower-level [`IdaasClient.rba`](rba.md) API.
 
 Some helper methods still require extra steps, see the following methods for completing the authentication life-cycle.
 
-| Method                                          | Description                                                                                    |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `submit(params)`                                | Submits OTPs, passkey assertions, KBA answers, etc.                                            |
-| `poll()`                                        | Polls the active transaction (mainly for push or face flows when mutual challenge is enabled). |
-| `cancel()`                                      | Cancels the active transaction.                                                                |
-| `logout()`                                      | Silently logs the user out of the ID Provider and clears tokens.                               |
+| Method           | Description                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| `submit(params)` | Submits OTPs, passkey assertions, KBA answers, etc.                                            |
+| `poll()`         | Polls the active transaction (mainly for push or face flows when mutual challenge is enabled). |
+| `cancel()`       | Cancels the active transaction.                                                                |
+| `logout()`       | Silently logs the user out of the ID Provider and clears tokens.                               |
 
 ## Setup
 
@@ -43,12 +43,12 @@ const idaas = new IdaasClient(
   {
     issuerUrl: "https://example.trustedauth.com",
     clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    storageType: "localstorage",
+    storageType: "localstorage"
   },
   {
     scope: "openid profile email",
     audience: "https://api.example.com",
-    useRefreshToken: true,
+    useRefreshToken: true
   }
 );
 ```
@@ -72,7 +72,7 @@ if (result.authenticationCompleted) {
 ```typescript
 const challenge = await idaas.auth.otp("user@example.com", {
   otpDeliveryType: "SMS",
-  otpDeliveryAttribute: "work-phone",
+  otpDeliveryAttribute: "work-phone"
 });
 
 // prompt user for code, then submit
@@ -87,7 +87,7 @@ await idaas.auth.submit({ response: otpCode });
 // Push with mutual challenge
 const { pushMutualChallenge } = await idaas.auth.softToken("user@example.com", {
   push: true,
-  mutualChallenge: true,
+  mutualChallenge: true
 });
 
 // Show mutual challenge text, then poll
@@ -97,7 +97,7 @@ const final = await idaas.auth.poll();
 ```typescript
 // Plain push (auto-polls internally)
 const final = await idaas.auth.softToken("user@example.com", {
-  push: true,
+  push: true
 });
 ```
 
@@ -162,7 +162,7 @@ The magicLink immediately polls for completion.
 ```typescript
 const result = await idaas.auth.smartCredential("user@example.com", {
   summary: "Approve login to Example App",
-  pushMessageIdentifier: "example-app-login",
+  pushMessageIdentifier: "example-app-login"
 });
 // Automatically polls until the push is approved or rejected.
 ```
@@ -173,7 +173,7 @@ const result = await idaas.auth.smartCredential("user@example.com", {
 
 ```typescript
 const result = await idaas.auth.faceBiometric("user@example.com", {
-  mutualChallenge: true,
+  mutualChallenge: true
 });
 // Display the mutual challenge stored in result.pushMutualChallenge
 ```
@@ -196,7 +196,7 @@ After any helper that returns `authenticationCompleted: false`:
 ```typescript
 // Submit codes or answers
 await idaas.auth.submit({
-  response: otpCode,
+  response: otpCode
   // or passkeyResponse, kbaChallengeAnswers, etc.
 });
 

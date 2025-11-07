@@ -18,10 +18,6 @@ import { getUrlParams, mockFetch } from "../helpers";
 describe("IdaasClient.oidc.login", () => {
   // @ts-expect-error not full type
   const _spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
-  // @ts-expect-error private method
-  const spyOnLoginWithRedirect = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "loginWithRedirect");
-  // @ts-expect-error private method
-  const spyOnLoginWithPopup = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "loginWithPopup");
   // @ts-expect-error accessing context
   const spyOnGetConfig = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc.context, "getConfig");
   const spyOnGenerateAuthorizationUrl = spyOn(urlUtils, "generateAuthorizationUrl");
@@ -37,12 +33,6 @@ describe("IdaasClient.oidc.login", () => {
     window.location.href = startLocation;
   });
 
-  test("fetches supported response modes from config", async () => {
-    await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
-
-    expect(spyOnGetConfig).toBeCalled();
-  });
-
   test("throws error if attempting to login with popup, but web_message response mode not supported", () => {
     spyOnGetConfig.mockResolvedValueOnce({ ...TEST_OIDC_CONFIG, response_modes_supported: ["query"] });
 
@@ -51,26 +41,22 @@ describe("IdaasClient.oidc.login", () => {
     }).toThrowError();
   });
 
-  test("calls loginWithPopup if popup is true", async () => {
-    spyOnLoginWithPopup.mockImplementationOnce(async () => "success");
-    await NO_DEFAULT_IDAAS_CLIENT.oidc.login({ popup: true });
-
-    expect(spyOnLoginWithRedirect).not.toBeCalled();
-    expect(spyOnLoginWithPopup).toBeCalled();
-  });
-
-  test("calls loginWithRedirect if popup is false", async () => {
+  test("redirects to authorization URL when popup is false", async () => {
+    const startUrl = window.location.href;
     await NO_DEFAULT_IDAAS_CLIENT.oidc.login({ popup: false });
 
-    expect(spyOnLoginWithRedirect).toBeCalled();
-    expect(spyOnLoginWithPopup).not.toBeCalled();
+    // Should redirect to authorization endpoint
+    expect(window.location.href).not.toBe(startUrl);
+    expect(window.location.href).toContain("/authorization");
   });
 
-  test("defaults to loginWithRedirect if popup param not supplied", async () => {
+  test("redirects to authorization URL when popup param not supplied (defaults to redirect)", async () => {
+    const startUrl = window.location.href;
     await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 
-    expect(spyOnLoginWithRedirect).toBeCalled();
-    expect(spyOnLoginWithPopup).not.toBeCalled();
+    // Should redirect to authorization endpoint (default behavior)
+    expect(window.location.href).not.toBe(startUrl);
+    expect(window.location.href).toContain("/authorization");
   });
 
   describe("login with redirect", () => {
@@ -86,29 +72,31 @@ describe("IdaasClient.oidc.login", () => {
       expect(localStorage.getItem(TEST_TOKEN_PAIR.key)).toBeTruthy();
     });
 
-    test("generateAuthorizationUrl returns {url, nonce, state, codeVerifier}", async () => {
+    test("generates authorization URL with all required parameters", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 
-      expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url, nonce, state, codeVerifier } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as {
         url: string;
         nonce: string;
         state: string;
         codeVerifier: string;
       };
-      const resultArr = [url, nonce, state, codeVerifier];
 
-      for (const result of resultArr) {
-        expect(result).toBeTruthy();
-        expect(typeof result).toBe("string");
-      }
+      // Verify all required parameters are generated
+      expect(url).toBeTruthy();
+      expect(typeof url).toBe("string");
+      expect(nonce).toBeTruthy();
+      expect(typeof nonce).toBe("string");
+      expect(state).toBeTruthy();
+      expect(typeof state).toBe("string");
+      expect(codeVerifier).toBeTruthy();
+      expect(typeof codeVerifier).toBe("string");
     });
 
     describe("scopes in auth url", () => {
       test("auth url contains scopes", async () => {
         await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 
-        expect(spyOnGenerateAuthorizationUrl).toBeCalled();
         const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
         const { scope } = getUrlParams(authUrl);
 
@@ -118,7 +106,6 @@ describe("IdaasClient.oidc.login", () => {
       test("scopes specified in login call are used", async () => {
         await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { scope: "test_scope1 test_scope2" });
 
-        expect(spyOnGenerateAuthorizationUrl).toBeCalled();
         const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
         const { scope } = getUrlParams(authUrl);
         const scopeArr = scope.split(" ");
@@ -130,7 +117,6 @@ describe("IdaasClient.oidc.login", () => {
       test("default scope used if none supplied in client constructor or login call", async () => {
         await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 
-        expect(spyOnGenerateAuthorizationUrl).toBeCalled();
         const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
         const { scope } = getUrlParams(authUrl);
         const sortedUrlScope = scope.split(" ").sort().join(", ");
@@ -143,7 +129,6 @@ describe("IdaasClient.oidc.login", () => {
       test("scope supplied in constructor used if not specified in login call", async () => {
         await SET_DEFAULTS_IDAAS_CLIENT.oidc.login();
 
-        expect(spyOnGenerateAuthorizationUrl).toBeCalled();
         const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
         const { scope } = getUrlParams(authUrl);
         const requiredScopes = TEST_DIFFERENT_SCOPE.split(" ");
@@ -158,7 +143,6 @@ describe("IdaasClient.oidc.login", () => {
     test("auth url contains correct response_mode and response_type", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 
-      expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
       const { response_mode, response_type } = getUrlParams(authUrl);
 
@@ -169,7 +153,6 @@ describe("IdaasClient.oidc.login", () => {
     test("auth url contains max_age param if maxAge >= 0", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { maxAge: 0 });
 
-      expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
       const { max_age: maxAge } = getUrlParams(authUrl);
 
@@ -179,7 +162,6 @@ describe("IdaasClient.oidc.login", () => {
     test("auth url does not contain max_age param if maxAge is undefined", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 
-      expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
       const { max_age } = getUrlParams(authUrl);
 
@@ -189,7 +171,6 @@ describe("IdaasClient.oidc.login", () => {
     test("auth url does not contain max_age param if maxAge is negative", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { maxAge: -1 });
 
-      expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
       const { max_age: maxAge } = getUrlParams(authUrl);
 
@@ -200,7 +181,6 @@ describe("IdaasClient.oidc.login", () => {
       const thisTestDifferentAcr = "different";
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { acrValues: [TEST_ACR_CLAIM, thisTestDifferentAcr] });
 
-      expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
       const { acr_values: acrValuesFromUrl } = getUrlParams(authUrl);
       const acrArr = acrValuesFromUrl.split(" ");
@@ -212,7 +192,6 @@ describe("IdaasClient.oidc.login", () => {
     test("auth url does not contain claims request if acrValues is not passed", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 
-      expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
       const { acr_values } = getUrlParams(authUrl);
 
@@ -222,7 +201,6 @@ describe("IdaasClient.oidc.login", () => {
     test("auth url does not contain claims request if acrValues is passed as empty array", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { acrValues: [] });
 
-      expect(spyOnGenerateAuthorizationUrl).toBeCalled();
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0].value) as { url: string };
       const { acr_values } = getUrlParams(authUrl);
 

@@ -34,7 +34,7 @@ The IDaaS Auth SDK will send API requests to your IDaaS tenant. You will need to
 
 The following must be set in your Content Security Policy for the SDK to work. Replace entrust.us.trustedauth.com with your IDaaS tenant hostname.
 
-`connect-src 'entrust.us.trustedauth.com'`
+`connect-src entrust.us.trustedauth.com`
 
 ---
 
@@ -58,9 +58,9 @@ npm install onfido-sdk-ui
 import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 
 const idaas = new IdaasClient({
-  issuerUrl: "https://example.trustedauth.com",
+  issuerUrl: "https://example.us.trustedauth.com/api/oidc",
   clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  storageType: "localstorage",
+  storageType: "localstorage"
 });
 
 // Popup flow (auto stores tokens)

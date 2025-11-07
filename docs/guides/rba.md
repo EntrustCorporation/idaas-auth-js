@@ -37,11 +37,11 @@ requestChallenge → poll → success/failure
 const challenge = await idaas.rba.requestChallenge(
   {
     userId: "user@example.com",
-    transactionDetails: [{ detail: "amount", value: "10000" }], // RBA policy determines if this is considered "high-risk" and chooses authenticator accordingly
+    transactionDetails: [{ detail: "amount", value: "10000" }] // RBA policy determines if this is considered "high-risk" and chooses authenticator accordingly
   },
   {
     audience: "https://api.example.com",
-    maxAge: 900,
+    maxAge: 900
   }
 );
 ```
@@ -85,7 +85,7 @@ if (challenge.method === "OTP") {
 
 ```typescript
 await idaas.rba.submitChallenge({
-  response: otpCode, // or mutual challenge data, etc.
+  response: otpCode // or mutual challenge data, etc.
 });
 ```
 
@@ -156,15 +156,15 @@ if (submitResponse.method === "TEMP_ACCESS_CODE") {
 
 ```typescript
 const challenge = await idaas.rba.requestChallenge({
-  preferredAuthenticationMethod: "PASSKEY",
+  preferredAuthenticationMethod: "PASSKEY"
 });
 
 const assertion = await navigator.credentials.get({
-  publicKey: challenge.passkeyChallenge,
+  publicKey: challenge.passkeyChallenge
 });
 
 await idaas.rba.submitChallenge({
-  passkeyResponse: assertion,
+  passkeyResponse: assertion
 });
 ```
 
@@ -173,19 +173,20 @@ await idaas.rba.submitChallenge({
 ```typescript
 await idaas.rba.requestChallenge({
   preferredAuthenticationMethod: "TOKENPUSH",
-  softTokenPushOptions: { mutualChallenge: true },
+  softTokenPushOptions: { mutualChallenge: true }
 });
 
 await idaas.rba.poll();
 ```
 
 ### Face (Onfido)
+
 > Refer to the [Onfido Web SDK documentation](https://documentation.onfido.com/sdk/web/) for details on how to use.
 
 ```typescript
 const challenge = await idaas.rba.requestChallenge({
   preferredAuthenticationMethod: "FACE",
-  faceBiometricOptions: { mutualChallenge: true },
+  faceBiometricOptions: { mutualChallenge: true }
 });
 
 showMutualAuthChallenge(challenge.pushMutualChallenge);
@@ -205,7 +206,7 @@ const onfidoSdk = (challenge: AuthenticationResponse) => {
       } finally {
         instance.tearDown();
       }
-    },
+    }
   });
 };
 ```

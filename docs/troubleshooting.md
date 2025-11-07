@@ -15,19 +15,19 @@ This guide lists common issues encountered when integrating the IDaaS Auth JS SD
 
 ## Hosted OIDC flows (`oidc`)
 
-| Symptom                                    | Likely cause                                                                         | Fix                                                                                       |
-| ------------------------------------------ | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| Popup window blocked or immediately closed | Browser blocked popups.                                                              | Switch to redirect flow (`popup: false`) or ask users to allow popups for your domain.    |
-| `invalid_redirect_uri` error               | Redirect URI sent by SDK isn’t registered.                                           | Update the tenant app configuration or pass the correct `redirectUri` to `login`.         |
+| Symptom                                    | Likely cause                                                                         | Fix                                                                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Popup window blocked or immediately closed | Browser blocked popups.                                                              | Switch to redirect flow (`popup: false`) or ask users to allow popups for your domain.           |
+| `invalid_redirect_uri` error               | Redirect URI sent by SDK isn’t registered.                                           | Update the tenant app configuration or pass the correct `redirectUri` to `login`.                |
 | `state mismatch`/`invalid_state`           | Callback handled without original state (e.g., multiple clients or double handling). | Use a single `IdaasClient` instance per request and call `handleRedirect()` only once per login. |
 
 ---
 
 ## `getAccessToken` / token storage
 
-| Symptom                     | Likely cause                                                          | Fix                                                                                         |
-| --------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `Requested token not found` | Token cached under different scope/audience or cleared.               | Pass matching `scope`/`audience`.                                                           |
+| Symptom                     | Likely cause                                                          | Fix                                                                                   |
+| --------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `Requested token not found` | Token cached under different scope/audience or cleared.               | Pass matching `scope`/`audience`.                                                     |
 | Refresh token not issued    | Tenant doesn't allow refresh tokens or `useRefreshToken` not enabled. | Enable refresh tokens in tenant policy and set `useRefreshToken: true` (or per-call). |
 
 ---

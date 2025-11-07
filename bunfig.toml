@@ -2,3 +2,6 @@
 preload = "./happydom.ts"
 coverage = true
 root = "./test/unit"
+coveragePathIgnorePatterns = [
+    "**/models/openapi-ts/**"
+]
