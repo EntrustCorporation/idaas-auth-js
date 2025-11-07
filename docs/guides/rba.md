@@ -124,17 +124,30 @@ Multi-Factor authentication flows start with a password login. You can submit th
 
 ```typescript
 // With Password
-const challenge = await idaas.rba.requestChallenge({userId, password})
+const challenge = await idaas.rba.requestChallenge({ userId, password });
 
 // Check challenge.method and handle the authentication method.
+if (challenge.method === "OTP") {
+  // Prompt user for OTP and submit
+  const final = await idaas.rba.submitChallenge({ response: otpCode });
+} else if (challenge.method === "MAGICLINK") {
+  const final = await idaas.rba.poll();
+}
 ```
 
 ```typescript
 // Without Password
-const challenge = await idaas.rba.requestChallenge({ userId })
-const submitResponse = await idaas.rba.submit({ response: password })
+const challenge = await idaas.rba.requestChallenge({ userId });
+const submitResponse = await idaas.rba.submitChallenge({ response: password });
 
-//check submitResponse.method and handle the authentication method.
+// Check submitResponse.method and handle the authentication method.
+if (submitResponse.method === "TEMP_ACCESS_CODE") {
+  // Prompt user for OTP and submit
+  const final = await idaas.rba.submitChallenge({ response: otpCode });
+} else if (submitResponse.method === "PASSKEY") {
+  const passkeyResponse = handlePasskey(submitResponse.passkeyChallenge);
+  const final = await idaas.rba.submitChallenge({ passkeyResponse });
+}
 ```
 
 ## Handling common authenticators
