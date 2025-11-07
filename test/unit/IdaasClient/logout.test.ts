@@ -5,10 +5,10 @@ import { getUrlParams, mockFetch, storeData } from "../helpers";
 describe("IdaasClient.oidc.logout", () => {
   // @ts-expect-error not full type
   const _spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
+  // @ts-expect-error accessing context
+  const spyOnGetConfig = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc.context, "getConfig");
   // @ts-expect-error private method
-  const spyOnGetConfig = spyOn(NO_DEFAULT_IDAAS_CLIENT, "getConfig");
-  // @ts-expect-error private method
-  const spyOnGenerateLogoutUrl = spyOn(NO_DEFAULT_IDAAS_CLIENT, "generateLogoutUrl");
+  const spyOnGenerateLogoutUrl = spyOn(NO_DEFAULT_IDAAS_CLIENT.oidc, "generateLogoutUrl");
   const startLocation = window.location.href;
 
   afterAll(() => {
@@ -21,16 +21,14 @@ describe("IdaasClient.oidc.logout", () => {
     window.location.href = startLocation;
   });
 
-  test("does nothing if no ID token stored", async () => {
-    const originalLocation = window.location.href;
+  test("clears stored data and redirects even without ID token", async () => {
     storeData({ tokenParams: true, clientParams: true, accessToken: true });
 
     await NO_DEFAULT_IDAAS_CLIENT.oidc.logout();
 
-    expect(spyOnGenerateLogoutUrl).not.toBeCalled();
-    expect(spyOnGetConfig).not.toBeCalled();
-    expect(localStorage.length).toBe(3);
-    expect(window.location.href).toStrictEqual(originalLocation);
+    expect(spyOnGenerateLogoutUrl).toBeCalled();
+    expect(spyOnGetConfig).toBeCalled();
+    expect(localStorage.length).toBe(0);
   });
 
   test("removes all stored data, if ID token stored", async () => {
