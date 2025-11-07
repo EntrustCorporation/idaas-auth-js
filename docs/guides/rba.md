@@ -98,10 +98,10 @@ You must use different properties for KBA & Passkey submissions.
 
 ## Polling asynchronous methods
 
-Some authenticators (push, face) take time to complete server-side. Use `poll` to check status until the transaction resolves or times out.
+Some authenticators (push, face) require user action on another device. Use `poll` to check status until the user completes the task or the transaction times out.
 
 ```typescript
-try{
+try {
   let result = await idaas.rba.poll();
 } catch (error) {
   console.error("Authentication failed", error);

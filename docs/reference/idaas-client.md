@@ -218,13 +218,13 @@ The following challenge types provide additional context for specific authentica
 
 Returned when using FIDO/WebAuthn authentication with a specific user.
 
-| Property           | Type       | Description                                                                  |
-| ------------------ | ---------- | ---------------------------------------------------------------------------- |
-| `allowCredentials` | `string[]?` | List of IDs of the FIDO tokens registered for the user (base-64 encoded).   |
-| `challenge`        | `string`   | Random challenge for the FIDO token (base-64 encoded).                       |
-| `timeout`          | `number?`  | Number of seconds the client will wait for the FIDO token to respond.        |
-| `rpId`             | `string?`  | Relying Party identifier.                                                    |
-| `userVerification` | `string?`  | User verification requirement (`"required"`, `"preferred"`, `"discouraged"`).|
+| Property           | Type        | Description                                                                  |
+| ------------------ | ----------- | ---------------------------------------------------------------------------- |
+| `allowCredentials` | `string[]?` | List of IDs of the FIDO tokens registered for the user (base-64 encoded).    |
+| `challenge`        | `string`    | Random challenge for the FIDO token (base-64 encoded).                       |
+| `timeout`          | `number?`   | Number of seconds the client will wait for the FIDO token to respond.        |
+| `rpId`             | `string?`   | Relying Party identifier.                                                    |
+| `userVerification` | `string?`   | User verification requirement (`"required"`, `"preferred"`, `"discouraged"`).|
 
 ### `GridChallenge`
 
