@@ -31,11 +31,11 @@ const idaas = new IdaasClient(
 
 ### Login Options
 
-See the [OidcLoginOptions reference](../reference/idaas-client.md#oidcloginoptions) for complete details.
+See the [OidcLoginOptions reference](../api/README.md#oidcloginoptions) for complete details.
 
 ### Token Options
 
-See the [TokenOptions reference](../reference/idaas-client.md#tokenoptions) for complete details on all available options and their defaults.
+See the [TokenOptions reference](../api/README.md#tokenoptions) for complete details on all available options and their defaults.
 
 ### Popup (recommended for SPAs)
 
@@ -128,5 +128,5 @@ Common issues:
 ## Related docs
 
 - [Quickstart](../quickstart.md)
-- [API Reference](../reference/idaas-client.md)
+- [API Reference](../api/README.md)
 - [Troubleshooting](../troubleshooting.md)

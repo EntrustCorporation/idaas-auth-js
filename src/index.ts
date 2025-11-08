@@ -23,4 +23,5 @@ export type {
   GridChallenge,
   KbaChallenge,
   TempAccessCodeChallenge,
+  TransactionDetail,
 } from "./models/openapi-ts";

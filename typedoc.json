@@ -1,0 +1,16 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts", "src/IdaasClient.ts", "src/OidcClient.ts", "src/RbaClient.ts", "src/AuthClient.ts"],
+  "out": "docs/api",
+  "plugin": ["typedoc-plugin-markdown"],
+  "hideGenerator": true,
+  "disableSources": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "readme": "none",
+  "categorizeByGroup": true,
+  "categoryOrder": ["Classes", "Interfaces", "Type Aliases", "Enums", "Functions", "*"],
+  "githubPages": false,
+  "cleanOutputDir": true
+}

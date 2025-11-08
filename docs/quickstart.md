@@ -106,4 +106,4 @@ await idaas.oidc.logout({
 - Explore the [OIDC Guide](guides/oidc.md) for more information on the OIDC methods.
 - Visit the [Risk-Based Authentication Guide](guides/rba.md) for advanced flows.
 - See the [Convenience](guides/auth.md) one off authentication methods.
-- Browse the [API Reference](reference/idaas-client.md) for complete method signatures.
+- Browse the [API Reference](api/README.md) for complete method signatures.

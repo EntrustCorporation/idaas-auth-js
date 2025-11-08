@@ -8,7 +8,7 @@ This document provides AI agents and developers with comprehensive information a
 **Description:** IDaaS Authentication SDK for Single Page Applications (SPAs)  
 **Version:** 0.1.43  
 **License:** Apache-2.0  
-**Repository:** https://github.com/EntrustCorporation/idaas-auth-spa  
+**Repository:** https://github.com/EntrustCorporation/idaas-auth-js  
 **Owner:** EntrustCorporation
 
 ### Purpose
@@ -243,8 +243,38 @@ bun run format
 bun run lint
 
 # Fix formatting/linting issues
-bun run ci:fix
+bun run fix
+
+# Generate API documentation
+bun run docs:generate
+
+# Watch mode for documentation
+bun run docs:watch
 ```
+
+### Documentation Generation
+
+The SDK uses [TypeDoc](https://typedoc.org/) with the Markdown plugin to automatically generate API reference documentation from TypeScript source code and JSDoc comments.
+
+**Configuration:** `typedoc.json`
+
+**Output:** `docs/api/` (committed to version control)
+
+**Scripts:**
+
+- `bun run docs:generate` - Generate API documentation
+- `bun run docs:watch` - Watch mode for development
+
+**When to regenerate:**
+
+- After adding/modifying public APIs
+- After updating JSDoc comments
+- Before committing changes that affect the public API
+- CI will fail if docs are out of date
+
+**Important:** Generated documentation is **committed to version control** to ensure docs stay in sync with code and CI can validate changes.
+
+**Note:** TypeDoc generates comprehensive API reference from source code. Manual guides in `docs/guides/` provide conceptual explanations and usage patterns.
 
 ### Commit Messages
 
@@ -252,30 +282,9 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) f
 
 **Format**: `<type>[optional scope]: <description>`
 
-**Common types**:
+**Key types**: `feat` (minor bump), `fix` (patch bump), `feat!` or `BREAKING CHANGE:` (major bump)
 
-- `feat`: New feature (minor version bump)
-- `fix`: Bug fix (patch version bump)
-- `docs`: Documentation changes
-- `chore`: Maintenance tasks
-- `refactor`: Code refactoring
-- `perf`: Performance improvement
-- `test`: Test changes
-- `ci`: CI/CD changes
-
-**Breaking changes**: Add `!` after type or `BREAKING CHANGE:` in footer for major version bump
-
-**Examples**:
-
-```bash
-feat: add face biometric authentication
-fix: resolve token refresh race condition
-docs: update authentication flow examples
-chore: upgrade dependencies
-feat!: change authentication API interface
-```
-
-**Validation**: Commit messages are validated in CI. Run `bun run lint:commits` to validate locally.
+**Validation**: Run `bun run lint:commits` to validate locally. CI enforces this.
 
 ### Testing
 
@@ -283,31 +292,14 @@ feat!: change authentication API interface
 # Run unit tests
 bun run test:unit
 
-# Run specific unit test
-bun test test/unit/url.test.ts
-
 # Run E2E tests (Playwright)
 bun run test:e2e
-
-# Run E2E tests in UI mode (useful for debugging)
-bunx playwright test --ui
-
-# Run E2E tests in a specific browser
-bunx playwright test --project=chromium
 
 # Run manual test server
 bun run test:manual
 ```
 
-#### E2E Test Infrastructure
-
-The E2E tests use Playwright and automatically start required services:
-
-- **Test OIDC Provider**: Runs on port 3000 (`test/test-idp/oidc-provider.ts`)
-- **Test SPA Application**: Runs on port 8080 (`test/test-spa/app.ts`)
-- **Test Files**: Located in `test/e2e/` (e.g., `initialization.spec.ts`, `login.spec.ts`)
-
-Configuration is in `playwright.config.ts` with support for Chromium, Firefox, and WebKit.
+**E2E Infrastructure:** Playwright auto-starts test OIDC provider (port 3000) and test SPA (port 8080). Configuration in `playwright.config.ts`.
 
 ### API Code Generation
 
@@ -348,23 +340,9 @@ Configuration in `openapi-ts.config.ts`.
 
 ### Code Quality Standards
 
-**Biome Configuration:**
+**Biome:** 2 space indent, 120 char line width. Run `bun run fix` to auto-fix issues.
 
-- Indent: 2 spaces
-- Line width: 120 characters
-- Recommended rules enabled
-- Custom rules:
-  - `noParameterAssign`: error
-  - `useAsConstAssertion`: error
-  - `noInferrableTypes`: error
-  - Import organization: on
-
-**TypeScript Configuration:**
-
-- Extends `@tsconfig/bun`
-- DOM lib included
-- Isolated modules
-- JSON resolution enabled
+**TypeScript:** Extends `@tsconfig/bun` with DOM lib for browser APIs.
 
 ## Key Concepts
 
@@ -611,53 +589,26 @@ This project uses **GitHub Actions** for continuous integration and automated re
 
 ### Workflows
 
-#### 1. Build Workflow (`build.yaml`)
+**Build Workflow (`build.yaml`)** - Runs on PRs and main branch:
 
-Runs on pull requests and pushes to main:
+- Validates commits, generates API types, formats, lints, builds, type checks, tests (unit + E2E)
 
-- **Commit Validation**: Validates conventional commit format using commitlint
-- **API Generation**: Generates TypeScript types from OpenAPI specs
-- **Format Check**: Runs Biome formatter
-- **Lint**: Runs Biome linter
-- **Build**: Compiles TypeScript with rslib (includes publint validation via rsbuild-plugin-publint)
-- **Type Check**: Validates types with `attw`
-- **Tests**: Runs unit tests (Bun) and E2E tests (Playwright)
-- **Package Verification**: Validates npm package contents
+**Release Please Workflow (`release-please.yml`)** - Automated releases:
 
-#### 2. Release Please Workflow (`release-please.yml`)
+- Creates release PRs from conventional commits
+- Auto-publishes when release PR is merged (npm Trusted Publishing with OIDC)
 
-Automated release management:
+**Note**: Jenkins pipeline (`Jenkinsfile`) exists for legacy purposes; GitHub Actions is the primary CI/CD system.
 
-- **Triggers**: On push to main or manual workflow dispatch
-- **Creates Release PRs**: Based on conventional commits
-- **Generates Changelog**: Automatically from commit messages
-- **Auto-publishes**: When release PR is merged
-  - Runs full test suite
-  - Uses npm Trusted Publishing (OIDC, no tokens needed)
-  - Publishes with provenance for supply chain security
-
-### Configuration Files
-
-- `.github/workflows/build.yaml`: Build and test workflow
-- `.github/workflows/release-please.yml`: Automated release workflow
-- `commitlint.config.js`: Conventional commit validation
-- `release-please-config.json`: Release Please configuration
-- `.release-please-manifest.json`: Current version tracking
-
-**Note**: The Jenkins pipeline (`Jenkinsfile`) exists for legacy purposes but GitHub Actions is the primary CI/CD system.
-
-### Local CI Checks
-
-Run the same checks locally before committing:
+**Local CI Checks:**
 
 ```bash
-bun run format          # Format code
-bun run lint            # Lint code
+bun run fix             # Auto-fix formatting and linting
 bun run lint:types      # Type check
-bun run lint:commits    # Validate last 10 commit messages
-bun run build           # Build package (includes publint via rslib plugin)
-bun run test:unit       # Run unit tests
-bun run test:e2e        # Run E2E tests
+bun run lint:commits    # Validate commits
+bun run build           # Build package
+bun run test:unit       # Unit tests
+bun run test:e2e        # E2E tests
 ```
 
 ## Dependencies Management
@@ -697,12 +648,25 @@ When working on this codebase:
 2. **Maintain type safety**: All public APIs must have TypeScript types
 3. **Test thoroughly**: Add unit tests for utilities, E2E for flows
 4. **Document changes**: Update README for user-facing changes
-5. **Use Biome**: Run `bun run ci:fix` before committing
+5. **Use Biome**: Run `bun run fix` before committing
 6. **Bundle types**: Ensure types are bundled in dist output
 
 ## Maintaining This Document (AGENTS.md)
 
 **IMPORTANT:** AI agents should keep this AGENTS.md file up to date whenever making significant changes to the codebase.
+
+### Writing Philosophy
+
+**This document should be streamlined and focused on what AI agents actually need to know.** Avoid unnecessary details:
+
+- **Don't list exhaustive details** that agents can discover themselves (e.g., all command variations, every config option)
+- **Don't duplicate information** that's already documented elsewhere (e.g., listing all API methods when they're in "Public API Exports")
+- **Don't include verbose explanations** when concise statements suffice
+- **Focus on actionable information**: How to do things, where things are, when to regenerate/rebuild
+- **Prefer summaries over lists**: "Validates commits, formats, lints, builds, tests" not bullet points for each step
+- **Keep it scannable**: AI agents should quickly find what they need without wading through details
+
+**Ask yourself**: "Does an AI agent need this specific detail to maintain the codebase effectively?" If not, remove it.
 
 ### When to Update AGENTS.md
 
@@ -721,12 +685,14 @@ Do **not** update for: minor bug fixes, internal refactoring, documentation typo
 
 ### How to Update
 
-1. **Be Comprehensive:** Include context for AI agents unfamiliar with the changes
+1. **Be Comprehensive but Concise:** Include necessary context without exhaustive detail
 2. **Update Multiple Sections:** Changes often affect Architecture, Common Patterns, and Common Tasks
-3. **Maintain Consistency:** Follow existing format and style
-4. **Update Version Info & Date:** Bump version in Project Overview and "Last updated" date
-5. **Add Examples:** Include code examples for new features
-6. **Check Cross-References:** Verify all file paths and references are accurate
+3. **Maintain Consistency:** Follow existing format and style (terse, scannable, action-oriented)
+4. **Remove Redundancy:** If information exists elsewhere or can be easily discovered, don't duplicate it
+5. **Update Version Info & Date:** Bump version in Project Overview and "Last updated" date
+6. **Add Examples Judiciously:** Include code examples only when they clarify complex patterns
+7. **Check Cross-References:** Verify all file paths and references are accurate
+8. **Review for Bloat:** After updating, review the entire section and remove any unnecessary details
 
 ### Update Checklist
 
@@ -792,10 +758,10 @@ Despite `package.json` specifying `"engines": { "bun": ">= 1", "node": ">= 22" }
 
 ## Contact & Support
 
-- **Issues:** https://github.com/EntrustCorporation/idaas-auth-spa/issues
-- **Homepage:** https://github.com/EntrustCorporation/idaas-auth-spa
+- **Issues:** https://github.com/EntrustCorporation/idaas-auth-js/issues
+- **Homepage:** https://github.com/EntrustCorporation/idaas-auth-js
 - **Free Trial:** https://in.entrust.com/IDaaS/
 
 ---
 
-_Last updated: November 7, 2025 (reviewed for accuracy, clarity, and removed redundancies)_
+_Last updated: November 7, 2025 (streamlined for clarity and removed unnecessary details)_

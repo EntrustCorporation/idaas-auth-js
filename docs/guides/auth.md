@@ -79,7 +79,7 @@ const challenge = await idaas.auth.otp("user@example.com", {
 await idaas.auth.submit({ response: otpCode });
 ```
 
-> See [`OtpOptions`](../reference/idaas-client.md#otpoptions) in the API reference for available configuration options.
+> See [`OtpOptions`](../api/README.md#otpoptions) in the API reference for available configuration options.
 
 ## Soft token (push or OTP)
 
@@ -107,7 +107,7 @@ const challenge = await idaas.auth.softToken("user@example.com");
 await idaas.auth.submit({ response: softTokenCode });
 ```
 
-> See [`SoftTokenOptions`](../reference/idaas-client.md#softtokenoptions) in the API reference for available configuration options.
+> See [`SoftTokenOptions`](../api/README.md#softtokenoptions) in the API reference for available configuration options.
 
 ## Passkey (WebAuthn)
 
@@ -167,7 +167,7 @@ const result = await idaas.auth.smartCredential("user@example.com", {
 // Automatically polls until the push is approved or rejected.
 ```
 
-> See [`SmartCredentialOptions`](../reference/idaas-client.md#smartcredentialoptions) in the API reference for available configuration options.
+> See [`SmartCredentialOptions`](../api/README.md#smartcredentialoptions) in the API reference for available configuration options.
 
 ## Face (Onfido)
 
@@ -178,7 +178,7 @@ const result = await idaas.auth.faceBiometric("user@example.com", {
 // Display the mutual challenge stored in result.pushMutualChallenge
 ```
 
-> See [`FaceBiometricOptions`](../reference/idaas-client.md#facebiometricoptions) in the API reference for available configuration options.
+> See [`FaceBiometricOptions`](../api/README.md#facebiometricoptions) in the API reference for available configuration options.
 
 Requirements:
 
@@ -224,5 +224,5 @@ try {
 
 - For complete control over multi-step flows, see the [Risk-Based Authentication Guide](rba.md).
 - Check [Self-Hosted UI Examples](../self-hosted.md) for end-to-end implementations.
-- Review the [API Reference](../reference/idaas-client.md) for interfaces and return types.
+- Review the [API Reference](../api/README.md) for interfaces and return types.
 - Troubleshoot using the [Troubleshooting guide](../troubleshooting.md).

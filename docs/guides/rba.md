@@ -59,15 +59,15 @@ Typical response shape:
 
 ### Option reference
 
-See the [API Reference](../reference/idaas-client.md) for complete type definitions.
+See the [API Reference](../api/README.md) for complete type definitions.
 
 #### `AuthenticationRequestParams` (first argument)
 
-See the [AuthenticationRequestParams reference](../reference/idaas-client.md#authenticationrequestparams) for complete details.
+See the [AuthenticationRequestParams reference](../api/README.md#authenticationrequestparams) for complete details.
 
 #### `TokenOptions` (second argument)
 
-See the [TokenOptions reference](../reference/idaas-client.md#tokenoptions) for complete details on all available options and their defaults.
+See the [TokenOptions reference](../api/README.md#tokenoptions) for complete details on all available options and their defaults.
 
 ## Rendering the challenge
 
@@ -215,4 +215,4 @@ const onfidoSdk = (challenge: AuthenticationResponse) => {
 
 - [Convenience Auth Guide](auth.md) – higher-level helpers on top of RBA.
 - [Self-Hosted UI Examples](../self-hosted.md) – detailed code snippets for common authenticators.
-- [API Reference](../reference/idaas-client.md) – method signatures and types.
+- [API Reference](../api/README.md) – method signatures and types.

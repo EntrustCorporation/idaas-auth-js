@@ -65,23 +65,68 @@ export class IdaasClient {
 
   /**
    * Provides access to IDaaS hosted OIDC methods.
-   * Contains login, logout, and handleRedirect methods.
+   *
+   * Use this when you want Entrust to host the entire login UI. It handles PKCE, redirects, and logout
+   * for a quick hosted authentication experience.
+   *
+   * Available methods:
+   * - `login(options?, tokenOptions?)` - Initiate login via redirect or popup
+   * - `logout(options?)` - Log user out with optional redirect
+   * - `handleRedirect()` - Process OAuth callback after redirect
+   *
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/oidc.md OIDC Guide}
    */
   public get oidc() {
     return this._oidcClient;
   }
 
   /**
-   * Provides access to self hosted RBA OIDC methods.
-   * Contains requestChallenge, submitChallenge, poll, and cancel methods.
+   * Provides access to self-hosted Risk-Based Authentication (RBA) methods.
+   *
+   * Use this when building your own UI and need full control over multi-factor and risk-based challenges.
+   * Requires Resource Rules to be configured in IDaaS for risk evaluation.
+   *
+   * Available methods:
+   * - `requestChallenge(params?, tokenOptions?)` - Request authentication challenge with risk evaluation
+   * - `submitChallenge(params)` - Submit user response to challenge
+   * - `poll()` - Poll for asynchronous authentication completion
+   * - `cancel()` - Cancel ongoing authentication
+   * - `logout()` - End user session
+   *
+   * **Note:** Supply the user's identifier (`userId`) in `AuthenticationRequestParams` unless the
+   * authenticator explicitly allows anonymous flows (e.g., passkey with discoverable credentials).
+   *
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public get rba() {
     return this._rbaClient;
   }
 
   /**
-   * Provides access to self hosted auth convenience methods.
-   * Contains password.
+   * Provides access to self-hosted auth convenience methods.
+   *
+   * Use these simplified helpers when you want custom UI but have a fixed authentication method
+   * configured in IDaaS (not using Resource Rules for risk-based decisions).
+   *
+   * Available methods:
+   * - `password(userId, password)` - Password authentication
+   * - `softToken(userId, options?)` - Soft token (TOTP or push)
+   * - `grid(userId)` - Grid card authentication
+   * - `passkey(userId?)` - WebAuthn/FIDO2 passkey (omit userId for discoverable credentials)
+   * - `kba(userId)` - Knowledge-based authentication
+   * - `tempAccessCode(userId, code)` - Temporary access code
+   * - `otp(userId, options?)` - One-time password
+   * - `smartCredential(userId, options?)` - Smart credential push
+   * - `faceBiometric(userId, options?)` - Face biometric authentication
+   * - `magicLink(userId)` - Magic link authentication
+   * - `submit(params?)` - Submit challenge response
+   * - `poll()` - Poll for completion
+   * - `cancel()` - Cancel authentication
+   * - `logout()` - End session
+   *
+   * **Note:** Almost every convenience helper expects `userId` as the first argument.
+   *
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/auth.md Convenience Auth Guide}
    */
   public get auth() {
     return this._authClient;
@@ -90,15 +135,19 @@ export class IdaasClient {
   /**
    * Checks if the user is currently authenticated by verifying the presence of a valid ID token.
    *
-   * @returns True if the user is authenticated, false otherwise
+   * @returns `true` when an ID token exists, `false` otherwise
    */
   public isAuthenticated(): boolean {
     return !!this.storageManager.getIdToken();
   }
 
   /**
-   * Fetch the user information stored in the id_token
-   * @returns returns the decodedIdToken containing the user info.
+   * Retrieves decoded ID token claims containing user information.
+   *
+   * The ID token is a JWT that contains standard OIDC claims about the authenticated user
+   * such as `sub` (subject/user ID), `email`, `name`, etc.
+   *
+   * @returns Decoded ID token claims, or `null` if no ID token exists
    */
   public getIdTokenClaims(): UserClaims | null {
     const idToken = this.storageManager.getIdToken();
@@ -110,7 +159,14 @@ export class IdaasClient {
   }
 
   /**
-   * Returns an access token with the required scopes and audience that is unexpired or refreshable.
+   * Retrieves a cached access token matching the specified criteria.
+   *
+   * If the token is expired and a refresh token is available (subject to tenant configuration),
+   * the SDK automatically performs a token refresh.
+   *
+   * @param options Token options to match (audience, scope, acrValues)
+   * @returns Access token string, or `null` when no matching session exists
+   * @throws Error if the refresh/token exchange fails
    */
   public async getAccessToken({
     audience = this.context.tokenOptions.audience,
@@ -196,10 +252,15 @@ export class IdaasClient {
   }
 
   /**
-   * Get the user claims from the OpenId Provider using the userinfo endpoint.
+   * Retrieves user claims from the OpenID Provider using the userinfo endpoint.
    *
-   * @param accessToken when provided its scopes will be used to determine the claims returned from the userinfo endpoint.
-   * If not provided, the access token with the default scopes and audience will be used if available.
+   * This method fetches fresh user information from the identity provider, as opposed to
+   * `getIdTokenClaims()` which returns cached claims from the ID token.
+   *
+   * @param accessToken Optional access token to use. When provided, its scopes determine the claims
+   * returned from the userinfo endpoint. If not provided, the access token with default scopes and
+   * audience will be used if available.
+   * @returns User claims from the OpenID Provider, or `null` if unavailable
    */
   public async getUserInfo(accessToken?: string): Promise<UserClaims | null> {
     const { userinfo_endpoint, issuer, jwks_uri } = await this.context.getConfig();

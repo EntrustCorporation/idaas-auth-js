@@ -37,6 +37,17 @@ jobs:
       - name: 🔧 Generate API types
         run: bun run api:generate
 
+      - name: 📚 Generate API documentation
+        run: bun run docs:generate
+
+      - name: 🔍 Check if docs are up-to-date
+        run: |
+          if [[ -n $(git status --porcelain docs/api) ]]; then
+            echo "❌ API documentation is out of date. Please run 'bun run docs:generate' and commit the changes."
+            git diff docs/api
+            exit 1
+          fi
+
       - name: 🧹 Format check
         run: bun run format
 

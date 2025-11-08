@@ -12,11 +12,25 @@ import type { StorageManager } from "./storage/StorageManager";
 import { calculateEpochExpiry } from "./utils/format";
 
 /**
- * This class handles RBA flows using challenge-response patterns.
- * It manages the authentication transaction lifecycle including challenge requests,
- * response submissions, and asynchronous completion polling.
+ * Risk-Based Authentication (RBA) client for self-hosted authentication flows.
  *
- * Contains main methods: requestChallenge, submitChallenge, poll, and cancel.
+ * This client enables you to build custom authentication UI within your application by handling
+ * challenge-response authentication flows. It manages the complete authentication transaction
+ * lifecycle: challenge requests, response submissions, asynchronous polling, and cancellation.
+ *
+ * **Important**: RBA authentication requires your application to be configured with **Resource Rules**
+ * in the IDaaS portal. Resource Rules define which authentication methods are required based on
+ * contextual risk factors like IP address, device fingerprint, transaction amount, etc.
+ *
+ * Main methods:
+ * - `requestChallenge()`: Initiate authentication and receive a challenge
+ * - `submitChallenge()`: Submit user response to the challenge
+ * - `poll()`: Check for async completion (e.g., push notifications)
+ * - `cancel()`: Cancel an ongoing authentication transaction
+ * - `logout()`: End the session and revoke tokens
+ *
+ * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
+ * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/choosing-an-approach.md Choosing an Approach}
  */
 export class RbaClient {
   private context: IdaasContext;
@@ -30,12 +44,26 @@ export class RbaClient {
   }
 
   /**
-   * Initiates an authentication challenge request.
-   * Prepares a new authentication transaction and requests a challenge from the authentication provider.
+   * Initiates a risk-based authentication challenge based on configured Resource Rules.
    *
-   * @param options Optional authentication request parameters
-   * @param tokenOptions Optional token parameters for the authentication request
-   * @returns The authentication response containing challenge details
+   * This method starts an authentication transaction by sending contextual information to the
+   * identity provider, which evaluates risk and returns an appropriate authentication challenge
+   * based on your configured Resource Rules.
+   *
+   * **Key features:**
+   * - Automatic risk evaluation based on transaction details (IP address, device, transaction amount, etc.)
+   * - Dynamic authentication method selection (password, OTP, push, biometric, etc.)
+   * - Support for step-up authentication scenarios
+   *
+   * The response indicates:
+   * - Which authentication method is required
+   * - Whether the method requires user interaction (`pollForCompletion: false`) or is asynchronous (`pollForCompletion: true`)
+   * - Challenge details (e.g., grid coordinates, KBA questions, FIDO options)
+   *
+   * @param options Authentication request parameters including userId and transactionDetails
+   * @param tokenOptions Token request options (audience, scope, ACR values)
+   * @returns Authentication response containing the challenge and method details
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async requestChallenge(
     options: AuthenticationRequestParams = {},
@@ -53,11 +81,23 @@ export class RbaClient {
   }
 
   /**
-   * Submits a response to an authentication challenge.
-   * Processes authentication responses and completes the authentication if successful.
+   * Submits the user's response to an authentication challenge.
    *
-   * @param options Authentication submission parameters including credentials or response data
-   * @returns The authentication response indicating completion status or next steps
+   * After receiving a challenge from `requestChallenge()`, use this method to submit the user's
+   * authentication response (e.g., password, OTP code, grid coordinates, KBA answers).
+   *
+   * The response indicates whether:
+   * - Authentication completed successfully (`authenticationCompleted: true`)
+   * - Additional authentication is required (step-up scenario)
+   * - Authentication failed
+   *
+   * Upon successful completion, tokens are automatically stored and can be retrieved via
+   * `getAccessToken()` and `getIdTokenClaims()`.
+   *
+   * @param options Authentication submission parameters with the user's response data
+   * @returns Authentication response indicating completion status or next challenge
+   * @throws {Error} If no authentication transaction is in progress
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async submitChallenge(options: AuthenticationSubmissionParams = {}): Promise<AuthenticationResponse> {
     if (!this.authenticationTransaction) {
@@ -75,8 +115,19 @@ export class RbaClient {
   }
 
   /**
-   * Ends the user’s session both locally and at the IdP by revoking the server-issued token,
-   * then clears cached credentials and resets the current authentication transaction.
+   * Logs the user out and terminates their session.
+   *
+   * This method:
+   * 1. Revokes the session token with the identity provider (server-side logout)
+   * 2. Clears all stored tokens (access, ID, and refresh) from local storage
+   * 3. Resets the current authentication transaction
+   *
+   * After logout, the user must authenticate again via `requestChallenge()`.
+   *
+   * **Note**: Unlike OIDC logout, this method does not redirect the browser.
+   * It completes silently and returns a Promise.
+   *
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async logout(): Promise<void> {
     const baseUrl = new URL(this.context.issuerUrl).origin;
@@ -90,10 +141,24 @@ export class RbaClient {
   }
 
   /**
-   * Polls the authentication provider to check for completion of an ongoing authentication process.
-   * Useful for authentication flows that may complete asynchronously (e.g., mobile push notifications).
+   * Polls for completion of an asynchronous authentication flow.
    *
-   * @returns The authentication response indicating completion status
+   * Some authentication methods complete asynchronously without requiring `submitChallenge()`:
+   * - Push notifications (user approves on mobile device)
+   * - Email magic links (user clicks link in email)
+   * - SMS magic links (user clicks link in SMS)
+   *
+   * When `pollForCompletion: true` in the challenge response, call this method repeatedly
+   * (e.g., every 2-3 seconds) to check if the user has completed authentication on their device.
+   *
+   * **Polling behavior:**
+   * - Returns `authenticationCompleted: false` while waiting for user action
+   * - Returns `authenticationCompleted: true` when authentication succeeds
+   * - Automatically stores tokens upon successful completion
+   *
+   * @returns Authentication response indicating completion status
+   * @throws {Error} If no authentication transaction is in progress
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async poll(): Promise<AuthenticationResponse> {
     if (!this.authenticationTransaction) {
@@ -109,8 +174,18 @@ export class RbaClient {
   }
 
   /**
-   * Cancels an ongoing authentication challenge.
-   * Terminates the current authentication transaction and cleans up any pending state.
+   * Cancels the current authentication transaction.
+   *
+   * Use this method to abandon an in-progress authentication flow, for example:
+   * - User clicks "Cancel" button during authentication
+   * - User navigates away from authentication page
+   * - Authentication timeout occurs
+   *
+   * This terminates the transaction server-side and cleans up any pending state.
+   * After cancellation, you must call `requestChallenge()` again to start a new authentication flow.
+   *
+   * @throws {Error} If no authentication transaction is in progress
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async cancel(): Promise<void> {
     if (!this.authenticationTransaction) {

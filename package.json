@@ -3,7 +3,7 @@
   "description": "IDaaS Authentication SDK for SPA applications",
   "version": "0.1.43",
   "author": "Entrust",
-  "homepage": "https://github.com/EntrustCorporation/idaas-auth-spa",
+  "homepage": "https://github.com/EntrustCorporation/idaas-auth-js",
   "license": "Apache-2.0",
   "type": "module",
   "files": [
@@ -13,10 +13,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/EntrustCorporation/idaas-auth-spa.git"
+    "url": "git+https://github.com/EntrustCorporation/idaas-auth-js.git"
   },
   "bugs": {
-    "url": "https://github.com/EntrustCorporation/idaas-auth-spa/issues"
+    "url": "https://github.com/EntrustCorporation/idaas-auth-js/issues"
   },
   "keywords": [
     "Entrust",
@@ -48,8 +48,9 @@
     "build": "rslib build",
     "api:download": "bun scripts/download.ts",
     "api:generate": "openapi-ts",
-    "ci": "biome ci . && bun run build",
-    "ci:fix": "bun run format --write && bun run lint --write",
+    "fix": "bun run format --write && bun run lint --write",
+    "docs:generate": "typedoc",
+    "docs:watch": "typedoc --watch",
     "format": "biome format .",
     "lint": "bun run lint:js && bun run lint:md",
     "lint:js": "biome ci .",
@@ -91,6 +92,8 @@
     "onfido-sdk-ui": "14.55.0",
     "prettier": "3.6.2",
     "rsbuild-plugin-publint": "0.3.3",
+    "typedoc": "0.28.14",
+    "typedoc-plugin-markdown": "4.9.0",
     "typescript": "5.9.3"
   }
 }

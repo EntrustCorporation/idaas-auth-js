@@ -11,8 +11,26 @@ import type { RbaClient } from "./RbaClient";
 import { browserSupportsPasskey } from "./utils/browser";
 
 /**
- * This class handles convenience authorization methods such as password-based authentication.
+ * Convenience authentication client for fixed authentication methods.
  *
+ * This client provides simplified methods for specific authentication types (password, OTP, passkey, etc.)
+ * when you want to bypass risk-based evaluation and use a specific authentication method directly.
+ *
+ * **Use cases:**
+ * - Login pages with traditional username/password forms
+ * - Passwordless authentication flows with a specific method (e.g., passkey-only)
+ * - Applications that don't require dynamic authentication based on context
+ *
+ * **When to use this vs RbaClient:**
+ * - Use `AuthClient` when you know which authentication method you want to use
+ * - Use `RbaClient` when you want the identity provider to dynamically select authentication
+ *   methods based on risk and Resource Rules
+ *
+ * Under the hood, these methods use `RbaClient` with `strict: true` and a specified
+ * `preferredAuthenticationMethod` to force a specific authentication method.
+ *
+ * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/auth.md Convenience Auth Guide}
+ * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/choosing-an-approach.md Choosing an Approach}
  */
 export class AuthClient {
   private rbaClient: RbaClient;
@@ -35,12 +53,25 @@ export class AuthClient {
   }
 
   /**
-   * Authenticate a user using password-based authentication.
-   * Initiates an authentication transaction with the PASSWORD method and submits the provided password.
+   * Authenticates a user with username and password.
    *
-   * @param userId The user ID to authenticate.
-   * @param password The user's password.
-   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
+   * This method bypasses risk-based evaluation and directly requests password authentication.
+   * It's ideal for traditional login forms where you want a consistent password-based experience.
+   *
+   * The method automatically:
+   * 1. Requests a PASSWORD challenge from the identity provider
+   * 2. Submits the provided password
+   * 3. Stores tokens upon successful authentication
+   *
+   * **When to use:**
+   * - Traditional login pages with username/password fields
+   * - Applications that require password authentication for specific workflows
+   * - Testing and development scenarios
+   *
+   * @param userId The user's unique identifier (email, username, etc.)
+   * @param password The user's password
+   * @returns Authentication response with `authenticationCompleted: true` on success
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/auth.md Convenience Auth Guide}
    */
   public async password(userId: string, password: string): Promise<AuthenticationResponse> {
     await this.rbaClient.requestChallenge({
@@ -63,11 +94,15 @@ export class AuthClient {
    * - push === true && mutualChallenge === false: Starts a TOKENPUSH challenge and immediately polls until completion; returns the final AuthenticationResponse.
    * - push === true && mutualChallenge === true: Starts a TOKENPUSH challenge with mutual challenge enabled; returns the initial response containing the mutual challenge. Caller must then call poll() to await completion.
    *
-   * mutualChallenge is ignored unless push is true.
+   * **Mutual Challenge**: When enabled, the user must verify a challenge code displayed on the authentication device
+   * to protect against push bombing attacks (where attackers spam push notifications hoping the user accidentally approves).
+   * The `mutualChallenge` option is ignored unless `push` is true.
+   *
    *
    * @param userId The user ID to authenticate.
-   * @param push Determines if push authentication (true) or standard token authentication (false) should be used. Default false.
-   * @param mutualChallenge Enables mutual challenge for push. Only valid if push is true. Default false.
+   * @param options Soft token authentication options
+   * @param options.push Determines if push authentication (true) or standard token authentication (false) should be used. Default false.
+   * @param options.mutualChallenge Enables mutual challenge for push. Only valid if push is true. Default false.
    * @returns AuthenticationResponse:
    *   - Final result (success/failure) for plain TOKENPUSH (no mutual challenge).
    *   - Initial challenge response for TOKENPUSH with mutual challenge (requires poll).
@@ -121,27 +156,39 @@ export class AuthClient {
   }
 
   /**
-   * Authenticate using a passkey (WebAuthn).
+   * Authenticates a user with a passkey (WebAuthn/FIDO2).
    *
-   * Modes:
-   * - userId provided: Uses FIDO (targets that user’s credential).
-   * - userId omitted: Uses PASSKEY (usernameless / discoverable credential).
+   * Supports two modes:
+   * - **With userId**: Uses FIDO authentication (user must have registered a passkey)
+   * - **Without userId**: Uses usernameless/discoverable credential (PASSKEY)
    *
-   * Flow:
-   * 1. Requests a challenge with the appropriate method.
-   * 2. If WebAuthn request options are returned, invokes navigator.credentials.get().
-   * 3. Submits the credential automatically.
+   * This method handles the complete passkey flow:
+   * 1. Requests an appropriate challenge (FIDO or PASSKEY)
+   * 2. Invokes the browser's passkey UI (`navigator.credentials.get()`)
+   * 3. Submits the WebAuthn credential automatically
+   * 4. Stores tokens upon successful authentication
    *
-   * @param userId Optional user identifier.
-   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
-   * @throws On unexpected WebAuthn (navigator.credentials.get) errors or if user cancels passkey ceremony.
+   * **Browser support:**
+   * Requires a browser with WebAuthn support. The method checks for support automatically
+   * and throws an error if passkeys are not available.
+   *
+   * **When to use:**
+   * - Passwordless authentication flows
+   * - Security key authentication
+   * - Biometric authentication (Face ID, Touch ID, Windows Hello)
+   *
+   * @param userId Optional user identifier (omit for usernameless authentication)
+   * @returns Authentication response with `authenticationCompleted: true` on success
+   * @throws {Error} If browser doesn't support passkeys
+   * @throws {Error} If user cancels the passkey ceremony
+   * @throws {Error} If no credential is returned
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/auth.md Convenience Auth Guide}
    */
   public async passkey(userId?: string): Promise<AuthenticationResponse | undefined> {
     const browserSupported = await browserSupportsPasskey();
     if (!browserSupported) {
       throw new Error("This browser does not support passkey");
     }
-
     const authenticationRequestParams: AuthenticationRequestParams = {
       strict: true,
       preferredAuthenticationMethod: userId ? "FIDO" : "PASSKEY",
@@ -201,14 +248,30 @@ export class AuthClient {
   }
 
   /**
-   * Starts an OTP challenge.
-   * Requests an OTP challenge with optional delivery type.
-   * Prompt the user for the OTP that was delivered to them, then call the submit method with their OTP (e.g idaasClient.auth.submit({ response: '123456' })).
+   * Requests an One-Time Password (OTP) to be sent to the user.
    *
-   * @param userId The user ID to authenticate.
-   * @param otpDeliveryType The delivery type for the OTP (e.g., "SMS", "EMAIL", "VOICE"). If not set will use the default delivery method.
-   * @param otpDeliveryAttribute The delivery attribute for the OTP (e.g., "business-email"). If not set will use the default delivery attribute.
-   * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
+   * This method initiates OTP authentication by requesting a time-based code to be delivered
+   * to the user via their configured delivery method (SMS, email, or voice call).
+   *
+   * After calling this method, prompt the user to enter the OTP they received, then call
+   * `idaasClient.auth.submit({ response: '123456' })` to complete authentication.
+   *
+   * **Delivery options:**
+   * - **SMS**: Code sent via text message (default for most configurations)
+   * - **EMAIL**: Code sent via email
+   * - **VOICE**: Code delivered via automated phone call
+   *
+   * You can optionally specify a delivery type and/or attribute to override the user's default.
+   *
+   * **When to use:**
+   * - Two-factor authentication (2FA) scenarios
+   * - Passwordless authentication with OTP
+   * - Account verification flows
+   *
+   * @param userId The user's unique identifier
+   * @param options OTP delivery configuration (type and attribute)
+   * @returns Authentication response containing the challenge (requires submission)
+   * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/auth.md Convenience Auth Guide}
    */
   public async otp(
     userId: string,
@@ -244,8 +307,9 @@ export class AuthClient {
    * Requests a SMARTCREDENTIALPUSH challenge, then immediately starts polling for completion.
    *
    * @param userId The user ID to authenticate.
-   * @param summary The summary to display in the push notification.
-   * @param pushMessageIdentifier The identifier to retrieve customized SDK push message configuration.
+   * @param options Smart credential authentication options
+   * @param options.summary The summary to display in the push notification.
+   * @param options.pushMessageIdentifier The identifier to retrieve customized SDK push message configuration.
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
   public async smartCredential(
@@ -331,9 +395,10 @@ export class AuthClient {
   /**
    * Submits a response to an authentication challenge.
    * Processes authentication responses and completes the authentication if successful.
-   * @param response The user's response to the authentication challenge.
-   * @param passkeyResponse The publicKeyCredential returned from navigator.credentials.get(credentialRequestOptions).
-   * @param kbaChallengeAnswers The user's answers to the KBA challenge questions. Answers must be in the order of the questions returned when requesting the challenge.
+   * @param params Authentication submission parameters
+   * @param params.response The user's response to the authentication challenge.
+   * @param params.passkeyResponse The publicKeyCredential returned from navigator.credentials.get(credentialRequestOptions).
+   * @param params.kbaChallengeAnswers The user's answers to the KBA challenge questions. Answers must be in the order of the questions returned when requesting the challenge.
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
   public async submit({

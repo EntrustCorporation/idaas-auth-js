@@ -76,14 +76,26 @@ See the [Quickstart guide](docs/quickstart.md) for configuration options, redire
 
 ## Documentation
 
+### Guides
+
 - [Overview](docs/index.md)
 - [Quickstart](docs/quickstart.md)
+- [Choosing an Authentication Approach](docs/guides/choosing-an-approach.md)
 - [OIDC Guide](docs/guides/oidc.md)
 - [Risk-Based Authentication Guide](docs/guides/rba.md)
 - [Convenience Auth Guide](docs/guides/auth.md)
+- [IDaaS JWT Grant Type](docs/guides/jwt-grant.md)
 - [Self-Hosted UI Examples](docs/self-hosted.md)
-- [API Reference](docs/reference/idaas-client.md)
 - [Troubleshooting](docs/troubleshooting.md)
+
+### API Reference
+
+- [Complete API Documentation](docs/api/README.md) - Auto-generated from TypeScript source code
+  - [IdaasClient](docs/api/IdaasClient/classes/IdaasClient.md) - Main client class
+  - [OidcClient](docs/api/OidcClient/classes/OidcClient.md) - Hosted authentication methods
+  - [RbaClient](docs/api/RbaClient/classes/RbaClient.md) - Risk-based authentication methods
+  - [AuthClient](docs/api/AuthClient/classes/AuthClient.md) - Convenience authentication methods
+- [Manual Reference](docs/reference/idaas-client.md) - Hand-crafted reference guide
 
 ---
 
