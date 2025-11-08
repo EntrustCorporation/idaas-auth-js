@@ -1,3 +1,7 @@
+[install]
+# Explicitly set the linker to isolated
+linker = "isolated"
+
 [test]
 preload = "./happydom.ts"
 coverage = true
