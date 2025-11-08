@@ -23,7 +23,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "bun ./test/test-idp/oidc-provider.ts",
+      command: "bun run ./test/test-idp/oidc-provider.ts",
       port: 3000,
       reuseExistingServer: !process.env.CI,
     },

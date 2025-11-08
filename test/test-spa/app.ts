@@ -28,6 +28,11 @@ console.log(process.env.CLIENT_ID);
     async fetch(req) {
       const url = new URL(req.url);
 
+      // Stub response for favicon.ico
+      if (url.pathname === "/favicon.ico") {
+        return new Response(null, { status: 204 });
+      }
+
       const filename = url.pathname === "/" ? "index.html" : url.pathname;
 
       console.info("🟢", req.method, filename);

@@ -48,7 +48,7 @@ const createApp = () => {
   const provider = new Provider(ISSUER, providerConfig);
 
   provider.listen(3000, () => {
-    console.info(`OIDC provider listening on port 3000, check ${ISSUER}/.well-known/openid-configuration`);
+    console.info(`OIDC provider listening on port 3000, check http://${ISSUER}/.well-known/openid-configuration`);
   });
 };
 
