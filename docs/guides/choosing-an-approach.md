@@ -388,5 +388,5 @@ Choose your approach based on three key questions:
 - [RBA Guide](./rba.md) - Risk-based authentication deep dive
 - [Convenience Auth Guide](./auth.md) - Simplified authentication methods
 - [Self-Hosted UI Examples](../self-hosted.md) - Code examples for each authentication type
-- [IDaaS JWT Grant Type](./jwt-grant.md) - Understanding the token exchange flow
+- [JWT IDaaS Grant Type](./jwt-idaas-grant.md) - Understanding the token exchange flow
 - [API Reference](../api/README.md) - Complete SDK documentation

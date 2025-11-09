@@ -82,9 +82,9 @@ See the [Quickstart guide](docs/quickstart.md) for configuration options, redire
 - [Quickstart](docs/quickstart.md)
 - [Choosing an Authentication Approach](docs/guides/choosing-an-approach.md)
 - [OIDC Guide](docs/guides/oidc.md)
-- [Risk-Based Authentication Guide](docs/guides/rba.md)
+- [RBA Guide](docs/guides/rba.md)
 - [Convenience Auth Guide](docs/guides/auth.md)
-- [IDaaS JWT Grant Type](docs/guides/jwt-grant.md)
+- [JWT IDaaS Grant Type](docs/guides/jwt-idaas-grant.md)
 - [Self-Hosted UI Examples](docs/self-hosted.md)
 - [Troubleshooting](docs/troubleshooting.md)
 

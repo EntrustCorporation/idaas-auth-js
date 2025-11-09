@@ -40,9 +40,9 @@ Use `oidc` when you want Entrust to host the whole login: it handles PKCE, redir
 - Understand which approach fits your needs: [Choosing an Authentication Approach](guides/choosing-an-approach.md)
 - Follow guides for specific flows:
   - [OIDC Guide](guides/oidc.md)
-  - [Risk-Based Authentication Guide](guides/rba.md)
+  - [RBA Guide](guides/rba.md)
   - [Convenience Auth Guide](guides/auth.md)
-  - [IDaaS JWT Grant Type](guides/jwt-grant.md)
+  - [JWT IDaaS Grant Type (`jwt_idaas`)](guides/jwt-idaas-grant.md)
 - Reference generated types in the [API Reference](api/README.md).
 - Check [Troubleshooting](troubleshooting.md) for common issues.
 

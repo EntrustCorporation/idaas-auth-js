@@ -38,7 +38,7 @@ This section contains comprehensive guides for implementing authentication with 
 
 ## Technical Deep Dives
 
-- **[IDaaS JWT Grant Type](./jwt-grant.md)** - Understand the custom `jwt_idaas` OAuth grant type
+- **[JWT IDaaS Grant Type](./jwt-idaas-grant.md)** - Understand the custom `jwt_idaas` OAuth grant type
   - How the JWT grant flow works
   - Token exchange process
   - Security considerations

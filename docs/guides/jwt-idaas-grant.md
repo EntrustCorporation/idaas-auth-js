@@ -1,10 +1,12 @@
-# IDaaS JWT Grant Type
+# JWT IDaaS Grant Type
 
-The IDaaS JWT grant type (`jwt_idaas`) is a custom OAuth 2.0 grant type specific to Entrust Identity as a Service. It enables applications to exchange an authenticated IDaaS session token (JWT) for standard OIDC tokens (ID token, access token, and optionally refresh token).
+The `jwt_idaas` grant type is a **custom OAuth 2.0 grant type** specific to Entrust Identity as a Service (IDaaS). It enables applications to exchange an authenticated IDaaS session token (JWT) for standard OIDC tokens (ID token, access token, and optionally refresh token).
+
+> **Note:** This is a proprietary grant type, not defined in any OAuth 2.0 RFC. It is supported exclusively by IDaaS and should not be confused with the standard JWT Bearer Grant Type ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)).
 
 ## Overview
 
-The JWT grant type is used internally by the SDK when performing **in-app authentication** through the IDaaS Authentication API (also known as RBA - Risk-Based Authentication). This flow allows your application to present authentication challenges directly within your UI, rather than redirecting users to a hosted login page.
+The `jwt_idaas` grant type is used internally by the SDK when performing **in-app authentication** (self-hosted UI) through the IDaaS Authentication API. This flow allows your application to present authentication challenges directly within your UI, rather than redirecting users to a hosted login page.
 
 ### Flow Comparison
 
@@ -13,71 +15,123 @@ The JWT grant type is used internally by the SDK when performing **in-app authen
 | **Hosted OIDC** | `authorization_code` | User redirects to IDaaS login page    | Standard web apps, SSO             |
 | **In-App Auth** | `jwt_idaas`          | Authentication happens in your app UI | Custom UX, native-like experiences |
 
+## Visual Flow Overview
+
+```mermaid
+sequenceDiagram
+    participant App as Your Application
+    participant SDK as IDaaS SDK
+    participant AuthAPI as IDaaS Auth API
+    participant TokenEP as IDaaS Token Endpoint
+
+    Note over App,TokenEP: Step 1: Initialize JWT Authorization Flow
+    App->>SDK: auth.password(userId, password)
+    SDK->>SDK: Generate PKCE verifier + challenge
+    SDK->>AuthAPI: POST /authorizejwt<br/>(client_id, scope, code_challenge)
+    AuthAPI-->>SDK: authRequestKey, applicationId
+
+    Note over App,TokenEP: Step 2: Complete Authentication Challenge
+    SDK->>AuthAPI: POST /authenticate/{method}<br/>(userId, password, authRequestKey)
+    AuthAPI->>AuthAPI: Validate credentials<br/>Evaluate risk
+    AuthAPI-->>SDK: authenticationCompleted: true<br/>token: session JWT
+
+    Note over App,TokenEP: Step 3: Exchange JWT for OIDC Tokens
+    SDK->>TokenEP: POST /token<br/>(grant_type=jwt_idaas, jwt, code, code_verifier)
+    TokenEP->>TokenEP: Validate JWT signature<br/>Verify PKCE<br/>Check authRequestKey
+    TokenEP-->>SDK: access_token, id_token, refresh_token
+    SDK-->>App: Authentication complete<br/>Tokens stored
+```
+
 ## How It Works
 
-The JWT grant type flow involves these key steps:
+The `jwt_idaas` grant type flow involves three key steps:
 
 ### 1. Initialize JWT Authorization Request
 
-The SDK calls the `/authorizejwt` endpoint (instead of the standard `/authorize` endpoint) to initiate a JWT-based authorization flow:
+When you call an in-app authentication method, the SDK first calls the `/authorizejwt` endpoint (instead of the standard `/authorize` endpoint) to initiate a JWT-based authorization flow:
 
 ```typescript
 // Generated internally by the SDK
-const authUrl = `${issuerUrl}/authorizejwt`;
-const params = {
-  client_id: "your-client-id",
-  scope: "openid profile email",
-  code_challenge: "base64url-encoded-sha256-hash",
-  code_challenge_method: "S256"
-};
-```
-
-This returns an `authRequestKey` and `applicationId` used to track the authentication session.
-
-### 2. Complete Authentication Challenge
-
-The application presents authentication challenges to the user through the Authentication API:
-
-```typescript
-// Example: Password authentication
-const response = await client.auth.password("user@example.com", "password123");
-
-// Example: OTP authentication
-const response = await client.auth.otp("user@example.com", {
-  otpDeliveryType: "EMAIL"
-});
-```
-
-Upon successful authentication, IDaaS issues a **session JWT** that represents the authenticated session.
-
-### 3. Exchange JWT for OIDC Tokens
-
-The SDK exchanges the session JWT for standard OIDC tokens using the `jwt_idaas` grant type:
-
-```typescript
-// Token exchange request (handled internally by SDK)
-POST /token
+POST https://your-tenant.trustedauth.com/authorizejwt
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=jwt_idaas
-&client_id=your-client-id
-&code=auth-request-key
-&code_verifier=random-verifier-string
-&jwt=eyJhbGciOiJSUzI1Ni...  // IDaaS session JWT
+client_id=your-client-id
+&scope=openid+profile+email
+&code_challenge=base64url-encoded-sha256-hash
+&code_challenge_method=S256
+&nonce=random-nonce
+&state=random-state
 ```
 
 **Response:**
 
 ```json
 {
-  "access_token": "eyJhbGciOiJSUzI1Ni...",
-  "id_token": "eyJhbGciOiJSUzI1Ni...",
-  "refresh_token": "rt_abc123...", // Optional
+  "authRequestKey": "QoOuQ3JyccbHqVJxUwHInxSPdn37nSJTgOMn6UE3Yi9c=",
+  "applicationId": "dba4e3c6-f1f3-4d23-9088-fb452064c73f"
+}
+```
+
+These values (`authRequestKey` and `applicationId`) are used to track the authentication session throughout the flow.
+
+### 2. Complete Authentication Challenge
+
+The SDK then presents authentication challenges to the user through the Authentication API:
+
+```typescript
+// Example: Password authentication
+POST https://your-tenant.trustedauth.com/api/v1/authenticate/PASSWORD
+Content-Type: application/json
+
+{
+  "userId": "user@example.com",
+  "password": "password123",
+  "authRequestKey": "QoOuQ3JyccbHqVJxUwHInxSPdn37nSJTgOMn6UE3Yi9c=",
+  "applicationId": "dba4e3c6-f1f3-4d23-9088-fb452064c73f"
+}
+```
+
+**Response:**
+
+```json
+{
+  "authenticationCompleted": true,
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "time": 1520967582294
+}
+```
+
+Upon successful authentication, IDaaS issues a **session JWT** (short-lived, typically 5 minutes) that represents the authenticated session. This JWT is what gets exchanged for OIDC tokens in the next step.
+
+### 3. Exchange JWT for OIDC Tokens
+
+Finally, the SDK exchanges the session JWT for standard OIDC tokens using the `jwt_idaas` grant type:
+
+```http
+POST https://your-tenant.trustedauth.com/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=jwt_idaas
+&client_id=your-client-id
+&code=QoOuQ3JyccbHqVJxUwHInxSPdn37nSJTgOMn6UE3Yi9c=
+&code_verifier=random-pkce-verifier-string
+&jwt=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Response:**
+
+```json
+{
+  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "id_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "rt_abc123...",
   "token_type": "Bearer",
-  "expires_in": "3600",
+  "expires_in": 3600,
   "scope": "openid profile email"
 }
 ```
+
+The tokens are then stored by the SDK and made available to your application through methods like `getAccessToken()` and `getIdTokenClaims()`.
 
 ## When Is This Used?
 
@@ -121,27 +175,27 @@ All these methods internally perform the JWT grant flow to obtain OIDC tokens.
 
 ## Technical Details
 
-### Request Parameters
+### Token Request Parameters
 
-The `jwt_idaas` grant type requires these parameters:
+The `jwt_idaas` grant type requires these parameters when calling the token endpoint:
 
-| Parameter       | Description                                      | Required |
-| --------------- | ------------------------------------------------ | -------- |
-| `grant_type`    | Must be `"jwt_idaas"`                            | Yes      |
-| `client_id`     | Your OIDC client identifier                      | Yes      |
-| `code`          | The `authRequestKey` from `/authorizejwt`        | Yes      |
-| `code_verifier` | PKCE code verifier (random string)               | Yes      |
-| `jwt`           | IDaaS session JWT from successful authentication | Yes      |
+| Parameter       | Description                                         | Required | Example                                   |
+| --------------- | --------------------------------------------------- | -------- | ----------------------------------------- |
+| `grant_type`    | Must be `"jwt_idaas"` (literal string)              | Yes      | `jwt_idaas`                               |
+| `client_id`     | Your OAuth 2.0 client identifier                    | Yes      | `dba4e3c6-f1f3-4d23-9088-fb452064c73f`    |
+| `code`          | The `authRequestKey` returned from `/authorizejwt`  | Yes      | `QoOuQ3JyccbHqVJxUwHInxSPdn37nSJT...`     |
+| `code_verifier` | PKCE code verifier (43-128 character random string) | Yes      | `random-pkce-verifier-string`             |
+| `jwt`           | IDaaS session JWT from successful authentication    | Yes      | `eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...` |
 
 ### TypeScript Interface
 
 ```typescript
 interface JwtIdaasTokenRequest {
   grant_type: "jwt_idaas";
-  code: string;
-  code_verifier: string;
-  client_id: string;
-  jwt: string;
+  code: string; // authRequestKey from /authorizejwt
+  code_verifier: string; // PKCE verifier
+  client_id: string; // OAuth client ID
+  jwt: string; // Session JWT from authentication
 }
 ```
 
@@ -149,12 +203,21 @@ interface JwtIdaasTokenRequest {
 
 Like the standard authorization code flow, the JWT grant type uses PKCE for security:
 
-1. **Generate code verifier:** 43-128 character random string
-2. **Create code challenge:** SHA-256 hash of verifier, base64url encoded
-3. **Send challenge** with `/authorizejwt` request
-4. **Send verifier** with token exchange request
+1. **Generate code verifier:**
+   - Generate 32 cryptographically secure random bytes using `window.crypto.getRandomValues()`
+   - Base64url encode the bytes (resulting in a 43-character string)
+   - This meets RFC 7636 requirements (43-128 characters, unreserved characters only)
 
-This prevents authorization code interception attacks.
+2. **Create code challenge:**
+   - Compute SHA-256 hash of the code verifier
+   - Base64url encode the hash
+   - Method: `S256` (SHA-256)
+
+3. **Send challenge** with `/authorizejwt` request (includes `code_challenge` and `code_challenge_method=S256`)
+
+4. **Send verifier** with token exchange request (the original random string, base64url encoded)
+
+This prevents authorization code interception attacks by ensuring only the client that initiated the flow can exchange the authorization code for tokens.
 
 ## Security Considerations
 
