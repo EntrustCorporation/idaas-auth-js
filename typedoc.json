@@ -12,5 +12,6 @@
   "categorizeByGroup": true,
   "categoryOrder": ["Classes", "Interfaces", "Type Aliases", "Enums", "Functions", "*"],
   "githubPages": false,
-  "cleanOutputDir": true
+  "cleanOutputDir": true,
+  "formatWithPrettier": true
 }
