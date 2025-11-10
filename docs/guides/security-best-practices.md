@@ -219,7 +219,6 @@ The SDK supports multiple authentication methods with different security charact
 
    - Physical card with grid of codes
    - Challenge-response based
-   - Resistant to phishing
    - Can be lost or stolen
 
 8. **Knowledge-Based Authentication (KBA)** ⭐⭐⭐
@@ -239,7 +238,7 @@ The SDK supports multiple authentication methods with different security charact
    await client.auth.tempAccessCode(userId, code);
    ```
 
-   - Short-lived single-use codes
+   - Single-use codes
    - Typically delivered via secure channel
    - Time-limited validity
    - Can be intercepted during delivery
@@ -274,7 +273,7 @@ The SDK supports multiple authentication methods with different security charact
     - Still vulnerable to device compromise
     - Requires WeChat account
 
-13. **Email OTP** ⭐
+13. **Email OTP** ⭐⭐
 
     ```typescript
     await client.auth.otp(userId, { otpDeliveryType: "EMAIL" });
@@ -283,8 +282,9 @@ The SDK supports multiple authentication methods with different security charact
     - Weakest MFA option
     - Email account may be compromised
     - No device separation
+    - Heavily reliant on email security
 
-14. **Magic Link** ⭐
+14. **Magic Link** ⭐⭐
 
     ```typescript
     await client.auth.magicLink(userId);
@@ -294,6 +294,19 @@ The SDK supports multiple authentication methods with different security charact
     - Shares same vulnerabilities as email OTP
     - Vulnerable to email account compromise
     - Link can be intercepted or forwarded
+    - Heavily reliant on email security
+
+15. **Password** ⭐
+
+    ```typescript
+    await client.auth.password(userId, password);
+    ```
+
+    - Weakest authentication method
+    - Vulnerable to phishing, credential stuffing, brute force
+    - Often reused across services
+    - Can be compromised through data breaches
+    - Should always be combined with MFA
 
 ### MFA Recommendations
 
