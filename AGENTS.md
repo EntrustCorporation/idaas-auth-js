@@ -628,7 +628,7 @@ bun run test:e2e        # E2E tests
 ### For Users
 
 - **README.md**: User-facing documentation with examples
-- **docs/index.md**: Documentation overview
+- **docs/README.md**: Documentation overview
 - **docs/quickstart.md**: Quick start guide
 - **docs/self-hosted.md**: Self-hosted authentication guide
 - **docs/troubleshooting.md**: Troubleshooting guide
