@@ -181,15 +181,16 @@ await idaas.rba.poll();
 
 ### Face (Onfido)
 
+In the Face Biometric authenticator policy you can set the authentication to complete on web or mobile. See below for how to handle each.
+
 > Refer to the [Onfido Web SDK documentation](https://documentation.onfido.com/sdk/web/) for details on how to use.
+
+#### Web
 
 ```typescript
 const challenge = await idaas.rba.requestChallenge({
-  preferredAuthenticationMethod: "FACE",
-  faceBiometricOptions: { mutualChallenge: true }
+  preferredAuthenticationMethod: "FACE"
 });
-
-showMutualAuthChallenge(challenge.pushMutualChallenge);
 
 const onfidoSdk = (challenge: AuthenticationResponse) => {
   const instance = Onfido.init({
@@ -209,6 +210,20 @@ const onfidoSdk = (challenge: AuthenticationResponse) => {
     }
   });
 };
+```
+
+#### Mobile
+
+```typescript
+const challenge = await idaas.rba.requestChallenge({
+  preferredAuthenticationMethod: "FACE",
+  faceBiometricOptions: { mutualChallenge: true }
+});
+
+// Display the mutual authentication challenge code to the user if enabled.
+showMutualAuthChallenge(challenge.pushMutualChallenge);
+
+const authenticationPollResponse = await idaas.rba.poll();
 ```
 
 ## See also
