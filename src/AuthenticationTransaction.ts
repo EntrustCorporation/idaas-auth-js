@@ -493,7 +493,7 @@ export class AuthenticationTransaction {
         break;
       case "FIDO":
       case "PASSKEY":
-        requestBody.rpId = window.location.origin;
+        requestBody.rpId = window.location.hostname;
         break;
       case "TOKENPUSH":
         requestBody.pushMutualChallengeEnabled =
