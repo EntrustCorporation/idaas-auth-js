@@ -36,6 +36,22 @@ This section contains comprehensive guides for implementing authentication with 
   - Biometric authentication (Face)
   - Knowledge-based authentication (Grid, KBA)
 
+## Security
+
+- **[Security Best Practices](./security-best-practices.md)** - Comprehensive security guidance for production deployments
+  - Threat model and attack vectors
+  - XSS, CSRF, MITM protection
+  - Token security and storage
+
+## Integration Guides
+
+- **[AWS API Gateway Integration](./aws-api-gateway.md)** - Complete guide for securing AWS REST APIs with IDaaS authentication
+  - Frontend SPA setup with SDK
+  - Lambda Authorizer deployment and configuration
+  - Step-up authentication for sensitive operations
+  - Security best practices for AWS deployments
+  - Complete React examples and troubleshooting
+
 ## Technical Deep Dives
 
 - **[JWT IDaaS Grant Type](./jwt-idaas-grant.md)** - Understand the custom `jwt_idaas` OAuth grant type

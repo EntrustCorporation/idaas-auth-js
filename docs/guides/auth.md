@@ -223,6 +223,7 @@ try {
 ## Next steps
 
 - For complete control over multi-step flows, see the [Risk-Based Authentication Guide](rba.md).
+- See [Security Best Practices](./security-best-practices.md) for essential security guidance for production deployments
 - Check [Self-Hosted UI Examples](../self-hosted.md) for end-to-end implementations.
 - Review the [API Reference](../api/README.md) for interfaces and return types.
 - Troubleshoot using the [Troubleshooting guide](../troubleshooting.md).

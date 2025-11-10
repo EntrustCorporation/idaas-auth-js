@@ -128,5 +128,6 @@ Common issues:
 ## Related docs
 
 - [Quickstart](../quickstart.md)
+- [Security Best Practices](./security-best-practices.md) - Essential security guidance
 - [API Reference](../api/README.md)
 - [Troubleshooting](../troubleshooting.md)

@@ -214,5 +214,6 @@ const onfidoSdk = (challenge: AuthenticationResponse) => {
 ## See also
 
 - [Convenience Auth Guide](auth.md) – higher-level helpers on top of RBA.
+- [Security Best Practices](./security-best-practices.md) - Essential security guidance
 - [Self-Hosted UI Examples](../self-hosted.md) – detailed code snippets for common authenticators.
 - [API Reference](../api/README.md) – method signatures and types.

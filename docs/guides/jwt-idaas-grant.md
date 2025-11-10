@@ -221,31 +221,80 @@ This prevents authorization code interception attacks by ensuring only the clien
 
 ## Security Considerations
 
+> **🔒 See Also:** [Security Best Practices Guide](./security-best-practices.md) for comprehensive security guidance including token storage, credential handling, and authentication method security.
+
+This section covers security aspects specific to the `jwt_idaas` grant type flow.
+
 ### JWT Validation
 
-The IDaaS token endpoint validates:
+The IDaaS token endpoint validates the session JWT before issuing OIDC tokens:
 
-- ✅ JWT signature using IDaaS private keys
+- ✅ JWT signature using IDaaS private keys (RSA)
 - ✅ JWT issuer matches expected issuer
-- ✅ JWT expiration (`exp` claim)
+- ✅ JWT expiration (`exp` claim - typically ~5 minutes)
 - ✅ `authRequestKey` matches the JWT's session
-- ✅ PKCE code verifier matches the challenge
+- ✅ PKCE code verifier matches the original challenge
 
-### Token Lifecycle
+### Session JWT Security
+
+The session JWT is a **short-lived bearer token** (~5 minutes) issued after successful authentication:
+
+**Why it's critical:**
+
+- Can be exchanged for long-lived access/refresh tokens within the 5-minute window
+- If stolen, attacker gains full account access
+- PKCE binding limits damage (requires original `code_verifier`)
+
+**SDK Protection:**
+
+- Session JWT handled internally, never exposed to your application code
+- Automatically passed to token endpoint for exchange
+- Cannot be reused after successful token exchange
+
+### Authorization Code (`authRequestKey`) Security
+
+The `authRequestKey` functions as an authorization code with these properties:
+
+- **Single-use**: Invalidated after token exchange
+- **Short-lived**: Expires with session JWT (~5 minutes)
+- **PKCE-bound**: Requires matching `code_verifier`
+- **Client-bound**: Cannot be used by different `client_id`
+
+**Threat Prevention:**
+
+- **Code interception** → PKCE prevents exchange without verifier
+- **Code replay** → Single-use validation prevents reuse
+- **Code substitution** → Binding to session prevents tampering
+
+### Token Lifecycle Security
 
 ```
-1. User authenticates → IDaaS session JWT (short-lived, ~5 minutes)
-2. Exchange JWT → Access token (configurable, typically 1 hour)
-3. Access token expires → Use refresh token (if enabled)
-4. Refresh token expires → Re-authenticate
+1. Authentication → Session JWT (5 min)
+   Risk: If stolen, 5-minute window to exchange for tokens
+   Mitigation: Short lifetime, PKCE binding
+
+2. JWT Exchange → Access Token (1 hour)
+   Risk: Bearer token, full API access
+   Mitigation: Short lifetime, minimal scopes, audience validation
+
+3. Token Refresh → New Access Token
+   Risk: Refresh token is long-lived
+   Mitigation: Automatic rotation, secure storage, revocation on logout
+
+4. Token Expiry → Re-authenticate
+   Security checkpoint: Forces user verification
 ```
 
 ### Best Practices
 
-1. **Never expose the session JWT** - It's handled internally by the SDK
-2. **Use HTTPS** - All token exchanges must occur over TLS
-3. **Enable refresh tokens** for better UX (reduces re-authentication frequency)
-4. **Set appropriate token lifetimes** based on your security requirements
+1. **Never log tokens**: Session JWT, access tokens, refresh tokens
+2. **Use memory storage** for high-security apps (or localStorage with CSP)
+3. **Enable refresh token rotation**: SDK handles automatically
+4. **Implement proper logout**: Revokes refresh tokens server-side
+5. **Use minimal scopes**: Request only what your application needs
+6. **Specify audience**: Bind tokens to your specific API
+
+For detailed security guidance, see the [Security Best Practices Guide](./security-best-practices.md).
 
 ## Differences from Standard OAuth 2.0 JWT Bearer Grant
 
@@ -270,34 +319,46 @@ const client = new IdaasClient(
   {
     issuerUrl: "https://your-tenant.trustedauth.com",
     clientId: "your-client-id",
-    storageType: "localstorage"
+    // 🔒 SECURITY: Use 'memory' for high-security apps to prevent XSS token theft
+    // Use 'localstorage' only if you need persistence and have strong XSS protections (CSP)
+    storageType: "memory" // or "localstorage"
   },
   {
     scope: "openid profile email",
+    // 🔒 SECURITY: Enable refresh tokens for better UX, but consider security tradeoffs
+    // Refresh tokens are long-lived and increase risk if stolen
     useRefreshToken: true,
+    // 🔒 SECURITY: Specify audience to prevent token misuse across services
     audience: "https://api.yourapp.com"
   }
 );
 
 // Method 1: Using convenience methods (recommended)
 try {
-  await client.auth.password("user@example.com", "password123");
+  const userId = getUserIdFromInput();
+  const password = getUserPasswordFromInput();
+
+  await client.auth.password(userId, password);
 
   // Tokens are now available
   const claims = client.getIdTokenClaims();
   const accessToken = await client.getAccessToken();
 
   console.log("Authenticated as:", claims.sub);
-  console.log("Access token:", accessToken);
 } catch (error) {
-  console.error("Authentication failed:", error);
+  // 🔒 SECURITY: Don't expose sensitive error details to users
+  console.error("Authentication failed"); // Generic message for user
+  // Log detailed errors server-side for debugging
+  logToSecureAuditSystem(error);
 }
 
 // Method 2: Using RBA client directly (more control)
 try {
   // Step 1: Request challenge
+  const userId = getUserIdFromInput();
+
   const { method, pollForCompletion } = await client.rba.requestChallenge({
-    userId: "user@example.com",
+    userId,
     preferredAuthenticationMethod: "OTP",
     otpOptions: {
       otpDeliveryType: "EMAIL"
@@ -323,7 +384,10 @@ try {
   const claims = client.getIdTokenClaims();
   console.log("Authenticated as:", claims.sub);
 } catch (error) {
-  console.error("Authentication failed:", error);
+  // 🔒 SECURITY: Don't expose sensitive error details to users
+  console.error("Authentication failed"); // Generic message for user
+  // Log detailed errors server-side for debugging
+  logToSecureAuditSystem(error);
 }
 ```
 
@@ -332,12 +396,16 @@ try {
 ```typescript
 // Password + Second Factor (e.g., OTP)
 try {
+  // 🔒 SECURITY: MFA significantly improves security by requiring multiple authentication factors
+  const userId = getUserIdFromInput();
+  const password = getUserPasswordFromInput();
+
   const { method, secondFactorMethod } = await client.rba.requestChallenge({
-    userId: "user@example.com",
-    password: "user-password",
+    userId,
+    password,
     preferredAuthenticationMethod: "PASSWORD_AND_SECONDFACTOR",
     otpOptions: {
-      otpDeliveryType: "SMS"
+      otpDeliveryType: "SMS" // Consider authenticator apps over SMS for better security
     }
   });
 
@@ -358,7 +426,10 @@ try {
   const claims = client.getIdTokenClaims();
   console.log("MFA authenticated as:", claims.sub);
 } catch (error) {
-  console.error("MFA failed:", error);
+  // 🔒 SECURITY: Don't expose sensitive error details to users
+  console.error("Authentication failed"); // Generic message for user
+  // Log detailed errors server-side for debugging
+  logToSecureAuditSystem(error);
 }
 ```
 
@@ -367,26 +438,34 @@ try {
 ```typescript
 // Passkey (WebAuthn/FIDO2)
 try {
-  await client.auth.passkey("user@example.com");
+  // 🔒 SECURITY: Passkeys provide phishing-resistant authentication
+  // Most secure option - uses device biometrics or security keys
+  const userId = getUserIdFromInput();
+  await client.auth.passkey(userId);
 
   // Browser prompts for biometric/security key
   // Upon success, tokens are available
   const claims = client.getIdTokenClaims();
   console.log("Passwordless auth as:", claims.sub);
 } catch (error) {
-  console.error("Passkey authentication failed:", error);
+  console.error("Passkey authentication failed");
 }
 
 // Magic Link
 try {
-  await client.auth.magicLink("user@example.com");
+  // 🔒 SECURITY: Magic links are convenient but have security considerations:
+  // - Email delivery may be insecure (SMTP)
+  // - Links in email can be intercepted or forwarded
+  // - Consider short expiration times (5-15 minutes)
+  const userId = getUserIdFromInput();
+  await client.auth.magicLink(userId);
 
   // User receives email with magic link
   // After clicking link and completing flow, tokens are available
   const claims = client.getIdTokenClaims();
   console.log("Magic link auth as:", claims.sub);
 } catch (error) {
-  console.error("Magic link authentication failed:", error);
+  console.error("Magic link authentication failed");
 }
 ```
 

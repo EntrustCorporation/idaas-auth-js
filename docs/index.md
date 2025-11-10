@@ -38,6 +38,7 @@ Use `oidc` when you want Entrust to host the whole login: it handles PKCE, redir
 
 - Start building with the [Quickstart](quickstart.md).
 - Understand which approach fits your needs: [Choosing an Authentication Approach](guides/choosing-an-approach.md)
+- See [Security Best Practices](guides/security-best-practices.md) for essential security guidance for production deployments
 - Follow guides for specific flows:
   - [OIDC Guide](guides/oidc.md)
   - [RBA Guide](guides/rba.md)
