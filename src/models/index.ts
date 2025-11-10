@@ -274,7 +274,6 @@ export interface AuthenticationSubmissionParams {
    * The user's answers to the KBA challenge questions.
    * Answers must be in the order of the questions returned when requesting the challenge.
    */
-  // TODO: individual responses (ie gridResponse, password, OTP, etc) ??
   kbaChallengeAnswers?: string[];
 
   /**
