@@ -62,7 +62,7 @@
     "test:manual": "bun run test/test-manual/app.ts"
   },
   "dependencies": {
-    "jose": "6.1.0"
+    "jose": "^6.1.0"
   },
   "peerDependencies": {
     "onfido-sdk-ui": "^14.50.0"
