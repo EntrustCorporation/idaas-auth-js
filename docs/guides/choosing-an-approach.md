@@ -87,15 +87,16 @@ The RBA approach leverages IDaaS's **Resource Rules** to perform risk evaluation
 
 ### Understanding Resource Rules
 
-Resource Rules are configured in IDaaS to evaluate risk and determine authentication requirements. They consider factors like:
+Resource Rules are configured in IDaaS to evaluate risk and determine authentication requirements. IDaaS evaluates the following factors when determining risk level:
 
-- **User attributes** (role, department, risk profile)
-- **Device context** (trusted device, new device, location)
-- **Transaction details** (amount, type, sensitivity)
-- **Environmental factors** (IP address, time of day, geolocation)
-- **Historical behavior** (typical login patterns, velocity)
+- **Date and time of request** - When the authentication attempt occurs
+- **Location of request** - Geolocation of the authentication attempt
+- **Source IP address** - IP address of the request origin
+- **Machine authentication** - Device fingerprinting to identify trusted devices
+- **Location history** - Historical authentication locations for this user
+- **Travel velocity** - Speed of location changes between authentication attempts
 
-Based on this evaluation, IDaaS responds with the authentication methods that can be used, which may include:
+Based on this risk evaluation, IDaaS responds with the authentication methods that can be used, which may include:
 
 - Single-factor authentication for low-risk scenarios
 - Multi-factor authentication for medium-risk scenarios
@@ -138,25 +139,25 @@ const client = new IdaasClient(
   }
 );
 
-// Request authentication with risk context
+// Request authentication with transaction details
 const response = await client.rba.requestChallenge({
   userId: "user@example.com",
   preferredAuthenticationMethod: "PASSWORD",
   transactionDetails: [
     {
-      detail: "IP_ADDRESS",
-      value: "192.168.1.100",
-      usage: ["RBA", "TVS"]
-    },
-    {
       detail: "TRANSACTION_AMOUNT",
       value: "5000.00",
-      usage: ["TVS"]
+      usage: ["RBA", "TVS"] // Used for both risk assessment and display
     },
     {
-      detail: "DEVICE_ID",
-      value: "device-fingerprint-12345",
-      usage: ["RBA"]
+      detail: "TRANSACTION_TYPE",
+      value: "Wire Transfer",
+      usage: ["RBA", "TVS"] // Used for both risk assessment and display
+    },
+    {
+      detail: "BENEFICIARY",
+      value: "John Doe",
+      usage: ["TVS"] // Displayed to user during authentication
     }
   ]
 });
@@ -181,19 +182,23 @@ if (response.pollForCompletion) {
 const claims = client.getIdTokenClaims();
 ```
 
-### Transaction Details for RBA
+### Transaction Details
 
-Transaction details are key to risk assessment. Common details include:
+Transaction details can be used for both risk evaluation and transaction verification. Common details include:
 
-| Detail Type          | Example Value   | Usage     | Purpose                |
-| -------------------- | --------------- | --------- | ---------------------- |
-| `TRANSACTION_AMOUNT` | `5000.00`       | `["TVS"]` | Transaction value risk |
-| `TRANSACTION_TYPE`   | `WIRE_TRANSFER` | `["TVS"]` | Operation sensitivity  |
+| Detail Type          | Example Value   | Usage            | Purpose                               |
+| -------------------- | --------------- | ---------------- | ------------------------------------- |
+| `TRANSACTION_AMOUNT` | `5000.00`       | `["RBA", "TVS"]` | Risk assessment and display to user   |
+| `TRANSACTION_TYPE`   | `WIRE_TRANSFER` | `["RBA", "TVS"]` | Risk assessment and display to user   |
+| `BENEFICIARY`        | `John Doe`      | `["TVS"]`        | Display to user during authentication |
+| `ACCOUNT_NUMBER`     | `****1234`      | `["TVS"]`        | Display to user during authentication |
 
 **Usage values:**
 
-- `RBA` - Used for risk-based authentication decision-making
-- `TVS` - Displayed in Transaction Verification Screen (if applicable)
+- `RBA` - Used in Resource Rules where customers can define conditions based on these values and assign risk levels
+- `TVS` - Displayed to the user in Transaction Verification Screen during OTP and push authentication
+
+**Note:** Since `usage` is an array, a transaction detail can be used for both purposes. IP address is automatically collected by IDaaS from the HTTP connection and does not need to be provided in transaction details.
 
 ### Key Characteristics
 
