@@ -5,7 +5,7 @@
     "": {
       "name": "@entrustcorp/idaas-auth-js",
       "dependencies": {
-        "jose": "6.1.0",
+        "jose": "^6.1.0",
       },
       "devDependencies": {
         "@arethetypeswrong/cli": "0.18.2",
@@ -25,7 +25,7 @@
         "@types/web": "0.0.294",
         "dotenv": "17.2.3",
         "oidc-provider": "9.5.2",
-        "onfido-sdk-ui": "14.55.0",
+        "onfido-sdk-ui": "14.56.0",
         "prettier": "3.6.2",
         "rsbuild-plugin-publint": "0.3.3",
         "typedoc": "0.28.14",
@@ -645,7 +645,7 @@
 
     "on-finished": ["on-finished@2.4.1", "", { "dependencies": { "ee-first": "1.1.1" } }, "sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg=="],
 
-    "onfido-sdk-ui": ["onfido-sdk-ui@14.55.0", "", {}, "sha512-Kk+05XD7+OJiQwSI3p5+FuPIEbQdwTScapXmB+nVunHWkJHxa0qAMitgR7cnI4ol1eNHzvA99HyBF5MwwEejfQ=="],
+    "onfido-sdk-ui": ["onfido-sdk-ui@14.56.0", "", {}, "sha512-3go1QTQ4WUXYL3muEcrkZVCKRuoUha6eCqC475eksBjmVLuBMfc9ouGvB3lMWZ7JaEO4dKwtqk2LB1kh9w1ERQ=="],
 
     "open": ["open@10.2.0", "", { "dependencies": { "default-browser": "^5.2.1", "define-lazy-prop": "^3.0.0", "is-inside-container": "^1.0.0", "wsl-utils": "^0.1.0" } }, "sha512-YgBpdJHPyQ2UE5x+hlSXcnejzAvD0b22U2OuAP+8OnlJT+PjWPxtgmGqKKc+RgTM63U9gN0YzrYc71R2WT/hTA=="],
 
