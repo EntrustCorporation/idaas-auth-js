@@ -42,7 +42,7 @@ export interface IdToken {
 /**
  * Contains the IDaaS Session Token.
  */
-export interface IdaasSessionToken {
+interface IdaasSessionToken {
   token: string;
 }
 

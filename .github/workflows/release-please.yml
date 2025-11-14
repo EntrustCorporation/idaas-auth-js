@@ -56,6 +56,9 @@ jobs:
       - name: 🧹 Lint
         run: bun run lint
 
+      - name: 🔍 Check for unused code
+        run: bun run lint:knip
+
       - name: 🔍 Type check
         run: bun run lint:types
 

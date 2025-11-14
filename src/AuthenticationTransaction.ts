@@ -27,7 +27,7 @@ import { calculateEpochExpiry } from "./utils/format";
 import { buildFidoResponse, buildPubKeyRequestOptions } from "./utils/passkey";
 import { generateAuthorizationUrl } from "./utils/url";
 
-export interface AuthenticationDetails {
+interface AuthenticationDetails {
   method?: IdaasAuthenticationMethod;
   secondFactor?: IdaasAuthenticationMethod;
   scope?: string;

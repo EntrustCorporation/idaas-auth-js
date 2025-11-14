@@ -49,6 +49,7 @@ This SDK simplifies integrating secure authentication into JavaScript SPAs using
 - **oidc-provider**: Test identity provider
 - **@biomejs/biome**: Code formatting and linting
 - **@arethetypeswrong/cli**: Type checking for package exports
+- **knip**: Detect unused files, dependencies, and exports
 
 ## Architecture
 
@@ -342,6 +343,8 @@ Configuration in `openapi-ts.config.ts`.
 
 **Biome:** 2 space indent, 120 char line width. Run `bun run fix` to auto-fix issues.
 
+**Knip:** Detects unused files, dependencies, and exports. Run `bun run lint:knip` to check. Configuration in `knip.json`.
+
 **TypeScript:** Extends `@tsconfig/bun` with DOM lib for browser APIs.
 
 ## Key Concepts
@@ -591,7 +594,7 @@ This project uses **GitHub Actions** for continuous integration and automated re
 
 **Build Workflow (`build.yaml`)** - Runs on PRs and main branch:
 
-- Validates commits, generates API types, formats, lints, builds, type checks, tests (unit + E2E)
+- Validates commits, generates API types, formats, lints, checks for unused code (knip), builds, type checks, tests (unit + E2E)
 
 **Release Please Workflow (`release-please.yml`)** - Automated releases:
 
@@ -605,6 +608,7 @@ This project uses **GitHub Actions** for continuous integration and automated re
 ```bash
 bun run fix             # Auto-fix formatting and linting
 bun run lint:types      # Type check
+bun run lint:knip       # Check for unused code
 bun run lint:commits    # Validate commits
 bun run build           # Build package
 bun run test:unit       # Unit tests
