@@ -107,6 +107,17 @@ document.getElementById("get-user-info")?.addEventListener("click", async () => 
   }
 });
 
+document.getElementById("get-access-token")?.addEventListener("click", async () => {
+  console.info("Getting access token");
+
+  try {
+    await idaasClient.getAccessToken();
+    await updateUI();
+  } catch (e) {
+    console.error("Get access token failed", e);
+  }
+});
+
 window.addEventListener("load", async () => {
   await updateUI();
 });
