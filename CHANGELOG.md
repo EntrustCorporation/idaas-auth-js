@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/EntrustCorporation/idaas-auth-js/compare/v0.2.0...v0.2.1) (2025-11-15)
+
+
+### Bug Fixes
+
+* add prompt=consent for offline_access ([#56](https://github.com/EntrustCorporation/idaas-auth-js/issues/56)) ([6b8b83b](https://github.com/EntrustCorporation/idaas-auth-js/commit/6b8b83bc33761c633a28e10cc9d1703514683152))
+
 ## [0.2.0](https://github.com/EntrustCorporation/idaas-auth-js/compare/v0.1.43...v0.2.0) (2025-11-14)
 
 
