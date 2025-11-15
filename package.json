@@ -57,6 +57,7 @@
     "lint:md": "prettier --check '**/*.{md,mdx}'",
     "lint:types": "attw .",
     "lint:commits": "commitlint --from HEAD~10 --to HEAD --verbose",
+    "lint:knip": "knip",
     "test:unit": "bun test",
     "test:e2e": "playwright test",
     "test:manual": "bun run test/test-manual/app.ts"
@@ -89,6 +90,7 @@
     "@types/oidc-provider": "9.5.0",
     "@types/web": "0.0.294",
     "dotenv": "17.2.3",
+    "knip": "^5.69.1",
     "oidc-provider": "9.5.2",
     "onfido-sdk-ui": "14.56.0",
     "prettier": "3.6.2",

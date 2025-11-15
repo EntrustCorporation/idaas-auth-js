@@ -55,6 +55,9 @@ jobs:
       - name: 🧹 Lint
         run: bun run lint
 
+      - name: 🔍 Check for unused code
+        run: bun run lint:knip
+
       - name: 🏗️ Build (includes publint via rslib plugin)
         run: bun run build
 

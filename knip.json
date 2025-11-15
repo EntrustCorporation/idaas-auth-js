@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "src/index.ts",
+    "test/**/*.spec.ts",
+    "test/**/*.test.ts",
+    "test/test-idp/oidc-provider.ts",
+    "test/test-spa/app.ts",
+    "test/test-spa/index.ts",
+    "test/test-manual/**/*.ts",
+    "test/unit/constants.ts",
+    "scripts/**/*.ts",
+    "happydom.ts",
+    "openapi-ts.config.ts"
+  ],
+  "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"],
+  "ignore": ["dist/**", "playwright-report/**", "test-results/**", "docs/**", "src/models/openapi-ts/**"],
+  "ignoreDependencies": ["@types/web", "onfido-sdk-ui", "@hey-api/client-fetch"]
+}
