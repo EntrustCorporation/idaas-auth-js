@@ -85,6 +85,11 @@ export const generateAuthorizationUrl = async (
 
   url.searchParams.append("response_type", "code");
 
+  // If offline_access is requested, add prompt=consent
+  if (scopeAsArray.includes("offline_access")) {
+    url.searchParams.append("prompt", "consent");
+  }
+
   // Add OIDC flow parameters
   if (options.type === "standard") {
     if (options.responseMode) {

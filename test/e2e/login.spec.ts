@@ -42,18 +42,23 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.afterEach(async ({ page }) => {
-  // Logout
-  await page.getByRole("button", { name: "Logout" }).click();
-  await expect(page).toHaveURL(new RegExp(`${ISSUER}/session/end`));
-  await page.getByRole("button", { name: "Yes, sign me out" }).click();
-  await expect(page).toHaveURL(DEV_SERVER);
+  // Only logout if authenticated
+  const isAuthenticated = await page.getByTestId("authenticated-state").textContent();
 
-  // Should no longer be authenticated
-  await expect(page.getByTestId("authenticated-state")).toHaveText("false");
+  if (isAuthenticated === "true") {
+    // Logout
+    await page.getByRole("button", { name: "Logout" }).click();
+    await expect(page).toHaveURL(new RegExp(`${ISSUER}/session/end`));
+    await page.getByRole("button", { name: "Yes, sign me out" }).click();
+    await expect(page).toHaveURL(DEV_SERVER);
 
-  // Tokens should be cleared
-  await expect(page.getByTestId("access-token-state")).toHaveText("null");
-  await expect(page.getByTestId("id-token-state")).toHaveText("null");
+    // Should no longer be authenticated
+    await expect(page.getByTestId("authenticated-state")).toHaveText("false");
+
+    // Tokens should be cleared
+    await expect(page.getByTestId("access-token-state")).toHaveText("null");
+    await expect(page.getByTestId("id-token-state")).toHaveText("null");
+  }
 });
 
 test("login with popup", async ({ page }) => {
@@ -188,15 +193,14 @@ test("token refresh with expired access token", async ({ page }) => {
   }
 
   // Wait for access token to expire (configured in test IDP for 5 minutes)
-  // To speed up testing, we could modify the token in localStorage to have an expired timestamp
-  // or wait for natural expiration. For now, we'll manipulate the expiry.
+  // To speed up testing, we manipulate the token expiry in localStorage
   await page.evaluate(
     ({ key }) => {
       const stored = localStorage.getItem(key);
       if (stored) {
         const tokens = JSON.parse(stored);
-        // Set expiry to past timestamp
-        tokens[0].expiry = Math.floor(Date.now() / 1000) - 60;
+        // Set expiresAt to past timestamp (not 'expiry')
+        tokens[0].expiresAt = Math.floor(Date.now() / 1000) - 60;
         localStorage.setItem(key, JSON.stringify(tokens));
       }
     },
@@ -204,9 +208,10 @@ test("token refresh with expired access token", async ({ page }) => {
   );
 
   // Request new access token - should trigger refresh
-  const refreshTokenResponse = page.waitForResponse(new RegExp(`${ISSUER}/token`));
+  // Set up response listener before clicking to avoid race condition
+  const refreshTokenPromise = page.waitForResponse(new RegExp(`${ISSUER}/token`));
   await page.getByRole("button", { name: "Get Access Token" }).click();
-  const refreshToken = await refreshTokenResponse;
+  const refreshToken = await refreshTokenPromise;
   const refreshTokenJson = await refreshToken.json();
 
   expect(refreshToken.ok()).toBeTruthy();
