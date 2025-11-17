@@ -30,10 +30,9 @@ jobs:
         if: github.event_name == 'pull_request'
         run: bunx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-      # TODO: uncomment after first release
-      # - name: 🔍 Lint commit messages (Push)
-      #   if: github.event_name == 'push'
-      #   run: bun run lint:commits
+      - name: 🔍 Lint commit messages (Push)
+        if: github.event_name == 'push'
+        run: bun run lint:commits
 
       - name: 🔧 Generate API types
         run: bun run api:generate
