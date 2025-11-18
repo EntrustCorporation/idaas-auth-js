@@ -30,12 +30,17 @@ sequenceDiagram
     SDK->>AuthAPI: POST /authorizejwt<br/>(client_id, scope, code_challenge)
     AuthAPI-->>SDK: authRequestKey, applicationId
 
-    Note over App,TokenEP: Step 2: Complete Authentication Challenge
-    SDK->>AuthAPI: POST /authenticate/{method}<br/>(userId, password, authRequestKey)
-    AuthAPI->>AuthAPI: Validate credentials<br/>Evaluate risk
+    Note over App,TokenEP: Step 2: Request Authentication Challenge
+    SDK->>AuthAPI: POST /authenticate/challenge/{method}<br/>(userId, authRequestKey, applicationId)
+    AuthAPI->>AuthAPI: Evaluate risk<br/>Check Resource Rules
+    AuthAPI-->>SDK: Challenge details<br/>(token, gridChallenge/kbaChallenge/fidoChallenge/etc.)
+
+    Note over App,TokenEP: Step 3: Submit Challenge Response
+    SDK->>AuthAPI: POST /authenticate/{method}<br/>(userId, password/OTP/response, authRequestKey)<br/>Authorization: Bearer {token}
+    AuthAPI->>AuthAPI: Validate credentials<br/>Verify response
     AuthAPI-->>SDK: authenticationCompleted: true<br/>token: session JWT
 
-    Note over App,TokenEP: Step 3: Exchange JWT for OIDC Tokens
+    Note over App,TokenEP: Step 4: Exchange JWT for OIDC Tokens
     SDK->>TokenEP: POST /token<br/>(grant_type=jwt_idaas, jwt, code, code_verifier)
     TokenEP->>TokenEP: Validate JWT signature<br/>Verify PKCE<br/>Check authRequestKey
     TokenEP-->>SDK: access_token, id_token, refresh_token
@@ -44,7 +49,7 @@ sequenceDiagram
 
 ## How It Works
 
-The `jwt_idaas` grant type flow involves three key steps:
+The `jwt_idaas` grant type flow involves four key steps:
 
 ### 1. Initialize JWT Authorization Request
 
@@ -74,18 +79,48 @@ client_id=your-client-id
 
 These values (`authRequestKey` and `applicationId`) are used to track the authentication session throughout the flow.
 
-### 2. Complete Authentication Challenge
+### 2. Request Authentication Challenge
 
-The SDK then presents authentication challenges to the user through the Authentication API:
+The SDK first requests an authentication challenge from the Authentication API:
+
+```typescript
+// Request challenge for PASSWORD authentication
+POST https://your-tenant.trustedauth.com/api/v1/authenticate/challenge/PASSWORD
+Content-Type: application/json
+
+{
+  "userId": "user@example.com",
+  "authRequestKey": "QoOuQ3JyccbHqVJxUwHInxSPdn37nSJTgOMn6UE3Yi9c=",
+  "applicationId": "dba4e3c6-f1f3-4d23-9088-fb452064c73f"
+}
+```
+
+**Response:**
+
+```json
+{
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "time": 1520967582294
+}
+```
+
+For some authentication methods (GRID, KBA, FIDO/Passkey), the response includes challenge details (e.g., `gridChallenge`, `kbaChallenge`, `fidoChallenge`) that must be presented to the user.
+
+**Note:** Some convenience methods like `password()` automatically proceed to Step 3 if the user's password is already provided.
+
+### 3. Submit Challenge Response
+
+The SDK then submits the user's authentication response:
 
 ```typescript
 // Example: Password authentication
 POST https://your-tenant.trustedauth.com/api/v1/authenticate/PASSWORD
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
 
 {
   "userId": "user@example.com",
-  "password": "password123",
+  "response": "password123",
   "authRequestKey": "QoOuQ3JyccbHqVJxUwHInxSPdn37nSJTgOMn6UE3Yi9c=",
   "applicationId": "dba4e3c6-f1f3-4d23-9088-fb452064c73f"
 }
@@ -103,7 +138,9 @@ Content-Type: application/json
 
 Upon successful authentication, IDaaS issues a **session JWT** (short-lived, typically 5 minutes) that represents the authenticated session. This JWT is what gets exchanged for OIDC tokens in the next step.
 
-### 3. Exchange JWT for OIDC Tokens
+**Push-based methods** (TOKENPUSH, SMARTCREDENTIALPUSH, FACE) don't require explicit submission. Instead, the SDK polls for completion after the user approves the push notification or completes biometric authentication on their device.
+
+### 4. Exchange JWT for OIDC Tokens
 
 Finally, the SDK exchanges the session JWT for standard OIDC tokens using the `jwt_idaas` grant type:
 
