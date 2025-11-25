@@ -381,7 +381,7 @@ export class AuthClient {
             resolve(authenticationPollResponse);
             instance.tearDown();
           },
-          onError: (error: Error) => {
+          onError: (error) => {
             reject(error);
           },
         });
