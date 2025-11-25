@@ -15,5 +15,5 @@
   ],
   "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"],
   "ignore": ["dist/**", "playwright-report/**", "test-results/**", "docs/**", "src/models/openapi-ts/**"],
-  "ignoreDependencies": ["@types/web", "onfido-sdk-ui", "@hey-api/client-fetch"]
+  "ignoreDependencies": ["@types/web", "onfido-sdk-ui"]
 }

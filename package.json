@@ -79,7 +79,6 @@
     "@commitlint/cli": "20.1.0",
     "@commitlint/config-conventional": "20.0.0",
     "@happy-dom/global-registrator": "20.0.10",
-    "@hey-api/client-fetch": "0.13.1",
     "@hey-api/openapi-ts": "0.88.0",
     "@microsoft/api-extractor": "7.55.1",
     "@playwright/test": "1.56.1",
