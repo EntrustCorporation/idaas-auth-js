@@ -9,9 +9,7 @@ This guide covers security considerations specific to using the IDaaS Auth JavaS
 - [What the SDK Protects Against](#what-the-sdk-protects-against)
 - [Token Storage Security](#token-storage-security)
 - [SDK Configuration Security](#sdk-configuration-security)
-- [Secure Credential Handling](#secure-credential-handling)
 - [Authentication Method Security](#authentication-method-security)
-- [Security Checklist](#security-checklist)
 - [Resources](#resources)
 
 ## What the SDK Protects Against
