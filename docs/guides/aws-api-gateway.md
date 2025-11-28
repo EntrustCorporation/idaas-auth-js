@@ -469,8 +469,9 @@ async function performStepUp(userEmail: string, acrValues: string[]) {
 2. **Error body includes required ACR** - Response includes `error: "insufficient_acr"` and `required_acr: "possession"`
 3. **SPA parses requirements** - Frontend extracts required ACR level from error response
 4. **Dynamic step-up** - Triggers appropriate authentication based on backend requirements
-5. **Retry request** - After step-up, SDK has new token with elevated ACR### Backend Implementation
+5. **Retry request** - After step-up, SDK has new token with elevated ACR.
 
+### Backend Implementation
 #### Lambda Authorizer - Basic Token Validation
 
 The Lambda authorizer validates JWT signature, issuer, audience, and scopes. It passes token claims to backend Lambda functions via the authorizer context:
