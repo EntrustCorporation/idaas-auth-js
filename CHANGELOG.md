@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/EntrustCorporation/idaas-auth-js/compare/v0.2.1...v0.2.2) (2025-11-29)
+
+
+### Bug Fixes
+
+* remove error type in onfido init ([f68198e](https://github.com/EntrustCorporation/idaas-auth-js/commit/f68198eb6ee1a775457df77ee396b59a0f4f34bd))
+
 ## [0.2.1](https://github.com/EntrustCorporation/idaas-auth-js/compare/v0.2.0...v0.2.1) (2025-11-15)
 
 
