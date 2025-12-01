@@ -89,7 +89,7 @@
     "@types/oidc-provider": "9.5.0",
     "@types/web": "0.0.294",
     "dotenv": "17.2.3",
-    "knip": "5.70.2",
+    "knip": "5.71.0",
     "oidc-provider": "9.5.2",
     "onfido-sdk-ui": "14.57.0",
     "prettier": "3.7.3",
