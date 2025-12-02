@@ -87,10 +87,8 @@ const client = new IdaasClient(
 // Login
 await client.oidc.login({ redirectUri: window.location.origin });
 
-// Handle callback
-if (window.location.search.includes("code=")) {
-  await client.oidc.handleRedirect();
-}
+// Handle callback (returns null if not a callback URL)
+await client.oidc.handleRedirect();
 
 // Call API
 const token = await client.getAccessToken();
@@ -142,11 +140,8 @@ export function useAuth() {
 
   async function checkAuth() {
     try {
-      // Handle OAuth callback
-      if (window.location.search.includes("code=")) {
-        await idaasClient.oidc.handleRedirect();
-        window.history.replaceState({}, "", window.location.pathname);
-      }
+      // Handle OAuth callback (returns null if not a callback URL)
+      await idaasClient.oidc.handleRedirect();
 
       // Check if user is authenticated
       const authenticated = await idaasClient.isAuthenticated();
@@ -624,13 +619,11 @@ console.log("Current ACR:", claims.acr); // "knowledge" or "possession"
 
 **Problem:** `isAuthenticated()` returns false after login
 
-**Solution:** Ensure you're calling `handleRedirect()` and consider using `localstorage` for persistence:
+**Solution:** Ensure you're calling `handleRedirect()` (which automatically clears URL parameters and returns `null` if not a callback URL) and consider using `localstorage` for persistence:
 
 ```typescript
-if (window.location.search.includes("code=")) {
-  await client.oidc.handleRedirect();
-  window.history.replaceState({}, "", window.location.pathname);
-}
+// Call unconditionally - handles non-callback URLs gracefully
+await client.oidc.handleRedirect();
 ```
 
 ### 401 Unauthorized from API
@@ -650,12 +643,16 @@ console.log("Expires:", new Date(claims.exp * 1000));
 
 **Problem:** Browser keeps redirecting
 
-**Solution:** Clear URL parameters after handling callback:
+**Solution:** The SDK automatically clears URL parameters when `handleRedirect()` is called. If you're still experiencing loops, ensure you're not calling `login()` again after successful authentication:
 
 ```typescript
-if (window.location.search.includes("code=")) {
-  await client.oidc.handleRedirect();
-  window.history.replaceState({}, "", window.location.pathname);
+// Call handleRedirect() unconditionally
+await client.oidc.handleRedirect();
+
+// Ensure you check authentication status before calling login()
+const isAuthenticated = await client.isAuthenticated();
+if (!isAuthenticated) {
+  await client.oidc.login({ redirectUri: window.location.origin });
 }
 ```
 
