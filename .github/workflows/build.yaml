@@ -37,9 +37,6 @@ jobs:
         if: github.event_name == 'push'
         run: bun run lint:commits
 
-      - name: 🔧 Generate API types
-        run: bun run api:generate
-
       - name: 📚 Generate API documentation
         run: bun run docs:generate
 

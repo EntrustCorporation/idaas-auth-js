@@ -60,7 +60,8 @@
     "lint:knip": "knip",
     "test:unit": "bun test",
     "test:e2e": "playwright test",
-    "test:manual": "bun run test/test-manual/app.ts"
+    "test:manual": "bun run test/test-manual/app.ts",
+    "postinstall": "bun run api:generate"
   },
   "dependencies": {
     "jose": "^6.1.0"
