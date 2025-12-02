@@ -42,6 +42,10 @@ The client exposes three facades:
 - `idaas.rba` – self-hosted UI risk-based authentication.
 - `idaas.auth` – convenience authentication methods (password, passkey, OTP, etc.).
 
+### Cross-Origin Resource Sharing (CORS)
+
+CORS is a browser security feature that restricts web applications from making cross-origin HTTP requests via scripts. When your web application, hosted on one origin, attempts to access Entrust IDaaS APIs on a different origin, the browser will block these requests unless the server explicitly permits them. Since the `idaas.rba` and `idaas.auth` facades make direct authentication API calls, you must configure CORS allowlisting in your Entrust IDaaS tenant to authorize requests from your application's origin.
+
 ## 3. Trigger a hosted login flow
 
 ### Popup flow
