@@ -17,7 +17,7 @@ describe("IdaasClient.getIdTokenClaims", () => {
     const user = NO_DEFAULT_IDAAS_CLIENT.getIdTokenClaims();
 
     expect(user).toBeTruthy();
-    expect(user.sub).toStrictEqual(TEST_ID_PAIR.data.decoded.sub);
+    expect(user?.sub).toStrictEqual(TEST_ID_PAIR.data.decoded.sub);
   });
 
   test("if user info is not stored, returns null", () => {

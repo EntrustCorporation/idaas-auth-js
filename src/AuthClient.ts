@@ -33,13 +33,13 @@ import { browserSupportsPasskey } from "./utils/browser";
  * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/choosing-an-approach.md Choosing an Approach}
  */
 export class AuthClient {
-  private rbaClient: RbaClient;
+  readonly #rbaClient: RbaClient;
 
   constructor(rbaClient: RbaClient) {
-    this.rbaClient = rbaClient;
+    this.#rbaClient = rbaClient;
   }
 
-  private async importOnfidoSdk() {
+  async #importOnfidoSdk() {
     try {
       const { Onfido } = await import("onfido-sdk-ui");
       return Onfido;
@@ -74,13 +74,13 @@ export class AuthClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/auth.md Convenience Auth Guide}
    */
   public async password(userId: string, password: string): Promise<AuthenticationResponse> {
-    await this.rbaClient.requestChallenge({
+    await this.#rbaClient.requestChallenge({
       userId,
       strict: true,
       preferredAuthenticationMethod: "PASSWORD",
     });
 
-    const authResult = await this.rbaClient.submitChallenge({
+    const authResult = await this.#rbaClient.submitChallenge({
       response: password,
     });
     return authResult;
@@ -114,17 +114,17 @@ export class AuthClient {
     { mutualChallenge, push }: SoftTokenOptions = {},
   ): Promise<AuthenticationResponse> {
     if (push && !mutualChallenge) {
-      await this.rbaClient.requestChallenge({
+      await this.#rbaClient.requestChallenge({
         userId,
         strict: true,
         preferredAuthenticationMethod: "TOKENPUSH",
       });
 
-      return await this.rbaClient.poll();
+      return await this.#rbaClient.poll();
     }
 
     if (push && mutualChallenge) {
-      return await this.rbaClient.requestChallenge({
+      return await this.#rbaClient.requestChallenge({
         userId,
         strict: true,
         preferredAuthenticationMethod: "TOKENPUSH",
@@ -132,7 +132,7 @@ export class AuthClient {
       });
     }
 
-    return await this.rbaClient.requestChallenge({
+    return await this.#rbaClient.requestChallenge({
       userId,
       strict: true,
       preferredAuthenticationMethod: "TOKEN",
@@ -148,7 +148,7 @@ export class AuthClient {
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the gridChallenge to display to the user.
    */
   public async grid(userId: string): Promise<AuthenticationResponse> {
-    return await this.rbaClient.requestChallenge({
+    return await this.#rbaClient.requestChallenge({
       userId,
       strict: true,
       preferredAuthenticationMethod: "GRID",
@@ -195,7 +195,7 @@ export class AuthClient {
       userId,
     };
 
-    const response = await this.rbaClient.requestChallenge(authenticationRequestParams);
+    const response = await this.#rbaClient.requestChallenge(authenticationRequestParams);
 
     if (response.passkeyChallenge) {
       const publicKeyCredential = await window.navigator.credentials.get({
@@ -203,7 +203,7 @@ export class AuthClient {
       });
 
       if (publicKeyCredential && publicKeyCredential instanceof PublicKeyCredential) {
-        return await this.rbaClient.submitChallenge({
+        return await this.#rbaClient.submitChallenge({
           passkeyResponse: publicKeyCredential,
         });
       }
@@ -222,7 +222,7 @@ export class AuthClient {
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the KBA challenge questions to display to the user.
    */
   public async kba(userId: string): Promise<AuthenticationResponse> {
-    return await this.rbaClient.requestChallenge({
+    return await this.#rbaClient.requestChallenge({
       userId,
       strict: true,
       preferredAuthenticationMethod: "KBA",
@@ -238,13 +238,13 @@ export class AuthClient {
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
   public async tempAccessCode(userId: string, tempAccessCode: string): Promise<AuthenticationResponse> {
-    await this.rbaClient.requestChallenge({
+    await this.#rbaClient.requestChallenge({
       userId,
       strict: true,
       preferredAuthenticationMethod: "TEMP_ACCESS_CODE",
     });
 
-    return await this.rbaClient.submitChallenge({ response: tempAccessCode });
+    return await this.#rbaClient.submitChallenge({ response: tempAccessCode });
   }
 
   /**
@@ -277,7 +277,7 @@ export class AuthClient {
     userId: string,
     { otpDeliveryType, otpDeliveryAttribute }: OtpOptions = {},
   ): Promise<AuthenticationResponse> {
-    return await this.rbaClient.requestChallenge({
+    return await this.#rbaClient.requestChallenge({
       userId,
       strict: true,
       preferredAuthenticationMethod: "OTP",
@@ -293,13 +293,13 @@ export class AuthClient {
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
   public async magicLink(userId: string): Promise<AuthenticationResponse> {
-    await this.rbaClient.requestChallenge({
+    await this.#rbaClient.requestChallenge({
       userId,
       strict: true,
       preferredAuthenticationMethod: "MAGICLINK",
     });
 
-    return await this.rbaClient.poll();
+    return await this.#rbaClient.poll();
   }
 
   /**
@@ -316,7 +316,7 @@ export class AuthClient {
     userId: string,
     { summary, pushMessageIdentifier }: SmartCredentialOptions = {},
   ): Promise<AuthenticationResponse> {
-    await this.rbaClient.requestChallenge({
+    await this.#rbaClient.requestChallenge({
       userId,
       strict: true,
       preferredAuthenticationMethod: "SMARTCREDENTIALPUSH",
@@ -326,7 +326,7 @@ export class AuthClient {
       },
     });
 
-    return await this.rbaClient.poll();
+    return await this.#rbaClient.poll();
   }
 
   /**
@@ -353,7 +353,7 @@ export class AuthClient {
     userId: string,
     { mutualChallenge }: FaceBiometricOptions = {},
   ): Promise<AuthenticationResponse> {
-    const challengeResponse = await this.rbaClient.requestChallenge({
+    const challengeResponse = await this.#rbaClient.requestChallenge({
       userId,
       strict: true,
       preferredAuthenticationMethod: "FACE",
@@ -365,10 +365,10 @@ export class AuthClient {
     }
 
     if (challengeResponse.faceChallenge.device !== "WEB") {
-      return mutualChallenge ? challengeResponse : await this.rbaClient.poll();
+      return mutualChallenge ? challengeResponse : await this.#rbaClient.poll();
     }
 
-    const Onfido = await this.importOnfidoSdk();
+    const Onfido = await this.#importOnfidoSdk();
 
     const authenticationResponse = await new Promise<AuthenticationResponse>((resolve, reject) => {
       try {
@@ -377,7 +377,7 @@ export class AuthClient {
           workflowRunId: challengeResponse.faceChallenge?.workflowRunId,
           containerId: "onfido-mount",
           onComplete: async () => {
-            const authenticationPollResponse = await this.rbaClient.poll();
+            const authenticationPollResponse = await this.#rbaClient.poll();
             resolve(authenticationPollResponse);
             instance.tearDown();
           },
@@ -406,7 +406,7 @@ export class AuthClient {
     passkeyResponse,
     kbaChallengeAnswers,
   }: AuthenticationSubmissionParams): Promise<AuthenticationResponse> {
-    return await this.rbaClient.submitChallenge({
+    return await this.#rbaClient.submitChallenge({
       response,
       passkeyResponse,
       kbaChallengeAnswers,
@@ -414,7 +414,7 @@ export class AuthClient {
   }
 
   public async logout(): Promise<void> {
-    return await this.rbaClient.logout();
+    return await this.#rbaClient.logout();
   }
 
   /**
@@ -424,7 +424,7 @@ export class AuthClient {
    * @returns AuthenticationResponse containing information regarding the authentication request. Includes the authenticationCompleted flag to indicate successful authentication.
    */
   public async poll(): Promise<AuthenticationResponse> {
-    return await this.rbaClient.poll();
+    return await this.#rbaClient.poll();
   }
 
   /**
@@ -432,6 +432,6 @@ export class AuthClient {
    * Terminates the current authentication transaction and cleans up any pending state.
    */
   public async cancel(): Promise<void> {
-    return await this.rbaClient.cancel();
+    return await this.#rbaClient.cancel();
   }
 }

@@ -47,11 +47,14 @@ jobs:
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: 🏗️ Build
-        run: bun run build
-
       - name: 🧹 Lint
         run: bun run lint
+
+      - name: 🧾 Type check
+        run: bun run type-check
+
+      - name: 🏗️ Build
+        run: bun run build
 
       - name: 🔍 Check for unused code
         run: bun run lint:knip

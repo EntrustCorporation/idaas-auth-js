@@ -1,13 +1,12 @@
-import { pluginTypeCheck } from "@rsbuild/plugin-type-check";
 import { defineConfig } from "@rslib/core";
 import { pluginPublint } from "rsbuild-plugin-publint";
 
 export default defineConfig({
-  plugins: [pluginTypeCheck(), pluginPublint()],
+  plugins: [pluginPublint()],
   lib: [
     {
       format: "esm",
-      syntax: "es2021",
+      syntax: "es2022",
       bundle: true,
       autoExternal: true,
       dts: {

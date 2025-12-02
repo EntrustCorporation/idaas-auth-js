@@ -132,9 +132,9 @@ describe("IdaasClient.handleRedirect", () => {
       // @ts-expect-error accessing private var
       const storedToken = NO_DEFAULT_IDAAS_CLIENT.storageManager.getAccessTokens()[0];
 
-      expect(storedToken.scope).toStrictEqual(TEST_SCOPE);
-      expect(storedToken.audience).toStrictEqual(TEST_TOKEN_PARAMS.audience);
-      expect(storedToken.expiresAt).toBeGreaterThan(Math.floor(Date.now() / 1000));
+      expect(storedToken?.scope).toStrictEqual(TEST_SCOPE);
+      expect(storedToken?.audience).toStrictEqual(TEST_TOKEN_PARAMS.audience);
+      expect(storedToken?.expiresAt).toBeGreaterThan(Math.floor(Date.now() / 1000));
     });
 
     test("stores ID token with decoded claims", async () => {

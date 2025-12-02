@@ -33,14 +33,13 @@ import { calculateEpochExpiry } from "./utils/format";
  * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/choosing-an-approach.md Choosing an Approach}
  */
 export class RbaClient {
-  private context: IdaasContext;
-  private storageManager: StorageManager;
-  /** @internal */
-  public authenticationTransaction?: AuthenticationTransaction;
+  readonly #context: IdaasContext;
+  readonly #storageManager: StorageManager;
+  #authenticationTransaction?: AuthenticationTransaction;
 
   constructor(context: IdaasContext, storageManager: StorageManager) {
-    this.context = context;
-    this.storageManager = storageManager;
+    this.#context = context;
+    this.#storageManager = storageManager;
   }
 
   /**
@@ -70,14 +69,14 @@ export class RbaClient {
     tokenOptions?: TokenOptions,
   ): Promise<AuthenticationResponse> {
     // 1. Prepare transaction
-    await this.initializeAuthenticationTransaction(options, tokenOptions);
+    await this.#initializeAuthenticationTransaction(options, tokenOptions);
 
-    if (!this.authenticationTransaction) {
+    if (!this.#authenticationTransaction) {
       throw new Error("Failed to initialize authentication transaction");
     }
 
     // 2. Request authentication challenge, return response
-    return await this.authenticationTransaction.requestAuthChallenge();
+    return await this.#authenticationTransaction.requestAuthChallenge();
   }
 
   /**
@@ -100,15 +99,15 @@ export class RbaClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async submitChallenge(options: AuthenticationSubmissionParams = {}): Promise<AuthenticationResponse> {
-    if (!this.authenticationTransaction) {
+    if (!this.#authenticationTransaction) {
       throw new Error("No authentication transaction in progress!");
     }
 
-    const authenticationResponse = await this.authenticationTransaction.submitAuthChallenge({ ...options });
-    this.storageManager.saveIdaasSessionToken({ token: authenticationResponse.token || "" });
+    const authenticationResponse = await this.#authenticationTransaction.submitAuthChallenge({ ...options });
+    this.#storageManager.saveIdaasSessionToken({ token: authenticationResponse.token || "" });
 
     if (authenticationResponse.authenticationCompleted) {
-      this.handleAuthenticationTransactionSuccess();
+      this.#handleAuthenticationTransactionSuccess();
     }
 
     return authenticationResponse;
@@ -130,14 +129,14 @@ export class RbaClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async logout(): Promise<void> {
-    const baseUrl = new URL(this.context.issuerUrl).origin;
-    const token = this.storageManager.getIdaasSessionToken()?.token;
+    const baseUrl = new URL(this.#context.issuerUrl).origin;
+    const token = this.#storageManager.getIdaasSessionToken()?.token;
 
     if (token) {
       await logoutSilently(token, baseUrl);
     }
 
-    this.storageManager.remove();
+    this.#storageManager.remove();
   }
 
   /**
@@ -161,14 +160,14 @@ export class RbaClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async poll(): Promise<AuthenticationResponse> {
-    if (!this.authenticationTransaction) {
+    if (!this.#authenticationTransaction) {
       throw new Error("No authentication transaction in progress!");
     }
 
-    const authenticationResponse = await this.authenticationTransaction.pollForAuthCompletion();
+    const authenticationResponse = await this.#authenticationTransaction.pollForAuthCompletion();
 
     if (authenticationResponse.authenticationCompleted) {
-      this.handleAuthenticationTransactionSuccess();
+      this.#handleAuthenticationTransactionSuccess();
     }
     return authenticationResponse;
   }
@@ -188,43 +187,40 @@ export class RbaClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async cancel(): Promise<void> {
-    if (!this.authenticationTransaction) {
+    if (!this.#authenticationTransaction) {
       throw new Error("No authentication transaction in progress!");
     }
 
-    await this.authenticationTransaction.cancelAuthChallenge();
+    await this.#authenticationTransaction.cancelAuthChallenge();
   }
 
-  // PRIVATE METHODS
-  /** @internal */
-  public initializeAuthenticationTransaction = async (
+  #initializeAuthenticationTransaction = async (
     authenticationRequestParams?: AuthenticationRequestParams,
     tokenOptions?: TokenOptions,
   ) => {
-    const oidcConfig = await this.context.getConfig();
+    const oidcConfig = await this.#context.getConfig();
 
-    this.authenticationTransaction = new AuthenticationTransaction({
+    this.#authenticationTransaction = new AuthenticationTransaction({
       oidcConfig,
       authenticationRequestParams,
       tokenOptions: {
-        audience: tokenOptions?.audience ?? this.context.tokenOptions.audience,
-        scope: tokenOptions?.scope ?? this.context.tokenOptions.scope,
+        audience: tokenOptions?.audience ?? this.#context.tokenOptions.audience,
+        scope: tokenOptions?.scope ?? this.#context.tokenOptions.scope,
         acrValues: tokenOptions?.acrValues,
-        useRefreshToken: tokenOptions?.useRefreshToken ?? this.context.tokenOptions.useRefreshToken,
-        maxAge: tokenOptions?.maxAge ?? this.context.tokenOptions.maxAge,
+        useRefreshToken: tokenOptions?.useRefreshToken ?? this.#context.tokenOptions.useRefreshToken,
+        maxAge: tokenOptions?.maxAge ?? this.#context.tokenOptions.maxAge,
       },
-      clientId: this.context.clientId,
+      clientId: this.#context.clientId,
     });
   };
 
-  /** @internal */
-  public handleAuthenticationTransactionSuccess = () => {
-    if (!this.authenticationTransaction) {
+  #handleAuthenticationTransactionSuccess = () => {
+    if (!this.#authenticationTransaction) {
       throw new Error("No authentication transaction in progress!");
     }
 
     const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience } =
-      this.authenticationTransaction.getAuthenticationDetails();
+      this.#authenticationTransaction.getAuthenticationDetails();
 
     // Require the access token, id token, and necessary claims
     if (!(idToken && accessToken && expiresAt && scope)) {
@@ -232,11 +228,11 @@ export class RbaClient {
     }
 
     // Saving tokens
-    this.storageManager.saveIdToken({
+    this.#storageManager.saveIdToken({
       encoded: idToken,
       decoded: decodeJwt(idToken),
     });
-    this.storageManager.saveAccessToken({
+    this.#storageManager.saveAccessToken({
       accessToken,
       expiresAt,
       scope,
@@ -245,6 +241,6 @@ export class RbaClient {
       maxAgeExpiry: maxAge ? calculateEpochExpiry(maxAge.toString()) : undefined,
     });
 
-    this.authenticationTransaction = undefined;
+    this.#authenticationTransaction = undefined;
   };
 }

@@ -9,7 +9,7 @@ export class LocalStorageStore implements IStore {
     return localStorage.removeItem(key);
   }
 
-  save(key: string, data: string): Optional<void> {
+  public save(key: string, data: string): Optional<void> {
     return localStorage.setItem(key, data);
   }
 }

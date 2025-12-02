@@ -55,7 +55,9 @@ document.getElementById("enroll-passkey")?.addEventListener("click", async () =>
   }
 });
 
-export const extractAndEncodePayload = (credential: PublicKeyCredential) => {
+export const extractAndEncodePayload = (
+  credential: PublicKeyCredential,
+): PublicKeyCredential & AuthenticatorAttestationResponse => {
   const payload = {
     id: base64UrlEncode(credential.rawId),
     type: credential.type,
@@ -66,7 +68,7 @@ export const extractAndEncodePayload = (credential: PublicKeyCredential) => {
     payload[key] = base64UrlEncode(credential.response[key]);
   }
 
-  return payload;
+  return payload as PublicKeyCredential & AuthenticatorAttestationResponse;
 };
 
 export const base64UrlEncode = (value: ArrayBuffer) => {

@@ -175,7 +175,7 @@ describe("jwt.ts", () => {
   describe("readAccessToken", () => {
     test("returns an object containing the acr claim", () => {
       const result = readAccessToken(TEST_ENCODED_TOKEN);
-      expect(result.acr).toBeTruthy();
+      expect(result?.acr).toBeTruthy();
     });
 
     test("returns null if the passed token is not a JWT", () => {
