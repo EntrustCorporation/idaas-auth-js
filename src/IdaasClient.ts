@@ -24,12 +24,12 @@ export interface ValidatedTokenResponse {
  */
 
 export class IdaasClient {
-  private readonly storageManager: StorageManager;
+  readonly #storageManager: StorageManager;
 
-  private context: IdaasContext;
-  private _oidcClient: OidcClient;
-  private _rbaClient: RbaClient;
-  private _authClient: AuthClient;
+  readonly #context: IdaasContext;
+  readonly #oidcClient: OidcClient;
+  readonly #rbaClient: RbaClient;
+  readonly #authClient: AuthClient;
 
   /**
    * Creates a new IdaasClient instance for handling OIDC authentication flows.
@@ -38,7 +38,7 @@ export class IdaasClient {
    * @param tokenOptions Default token options including audience, scope, and refresh token settings
    */
   constructor({ issuerUrl, clientId, storageType = "memory" }: IdaasClientOptions, tokenOptions: TokenOptions = {}) {
-    this.storageManager = new StorageManager(clientId, storageType);
+    this.#storageManager = new StorageManager(clientId, storageType);
 
     // Normalize token options with defaults (audience remains optional per OIDC spec)
     const normalizedTokenOptions: NormalizedTokenOptions = {
@@ -49,16 +49,16 @@ export class IdaasClient {
       acrValues: tokenOptions.acrValues ?? [],
     };
 
-    this.context = new IdaasContext({
+    this.#context = new IdaasContext({
       issuerUrl,
       clientId,
       tokenOptions: normalizedTokenOptions,
     });
 
-    // Initialize clients with this.context instance as the context provider
-    this._oidcClient = new OidcClient(this.context, this.storageManager);
-    this._rbaClient = new RbaClient(this.context, this.storageManager);
-    this._authClient = new AuthClient(this._rbaClient);
+    // Initialize clients with this.#context instance as the context provider
+    this.#oidcClient = new OidcClient(this.#context, this.#storageManager);
+    this.#rbaClient = new RbaClient(this.#context, this.#storageManager);
+    this.#authClient = new AuthClient(this.#rbaClient);
   }
 
   // Public API exposing the client instances
@@ -77,7 +77,7 @@ export class IdaasClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/oidc.md OIDC Guide}
    */
   public get oidc() {
-    return this._oidcClient;
+    return this.#oidcClient;
   }
 
   /**
@@ -99,7 +99,7 @@ export class IdaasClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public get rba() {
-    return this._rbaClient;
+    return this.#rbaClient;
   }
 
   /**
@@ -129,7 +129,14 @@ export class IdaasClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/auth.md Convenience Auth Guide}
    */
   public get auth() {
-    return this._authClient;
+    return this.#authClient;
+  }
+
+  /**
+   * @private used to access the storage manager for testing purposes.
+   */
+  private get storageManager(): StorageManager {
+    return this.#storageManager;
   }
 
   /**
@@ -138,7 +145,7 @@ export class IdaasClient {
    * @returns `true` when an ID token exists, `false` otherwise
    */
   public isAuthenticated(): boolean {
-    return !!this.storageManager.getIdToken();
+    return !!this.#storageManager.getIdToken();
   }
 
   /**
@@ -150,7 +157,7 @@ export class IdaasClient {
    * @returns Decoded ID token claims, or `null` if no ID token exists
    */
   public getIdTokenClaims(): UserClaims | null {
-    const idToken = this.storageManager.getIdToken();
+    const idToken = this.#storageManager.getIdToken();
     if (!idToken?.decoded) {
       return null;
     }
@@ -169,13 +176,13 @@ export class IdaasClient {
    * @throws Error if the refresh/token exchange fails
    */
   public async getAccessToken({
-    audience = this.context.tokenOptions.audience,
-    scope = this.context.tokenOptions.scope,
+    audience = this.#context.tokenOptions.audience,
+    scope = this.#context.tokenOptions.scope,
     acrValues = [],
   }: TokenOptions = {}): Promise<string | null> {
     // 1. Remove tokens that are no longer valid
-    this.storageManager.removeExpiredTokens();
-    let accessTokens = this.storageManager.getAccessTokens();
+    this.#storageManager.removeExpiredTokens();
+    let accessTokens = this.#storageManager.getAccessTokens();
     const requestedScopes = scope.split(" ");
     const now = Date.now();
     // buffer (in seconds) to refresh/delete early, ensures an expired token is not returned
@@ -227,7 +234,7 @@ export class IdaasClient {
           refresh_token: newRefreshToken,
           access_token: newEncodedAccessToken,
           expires_in,
-        } = await this.requestTokenUsingRefreshToken(refreshToken);
+        } = await this.#requestTokenUsingRefreshToken(refreshToken);
 
         const authTime = readAccessToken(newEncodedAccessToken)?.auth_time;
         const newExpiration = calculateEpochExpiry(expires_in, authTime);
@@ -242,8 +249,8 @@ export class IdaasClient {
           acr,
         };
 
-        this.storageManager.removeAccessToken(requestedToken);
-        this.storageManager.saveAccessToken(newAccessToken);
+        this.#storageManager.removeAccessToken(requestedToken);
+        this.#storageManager.saveAccessToken(newAccessToken);
         return newEncodedAccessToken;
       }
     }
@@ -263,7 +270,7 @@ export class IdaasClient {
    * @returns User claims from the OpenID Provider, or `null` if unavailable
    */
   public async getUserInfo(accessToken?: string): Promise<UserClaims | null> {
-    const { userinfo_endpoint, issuer, jwks_uri } = await this.context.getConfig();
+    const { userinfo_endpoint, issuer, jwks_uri } = await this.#context.getConfig();
 
     const userInfoAccessToken = accessToken ?? (await this.getAccessToken({}));
 
@@ -278,7 +285,7 @@ export class IdaasClient {
     // 1. Check if userInfo is a JWT. If it is, its signature must be verified.
     claims = await validateUserInfoToken({
       userInfoToken: userInfo,
-      clientId: this.context.clientId,
+      clientId: this.#context.clientId,
       jwksEndpoint: jwks_uri,
       issuer,
     });
@@ -289,7 +296,7 @@ export class IdaasClient {
     }
 
     // 3. Finally, validate that the sub claim in the UserInfo response exactly matches the sub claim in the ID token
-    const idToken = this.storageManager.getIdToken();
+    const idToken = this.#storageManager.getIdToken();
     if (idToken?.decoded.sub !== claims.sub) {
       return null;
     }
@@ -298,12 +305,11 @@ export class IdaasClient {
   }
 
   // Service methods for OidcClient and RbaClient
-
-  private async requestTokenUsingRefreshToken(refreshToken: string): Promise<TokenResponse> {
-    const { token_endpoint } = await this.context.getConfig();
+  async #requestTokenUsingRefreshToken(refreshToken: string): Promise<TokenResponse> {
+    const { token_endpoint } = await this.#context.getConfig();
 
     const tokenRequest: RefreshTokenRequest = {
-      client_id: this.context.clientId,
+      client_id: this.#context.clientId,
       grant_type: "refresh_token",
       refresh_token: refreshToken,
     };

@@ -20,8 +20,8 @@ const ID_TOKENS_KEY = `entrust.${CLIENT_ID}.idToken`;
  */
 const validateTokenStorage = async (page: Page, expectedAccessToken: string, expectedIdToken: string) => {
   const storage = await page.context().storageState();
-  const accessTokens = storage.origins[0].localStorage.find(({ name }) => name === ACCESS_TOKENS_KEY);
-  const idToken = storage.origins[0].localStorage.find(({ name }) => name === ID_TOKENS_KEY);
+  const accessTokens = storage.origins[0]?.localStorage.find(({ name }) => name === ACCESS_TOKENS_KEY);
+  const idToken = storage.origins[0]?.localStorage.find(({ name }) => name === ID_TOKENS_KEY);
 
   expect(accessTokens).toBeTruthy();
   if (accessTokens) {
@@ -115,7 +115,7 @@ test("login with redirect", async ({ page }) => {
   const storage = await page.context().storageState();
 
   // Client state in local storage should match the returning url state
-  const clientParams = storage.origins[0].localStorage.find(({ name }) => {
+  const clientParams = storage.origins[0]?.localStorage.find(({ name }) => {
     return name === CLIENT_PARAMS_KEY;
   });
 
@@ -184,7 +184,7 @@ test("token refresh with expired access token", async ({ page }) => {
 
   // Verify refresh token exists in storage
   const storage = await page.context().storageState();
-  const accessTokens = storage.origins[0].localStorage.find(({ name }) => name === ACCESS_TOKENS_KEY);
+  const accessTokens = storage.origins[0]?.localStorage.find(({ name }) => name === ACCESS_TOKENS_KEY);
   expect(accessTokens).toBeTruthy();
 
   if (accessTokens) {

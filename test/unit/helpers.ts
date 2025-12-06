@@ -55,7 +55,7 @@ export const getTokenParams = (): TokenParams => {
   };
 };
 
-export const mockFetch = async (url, _config) => {
+export const mockFetch = async (url: string) => {
   switch (url) {
     case `${TEST_BASE_URI}/token`: {
       return Promise.resolve({

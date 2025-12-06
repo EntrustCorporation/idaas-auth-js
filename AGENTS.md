@@ -607,6 +607,7 @@ This project uses **GitHub Actions** for continuous integration and automated re
 
 ```bash
 bun run fix             # Auto-fix formatting and linting
+bun run type-check      # Type check
 bun run lint:types      # Type check
 bun run lint:knip       # Check for unused code
 bun run lint:commits    # Validate commits

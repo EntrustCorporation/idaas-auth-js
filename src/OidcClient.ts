@@ -18,12 +18,12 @@ import { generateAuthorizationUrl } from "./utils/url";
  */
 
 export class OidcClient {
-  private context: IdaasContext;
-  private storageManager: StorageManager;
+  readonly #context: IdaasContext;
+  readonly #storageManager: StorageManager;
 
   constructor(context: IdaasContext, storageManager: StorageManager) {
-    this.context = context;
-    this.storageManager = storageManager;
+    this.#context = context;
+    this.#storageManager = storageManager;
   }
 
   /**
@@ -51,16 +51,16 @@ export class OidcClient {
   ): Promise<string | null> {
     if (popup) {
       const popupWindow = openPopup("");
-      const { response_modes_supported } = await this.context.getConfig();
+      const { response_modes_supported } = await this.#context.getConfig();
       const popupSupported = response_modes_supported?.includes("web_message");
       if (!popupSupported) {
         popupWindow.close();
         throw new Error("Attempted to use popup but web_message is not supported by OpenID provider.");
       }
-      return await this.loginWithPopup({ redirectUri }, tokenOptions);
+      return await this.#loginWithPopup({ redirectUri }, tokenOptions);
     }
 
-    await this.loginWithRedirect({ redirectUri }, tokenOptions);
+    await this.#loginWithRedirect({ redirectUri }, tokenOptions);
 
     return null;
   }
@@ -80,9 +80,9 @@ export class OidcClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/oidc.md OIDC Guide}
    */
   public async logout({ redirectUri }: OidcLogoutOptions = {}): Promise<void> {
-    this.storageManager.remove();
+    this.#storageManager.remove();
 
-    window.location.href = await this.generateLogoutUrl(redirectUri);
+    window.location.href = await this.#generateLogoutUrl(redirectUri);
   }
 
   /**
@@ -106,29 +106,32 @@ export class OidcClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/oidc.md OIDC Guide}
    */
   public async handleRedirect(): Promise<null> {
-    const { authorizeResponse } = this.parseRedirect();
+    const { authorizeResponse } = this.#parseRedirect();
 
     // The current url is not an authorized callback url
     if (!authorizeResponse) {
       return null;
     }
 
-    const clientParams = this.storageManager.getClientParams();
+    const clientParams = this.#storageManager.getClientParams();
     if (!clientParams) {
       throw new Error("Failed to recover IDaaS client state from local storage");
     }
     const { codeVerifier, redirectUri, state, nonce } = clientParams;
 
-    const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
+    const authorizeCode = this.#validateAuthorizeResponse(authorizeResponse, state);
 
-    const validatedTokenResponse = await this.requestAndValidateTokens(authorizeCode, codeVerifier, redirectUri, nonce);
-    this.parseAndSaveTokenResponse(validatedTokenResponse);
+    const validatedTokenResponse = await this.#requestAndValidateTokens(
+      authorizeCode,
+      codeVerifier,
+      redirectUri,
+      nonce,
+    );
+    this.#parseAndSaveTokenResponse(validatedTokenResponse);
     return null;
   }
 
-  // PRIVATE METHODS
-
-  private parseRedirect() {
+  #parseRedirect() {
     const url = new URL(window.location.href);
     const searchParams = url.searchParams;
 
@@ -138,14 +141,14 @@ export class OidcClient {
       };
     }
 
-    const authorizeResponse = this.parseLoginRedirect(searchParams);
+    const authorizeResponse = this.#parseLoginRedirect(searchParams);
 
     return {
       authorizeResponse,
     };
   }
 
-  private parseLoginRedirect(searchParams: URLSearchParams): AuthorizeResponse | null {
+  #parseLoginRedirect(searchParams: URLSearchParams): AuthorizeResponse | null {
     const state = searchParams.get("state");
     const code = searchParams.get("code");
     const error = searchParams.get("error");
@@ -173,7 +176,7 @@ export class OidcClient {
     };
   }
 
-  private validateAuthorizeResponse(
+  #validateAuthorizeResponse(
     { state, code, error, error_description }: AuthorizeResponse,
     expectedState: string,
   ): string {
@@ -196,12 +199,12 @@ export class OidcClient {
     return code;
   }
 
-  private async requestAndValidateTokens(code: string, codeVerifier: string, redirectUri: string, nonce: string) {
+  async #requestAndValidateTokens(code: string, codeVerifier: string, redirectUri: string, nonce: string) {
     const { token_endpoint, id_token_signing_alg_values_supported, acr_values_supported } =
-      await this.context.getConfig();
+      await this.#context.getConfig();
 
     const tokenRequest: AccessTokenRequest = {
-      client_id: this.context.clientId,
+      client_id: this.#context.clientId,
       code,
       code_verifier: codeVerifier,
       grant_type: "authorization_code",
@@ -211,9 +214,9 @@ export class OidcClient {
     const tokenResponse = await requestToken(token_endpoint, tokenRequest);
 
     const { decodedJwt: decodedIdToken, idToken } = validateIdToken({
-      clientId: this.context.clientId,
+      clientId: this.#context.clientId,
       idToken: tokenResponse.id_token,
-      issuer: this.context.issuerUrl,
+      issuer: this.#context.issuerUrl,
       nonce,
       idTokenSigningAlgValuesSupported: id_token_signing_alg_values_supported,
       acrValuesSupported: acr_values_supported,
@@ -225,11 +228,11 @@ export class OidcClient {
   /**
    * Generate the endsession url with the required query params to log out the user from the OpenID Provider
    */
-  private async generateLogoutUrl(redirectUri?: string): Promise<string> {
-    const { end_session_endpoint } = await this.context.getConfig();
+  async #generateLogoutUrl(redirectUri?: string): Promise<string> {
+    const { end_session_endpoint } = await this.#context.getConfig();
 
     const url = new URL(end_session_endpoint);
-    url.searchParams.append("client_id", this.context.clientId);
+    url.searchParams.append("client_id", this.#context.clientId);
     if (redirectUri) {
       url.searchParams.append("post_logout_redirect_uri", redirectUri);
     }
@@ -241,12 +244,12 @@ export class OidcClient {
    * Extracts access token, ID token, and refresh token (if available).
    * @param validatedTokenResponse The validated response from the token endpoint
    */
-  private parseAndSaveTokenResponse(validatedTokenResponse: ValidatedTokenResponse): void {
+  #parseAndSaveTokenResponse(validatedTokenResponse: ValidatedTokenResponse): void {
     const { tokenResponse, decodedIdToken, encodedIdToken } = validatedTokenResponse;
     const { refresh_token, access_token, expires_in } = tokenResponse;
     const authTime = readAccessToken(access_token)?.auth_time;
     const expiresAt = calculateEpochExpiry(expires_in, authTime);
-    const tokenParams = this.storageManager.getTokenParams();
+    const tokenParams = this.#storageManager.getTokenParams();
 
     if (!tokenParams) {
       throw new Error("No token params stored, unable to parse");
@@ -255,7 +258,7 @@ export class OidcClient {
     const { audience, scope, maxAge } = tokenParams;
     const maxAgeExpiry = maxAge ? calculateEpochExpiry(maxAge.toString(), authTime) : undefined;
 
-    this.storageManager.removeTokenParams();
+    this.#storageManager.removeTokenParams();
 
     const token = readAccessToken(access_token);
     const acr = token?.acr ?? undefined;
@@ -270,35 +273,35 @@ export class OidcClient {
       acr,
     };
 
-    this.storageManager.saveIdToken({
+    this.#storageManager.saveIdToken({
       encoded: encodedIdToken,
       decoded: decodedIdToken,
     });
-    this.storageManager.saveAccessToken(newAccessToken);
+    this.#storageManager.saveAccessToken(newAccessToken);
   }
 
   /**
    * Perform the authorization code flow using a new popup window at the OpenID Provider (OP) to authenticate the user.
    */
-  private async loginWithPopup({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<string | null> {
+  async #loginWithPopup({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<string | null> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
 
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
-      await this.context.getConfig(),
+      await this.#context.getConfig(),
       {
         type: "standard",
-        clientId: this.context.clientId,
+        clientId: this.#context.clientId,
         responseMode: "web_message",
         redirectUri: finalRedirectUri,
         tokenOptions: {
-          ...this.context.tokenOptions,
+          ...this.#context.tokenOptions,
           ...tokenOptions,
         },
       },
     );
 
     const tokenParams: TokenParams = {
-      audience: tokenOptions.audience ?? this.context.tokenOptions.audience,
+      audience: tokenOptions.audience ?? this.#context.tokenOptions.audience,
       scope: usedScope,
     };
 
@@ -306,19 +309,19 @@ export class OidcClient {
       tokenParams.maxAge = tokenOptions.maxAge;
     }
 
-    this.storageManager.saveTokenParams(tokenParams);
+    this.#storageManager.saveTokenParams(tokenParams);
 
     const popup = openPopup(url);
     const authorizeResponse = await listenToAuthorizePopup(popup, url);
-    const authorizeCode = this.validateAuthorizeResponse(authorizeResponse, state);
-    const validatedTokenResponse = await this.requestAndValidateTokens(
+    const authorizeCode = this.#validateAuthorizeResponse(authorizeResponse, state);
+    const validatedTokenResponse = await this.#requestAndValidateTokens(
       authorizeCode,
       codeVerifier,
       finalRedirectUri,
       nonce,
     );
 
-    this.parseAndSaveTokenResponse(validatedTokenResponse);
+    this.#parseAndSaveTokenResponse(validatedTokenResponse);
 
     // redirect only if the redirectUri is not the current uri
     if (formatUrl(window.location.href) !== formatUrl(finalRedirectUri)) {
@@ -332,24 +335,24 @@ export class OidcClient {
    * Perform the authorization code flow by redirecting to the OpenID Provider (OP) to authenticate the user and then redirect
    * with the necessary state and code.
    */
-  private async loginWithRedirect({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<void> {
+  async #loginWithRedirect({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<void> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
-      await this.context.getConfig(),
+      await this.#context.getConfig(),
       {
         type: "standard",
-        clientId: this.context.clientId,
+        clientId: this.#context.clientId,
         responseMode: "query",
         redirectUri: finalRedirectUri,
         tokenOptions: {
-          ...this.context.tokenOptions,
+          ...this.#context.tokenOptions,
           ...tokenOptions,
         },
       },
     );
 
     const tokenParams: TokenParams = {
-      audience: tokenOptions.audience ?? this.context.tokenOptions.audience,
+      audience: tokenOptions.audience ?? this.#context.tokenOptions.audience,
       scope: usedScope,
     };
 
@@ -357,9 +360,9 @@ export class OidcClient {
       tokenParams.maxAge = tokenOptions.maxAge;
     }
 
-    this.storageManager.saveTokenParams(tokenParams);
+    this.#storageManager.saveTokenParams(tokenParams);
 
-    this.storageManager.saveClientParams({
+    this.#storageManager.saveClientParams({
       nonce,
       state,
       codeVerifier,

@@ -25,7 +25,7 @@ describe("browser.ts", () => {
       }
 
       expect(windowOpenMock).toHaveBeenCalledTimes(1);
-      const [calledUrl, name, features] = windowOpenMock.mock.calls[0];
+      const [calledUrl, name, features] = windowOpenMock.mock.calls[0] ?? [];
 
       expect(calledUrl).toBe(url);
       expect(name).toBe("idaas:authorize");
@@ -46,7 +46,7 @@ describe("browser.ts", () => {
         // May fail in test environment
       }
 
-      const features = windowOpenMock.mock.calls[0][2] as string;
+      const features = windowOpenMock.mock.calls[0]?.[2] as string;
       // left = 100 + (1200 - 500) / 2 = 450
       // top = 200 + (900 - 700) / 2 = 300
       expect(features).toContain("left=450");

@@ -12,11 +12,11 @@ export type NormalizedTokenOptions = Required<Omit<TokenOptions, "audience">> & 
  * without exposing the entire IdaasClient implementation
  */
 export class IdaasContext {
-  readonly issuerUrl: string;
-  readonly clientId: string;
-  readonly tokenOptions: NormalizedTokenOptions;
+  readonly #issuerUrl: string;
+  readonly #clientId: string;
+  readonly #tokenOptions: NormalizedTokenOptions;
 
-  private config?: OidcConfig;
+  #config?: OidcConfig;
 
   constructor({
     issuerUrl,
@@ -27,18 +27,30 @@ export class IdaasContext {
     clientId: string;
     tokenOptions: NormalizedTokenOptions;
   }) {
-    this.tokenOptions = tokenOptions;
-    this.issuerUrl = issuerUrl;
-    this.clientId = clientId;
+    this.#tokenOptions = tokenOptions;
+    this.#issuerUrl = issuerUrl;
+    this.#clientId = clientId;
+  }
+
+  get issuerUrl() {
+    return this.#issuerUrl;
+  }
+
+  get clientId() {
+    return this.#clientId;
+  }
+
+  get tokenOptions() {
+    return this.#tokenOptions;
   }
 
   /**
    * Get the OpenID configuration for the provider
    */
   public async getConfig(): Promise<OidcConfig> {
-    if (!this.config) {
-      this.config = await fetchOpenidConfiguration(this.issuerUrl);
+    if (!this.#config) {
+      this.#config = await fetchOpenidConfiguration(this.issuerUrl);
     }
-    return this.config;
+    return this.#config;
   }
 }
