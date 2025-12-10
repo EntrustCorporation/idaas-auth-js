@@ -23,7 +23,7 @@
         "@types/web": "0.0.297",
         "dotenv": "17.2.3",
         "knip": "5.71.0",
-        "oidc-provider": "9.5.2",
+        "oidc-provider": "9.6.0",
         "onfido-sdk-ui": "14.58.0",
         "prettier": "3.7.4",
         "rsbuild-plugin-publint": "0.3.3",
@@ -150,7 +150,7 @@
 
     "@koa/cors": ["@koa/cors@5.0.0", "", { "dependencies": { "vary": "^1.1.2" } }, "sha512-x/iUDjcS90W69PryLDIMgFyV21YLTnG9zOpPXS7Bkt2b8AsY3zZsIpOLBkYr9fBcF3HbkKaER5hOBZLfpLgYNw=="],
 
-    "@koa/router": ["@koa/router@14.0.0", "", { "dependencies": { "debug": "^4.4.1", "http-errors": "^2.0.0", "koa-compose": "^4.1.0", "path-to-regexp": "^8.2.0" } }, "sha512-LBSu5K0qAaaQcXX/0WIB9PGDevyCxxpnc1uq13vV/CgObaVxuis5hKl3Eboq/8gcb6ebnkAStW9NB/Em2eYyFA=="],
+    "@koa/router": ["@koa/router@15.0.0", "", { "dependencies": { "debug": "^4.4.3", "http-errors": "^2.0.1", "koa-compose": "^4.1.0", "path-to-regexp": "^8.3.0" } }, "sha512-qAoA07CndM5XuBZbTbsnvUj1RNVZtwOvO9xGz7CCE/t4nSopI+xEiFGHyJS1UuSDCt8cJZ9vfCvqbAFga+0y7w=="],
 
     "@loaderkit/resolve": ["@loaderkit/resolve@1.0.4", "", { "dependencies": { "@braidai/lang": "^1.0.0" } }, "sha512-rJzYKVcV4dxJv+vW6jlvagF8zvGxHJ2+HTr1e2qOejfmGhAApgJHl8Aog4mMszxceTRiKTTbnpgmTO1bEZHV/A=="],
 
@@ -662,7 +662,7 @@
 
     "ohash": ["ohash@2.0.11", "", {}, "sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ=="],
 
-    "oidc-provider": ["oidc-provider@9.5.2", "", { "dependencies": { "@koa/cors": "^5.0.0", "@koa/router": "^14.0.0", "debug": "^4.4.3", "eta": "^4.0.1", "jose": "^6.1.0", "jsesc": "^3.1.0", "koa": "^3.0.3", "nanoid": "^5.1.6", "quick-lru": "^7.3.0", "raw-body": "^3.0.1" } }, "sha512-lTI6U7ESvf34xuu9XPUfJX6sbIXuOsV2MUPT9YoT7dzDtajufc50iWSY2t/4xB/TuFQ4t0Q++JU2Cu270d11pg=="],
+    "oidc-provider": ["oidc-provider@9.6.0", "", { "dependencies": { "@koa/cors": "^5.0.0", "@koa/router": "^15.0.0", "debug": "^4.4.3", "eta": "^4.4.1", "jose": "^6.1.3", "jsesc": "^3.1.0", "koa": "^3.1.1", "nanoid": "^5.1.6", "quick-lru": "^7.3.0", "raw-body": "^3.0.2" } }, "sha512-CCRUYPOumEy/DT+L86H40WgXjXfDHlsJYZdyd4ZKGFxJh/kAd7DxMX3dwpbX0g+WjB+NWU+kla1b/yZmHNcR0Q=="],
 
     "on-finished": ["on-finished@2.4.1", "", { "dependencies": { "ee-first": "1.1.1" } }, "sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg=="],
 
