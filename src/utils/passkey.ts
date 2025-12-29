@@ -7,15 +7,16 @@ import type { FidoChallenge, FidoResponse } from "../models/openapi-ts";
  * @returns {FidoResponse} FIDO response formatted for IDaaS APIs.
  */
 export const buildFidoResponse = (credential: PublicKeyCredential): FidoResponse => {
-  const credentialJSON = credential.toJSON();
+  const credentialJSON = credential.toJSON() as AuthenticationResponseJSON;
   const { id } = credential;
+  const response = credentialJSON.response;
 
   return {
-    authenticatorData: credentialJSON.response.authenticatorData,
-    clientDataJSON: credentialJSON.response.clientDataJSON,
+    authenticatorData: response.authenticatorData,
+    clientDataJSON: response.clientDataJSON,
     credentialId: id,
-    signature: credentialJSON.response.signature,
-    userHandle: credentialJSON.response.userHandle,
+    signature: response.signature,
+    userHandle: response.userHandle,
   };
 };
 

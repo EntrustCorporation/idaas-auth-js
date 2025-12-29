@@ -1,10 +1,11 @@
 import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import * as jwtUtils from "../../../src/utils/jwt";
 import { NO_DEFAULT_IDAAS_CLIENT, TEST_ACCESS_TOKEN, TEST_BASE_URI, TEST_ID_PAIR, TEST_SUB_CLAIM } from "../constants";
 import { mockFetch } from "../helpers";
 
 describe("IdaasClient.getUserInfo", () => {
-  // @ts-expect-error not full type
-  const spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
+  const spyOnFetch = spyOn(window, "fetch").mockImplementation(((input: RequestInfo | URL, _init?: RequestInit) =>
+    mockFetch(input.toString())) as typeof fetch);
 
   afterAll(() => {
     jest.restoreAllMocks();
@@ -13,12 +14,11 @@ describe("IdaasClient.getUserInfo", () => {
   afterEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
+    spyOnFetch.mockImplementation(mockFetch as typeof fetch);
   });
 
-  test("throws error if no user info access token", () => {
-    expect(async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.getUserInfo();
-    }).toThrowError();
+  test("throws error if no user info access token", async () => {
+    await expect(NO_DEFAULT_IDAAS_CLIENT.getUserInfo()).rejects.toThrow();
   });
 
   test("makes a fetch request to the userinfo endpoint", async () => {
@@ -48,5 +48,32 @@ describe("IdaasClient.getUserInfo", () => {
     // Test outcome: should return user info object
     expect(result).toBeDefined();
     expect(result?.sub).toStrictEqual(TEST_SUB_CLAIM);
+  });
+
+  test("returns claims when userinfo is a JWT", async () => {
+    const jwtClaims = { sub: "jwt-sub" };
+    const validateSpy = spyOn(jwtUtils, "validateUserInfoToken").mockResolvedValue(jwtClaims);
+    localStorage.setItem(TEST_ID_PAIR.key, JSON.stringify({ ...TEST_ID_PAIR.data, decoded: { sub: jwtClaims.sub } }));
+
+    spyOnFetch.mockImplementation(((input: RequestInfo | URL) => {
+      const url = input.toString();
+      if (url === `${TEST_BASE_URI}/userinfo`) {
+        return Promise.resolve({
+          text: async () => "not-json",
+        } as Response);
+      }
+
+      return mockFetch(url);
+    }) as typeof fetch);
+
+    const result = await NO_DEFAULT_IDAAS_CLIENT.getUserInfo(TEST_ACCESS_TOKEN);
+
+    expect(result).toEqual(jwtClaims);
+    expect(validateSpy).toHaveBeenCalledWith({
+      userInfoToken: "not-json",
+      clientId: expect.any(String),
+      jwksEndpoint: `${TEST_BASE_URI}/jwks`,
+      issuer: `${TEST_BASE_URI}/issuer`,
+    });
   });
 });
