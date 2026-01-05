@@ -12,7 +12,11 @@ jobs:
       - uses: oven-sh/setup-bun@b7a1c7ccf290d58743029c4f6903da283811b979 # v2
       - run: bun install --frozen-lockfile
       - run: bun run api:download
+      - name: Extract API version
+        id: version
+        run: echo "api_version=$(jq -r '.info.version' authentication.json)" >> $GITHUB_OUTPUT
       - uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # v8
         with:
-          title: New IDaaS API version
+          title: "chore: update IDaaS API to v${{ steps.version.outputs.api_version }}"
+          commit-message: "chore: update IDaaS API to v${{ steps.version.outputs.api_version }}"
           assignees: maccuaa
