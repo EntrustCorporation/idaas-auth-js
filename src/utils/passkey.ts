@@ -10,12 +10,16 @@ export const buildFidoResponse = (credential: PublicKeyCredential): FidoResponse
   const credentialJSON = credential.toJSON();
   const { id } = credential;
 
+  if (!("signature" in credentialJSON.response)) {
+    throw new Error("Expected assertion response with signature");
+  }
+
   return {
     authenticatorData: credentialJSON.response.authenticatorData,
     clientDataJSON: credentialJSON.response.clientDataJSON,
     credentialId: id,
     signature: credentialJSON.response.signature,
-    userHandle: credentialJSON.response.userHandle,
+    userHandle: credentialJSON.response.userHandle ?? undefined,
   };
 };
 

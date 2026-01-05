@@ -17,6 +17,7 @@ describe("passkey.ts", () => {
           id: "credential-id-123",
           type: "public-key",
           rawId: "base64-raw-id",
+          clientExtensionResults: {},
           response: {
             authenticatorData: "base64-authenticator-data",
             clientDataJSON: "base64-client-data-json",
@@ -57,17 +58,18 @@ describe("passkey.ts", () => {
         id: "credential-id-123",
         type: "public-key",
         rawId: "base64-raw-id",
+        clientExtensionResults: {},
         response: {
           authenticatorData: "base64-authenticator-data",
           clientDataJSON: "base64-client-data-json",
           signature: "base64-signature",
-          userHandle: null,
+          userHandle: undefined,
         },
       }));
 
       const result = buildFidoResponse(mockCredential);
 
-      expect(result.userHandle).toBeNull();
+      expect(result.userHandle).toBeUndefined();
     });
   });
 });
