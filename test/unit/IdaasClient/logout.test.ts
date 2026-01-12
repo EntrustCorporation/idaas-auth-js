@@ -1,19 +1,24 @@
-import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import { afterAll, afterEach, beforeEach, describe, expect, jest, spyOn, test } from "bun:test";
 import { NO_DEFAULT_IDAAS_CLIENT, TEST_BASE_URI, TEST_CLIENT_ID } from "../constants";
 import { getUrlParams, mockFetch, storeData } from "../helpers";
 
 describe("IdaasClient.oidc.logout", () => {
-  // @ts-expect-error not full type
-  const _spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
+  let fetchSpy: ReturnType<typeof spyOn>;
   const startLocation = window.location.href;
 
   afterAll(() => {
     jest.restoreAllMocks();
   });
 
+  beforeEach(() => {
+    // @ts-expect-error not full type
+    fetchSpy = spyOn(window, "fetch").mockImplementation(mockFetch);
+  });
+
   afterEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    fetchSpy.mockRestore();
     window.location.href = startLocation;
   });
 

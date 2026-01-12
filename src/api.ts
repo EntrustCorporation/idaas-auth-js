@@ -92,7 +92,8 @@ export interface TokenResponse {
  * @param issuerUrl the OP's issuer location
  */
 export const fetchOpenidConfiguration = async (issuerUrl: string): Promise<OidcConfig> => {
-  const wellKnownUrl = `${issuerUrl}/.well-known/openid-configuration`;
+  const normalizedIssuerUrl = issuerUrl.trim().replace(/\/+$/, "");
+  const wellKnownUrl = `${normalizedIssuerUrl}/.well-known/openid-configuration`;
 
   const response = await fetch(wellKnownUrl);
 
