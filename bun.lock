@@ -13,7 +13,7 @@
         "@commitlint/cli": "20.3.1",
         "@commitlint/config-conventional": "20.3.1",
         "@happy-dom/global-registrator": "20.3.4",
-        "@hey-api/openapi-ts": "0.90.7",
+        "@hey-api/openapi-ts": "0.90.8",
         "@microsoft/api-extractor": "7.55.2",
         "@playwright/test": "1.57.0",
         "@rslib/core": "0.19.3",
@@ -140,7 +140,7 @@
 
     "@hey-api/json-schema-ref-parser": ["@hey-api/json-schema-ref-parser@1.2.2", "", { "dependencies": { "@jsdevtools/ono": "^7.1.3", "@types/json-schema": "^7.0.15", "js-yaml": "^4.1.1", "lodash": "^4.17.21" } }, "sha512-oS+5yAdwnK20lSeFO1d53Ku+yaGCsY8PcrmSq2GtSs3bsBfRnHAbpPKSVzQcaxAOrzj5NB+f34WhZglVrNayBA=="],
 
-    "@hey-api/openapi-ts": ["@hey-api/openapi-ts@0.90.7", "", { "dependencies": { "@hey-api/codegen-core": "^0.5.3", "@hey-api/json-schema-ref-parser": "1.2.2", "@hey-api/types": "0.1.1", "ansi-colors": "4.1.3", "c12": "3.3.3", "color-support": "1.1.3", "commander": "14.0.2", "open": "11.0.0", "semver": "7.7.3" }, "peerDependencies": { "typescript": ">=5.5.3" }, "bin": { "openapi-ts": "bin/run.js" } }, "sha512-30N0cYtT9ldm/MOosnxg87qDr5BZAArMlYAEG0VRWG0wr8mqSzTKC1TjuS6pteVnmlgLVcVgB3vSUDJpqMqo1Q=="],
+    "@hey-api/openapi-ts": ["@hey-api/openapi-ts@0.90.8", "", { "dependencies": { "@hey-api/codegen-core": "^0.5.4", "@hey-api/json-schema-ref-parser": "1.2.2", "@hey-api/types": "0.1.1", "ansi-colors": "4.1.3", "c12": "3.3.3", "color-support": "1.1.3", "commander": "14.0.2", "open": "11.0.0", "semver": "7.7.3" }, "peerDependencies": { "typescript": ">=5.5.3" }, "bin": { "openapi-ts": "bin/run.js" } }, "sha512-w+Gz4Jh9WVGrD0lDhxXcHIwscJDXV/VV5a2Kj/O1J99JydqH8Jaq382ezcyznmM/WsdBYa6qGwlItGx/iMinBg=="],
 
     "@hey-api/types": ["@hey-api/types@0.1.1", "", {}, "sha512-h9OQG7nl2SHKW6g/sO3XneSn4fz5ow6T/c2hEYsrOCuZry8kLPbZ9335OBgeYLyEB1OEa2KjvsQcef0UBKzMAg=="],
 
