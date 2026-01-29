@@ -1,4 +1,4 @@
-import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import { afterAll, afterEach, beforeEach, describe, expect, jest, spyOn, test } from "bun:test";
 import { IdaasClient } from "../../../src";
 import { formatUrl } from "../../../src/utils/format";
 import * as urlUtils from "../../../src/utils/url";
@@ -19,10 +19,15 @@ import {
 import { getUrlParams, mockFetch } from "../helpers";
 
 describe("IdaasClient.oidc.login", () => {
-  // @ts-expect-error not full type
-  const _spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
+  let fetchSpy: ReturnType<typeof spyOn>;
   const spyOnGenerateAuthorizationUrl = spyOn(urlUtils, "generateAuthorizationUrl");
   const startLocation = TEST_BASE_URI;
+
+  beforeEach(() => {
+    fetchSpy = spyOn(window, "fetch").mockImplementation(((input: RequestInfo | URL) =>
+      mockFetch(input.toString())) as typeof fetch);
+    window.location.href = startLocation;
+  });
 
   afterAll(() => {
     jest.restoreAllMocks();
@@ -31,14 +36,13 @@ describe("IdaasClient.oidc.login", () => {
   afterEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
-    window.location.href = startLocation;
+    fetchSpy.mockRestore();
   });
 
-  test("throws error if attempting to login with popup, but web_message response mode not supported", () => {
+  test("throws error if attempting to login with popup, but web_message response mode not supported", async () => {
     const oidcConfig = { ...TEST_OIDC_CONFIG, response_modes_supported: ["query"] };
-    // Create a new mockFetch that will be used in this test only
-    // @ts-expect-error non full type
-    spyOn(window, "fetch").mockImplementation((url: string) => {
+    fetchSpy.mockImplementation(((input: RequestInfo | URL) => {
+      const url = input.toString();
       if (url === `${TEST_BASE_URI}/issuer/.well-known/openid-configuration`) {
         return Promise.resolve({
           ok: true,
@@ -47,7 +51,7 @@ describe("IdaasClient.oidc.login", () => {
       }
 
       return mockFetch(url);
-    });
+    }) as typeof fetch);
 
     const idaasClient = new IdaasClient({
       issuerUrl: TEST_ISSUER_URI,
@@ -55,13 +59,8 @@ describe("IdaasClient.oidc.login", () => {
       storageType: "localstorage",
     });
 
-    expect(async () => {
-      await idaasClient.oidc.login({ popup: true });
-    }).toThrowError();
-
-    // Restore the original fetch mock
-    // @ts-expect-error not full type
-    spyOn(window, "fetch").mockImplementation(mockFetch);
+    await expect(idaasClient.oidc.login({ popup: true })).rejects.toThrow();
+    fetchSpy.mockImplementation(((input: RequestInfo | URL) => mockFetch(input.toString())) as typeof fetch);
   });
 
   test("redirects to authorization URL when popup is false", async () => {
@@ -86,13 +85,26 @@ describe("IdaasClient.oidc.login", () => {
     test("client params are saved", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 
-      expect(localStorage.getItem(TEST_CLIENT_PAIR.key)).toBeTruthy();
+      const stored = JSON.parse(localStorage.getItem(TEST_CLIENT_PAIR.key) as string);
+
+      expect(stored).toBeTruthy();
+      expect(typeof stored.state).toBe("string");
+      expect(stored.state.length).toBeGreaterThan(0);
+      expect(typeof stored.nonce).toBe("string");
+      expect(stored.nonce.length).toBeGreaterThan(0);
+      expect(typeof stored.codeVerifier).toBe("string");
+      expect(stored.codeVerifier.length).toBeGreaterThan(0);
+      expect(formatUrl(stored.redirectUri)).toBe(formatUrl(TEST_BASE_URI));
     });
 
     test("token params are saved", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 
-      expect(localStorage.getItem(TEST_TOKEN_PAIR.key)).toBeTruthy();
+      const stored = JSON.parse(localStorage.getItem(TEST_TOKEN_PAIR.key) as string);
+
+      expect(stored).toBeTruthy();
+      expect(stored.scope).toBe(TEST_SCOPE);
+      expect(stored.audience).toBeUndefined();
     });
 
     test("generates authorization URL with all required parameters", async () => {

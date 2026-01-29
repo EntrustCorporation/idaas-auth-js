@@ -4,13 +4,13 @@ import {
   NO_DEFAULT_IDAAS_CLIENT,
   TEST_ACCESS_TOKEN_KEY,
   TEST_BASE_URI,
-  TEST_CLIENT_ID,
   TEST_CODE,
   TEST_ID_TOKEN_KEY,
   TEST_ID_TOKEN_OBJECT,
   TEST_SCOPE,
   TEST_STATE,
   TEST_TOKEN_PARAMS,
+  TEST_TOKEN_PARAMS_KEY,
 } from "../constants";
 import { mockFetch, storeData } from "../helpers";
 
@@ -61,19 +61,37 @@ describe("IdaasClient.handleRedirect", () => {
       window.location.href = loginSuccessUrl;
     });
 
-    test("throws error if client params are not stored", () => {
-      expect(async () => {
-        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-      }).toThrowError("client");
+    test("throws error if client params are not stored", async () => {
+      await expect(NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect()).rejects.toThrow("client");
     });
 
-    test("throws error if state does not match stored state", () => {
+    test("throws error if state does not match stored state", async () => {
       storeData({ clientParams: true });
       window.location.href = `${TEST_BASE_URI}?code=${TEST_CODE}&state=different_state`;
 
-      expect(async () => {
-        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-      }).toThrowError();
+      await expect(NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect()).rejects.toThrow();
+    });
+
+    test("throws error if authorization response contains an error", async () => {
+      storeData({ clientParams: true });
+      window.location.href = `${TEST_BASE_URI}?state=${TEST_STATE}&error=access_denied&error_description=Denied`;
+
+      await expect(NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect()).rejects.toThrow("Error during authorization");
+    });
+
+    test("clears query params from the URL after parsing", async () => {
+      storeData({ clientParams: true, tokenParams: true });
+      window.location.href = loginSuccessUrl;
+      const replaceSpy = spyOn(window.history, "replaceState");
+
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+
+      expect(replaceSpy).toHaveBeenCalledTimes(1);
+      const [, , url] = replaceSpy.mock.calls[0] ?? [];
+      const cleanedUrl = new URL(url as string);
+
+      expect(cleanedUrl.search).toBe("");
+      expect(cleanedUrl.origin).toBe(new URL(TEST_BASE_URI).origin);
     });
 
     test("makes a fetch request to the token endpoint", async () => {
@@ -88,13 +106,11 @@ describe("IdaasClient.handleRedirect", () => {
       expect(requestToTokenEndpoint).toBeTruthy();
     });
 
-    test("throws error if no token params stored", () => {
+    test("throws error if no token params stored", async () => {
       storeData({ clientParams: true });
       window.location.href = loginSuccessUrl;
 
-      expect(async () => {
-        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-      }).toThrowError();
+      await expect(NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect()).rejects.toThrow();
     });
 
     test("removes tokenParams from storage after processing", async () => {
@@ -103,7 +119,7 @@ describe("IdaasClient.handleRedirect", () => {
 
       await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
 
-      expect(localStorage.getItem(`entrust.tokenParams.${TEST_CLIENT_ID}`)).toBeNull();
+      expect(localStorage.getItem(TEST_TOKEN_PARAMS_KEY)).toBeNull();
     });
 
     test("stores the ID token", async () => {
@@ -129,8 +145,8 @@ describe("IdaasClient.handleRedirect", () => {
       window.location.href = loginSuccessUrl;
 
       await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-      // @ts-expect-error accessing private var
-      const storedToken = NO_DEFAULT_IDAAS_CLIENT.storageManager.getAccessTokens()[0];
+      const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_TOKEN_KEY) as string);
+      const storedToken = storedTokens[0];
 
       expect(storedToken?.scope).toStrictEqual(TEST_SCOPE);
       expect(storedToken?.audience).toStrictEqual(TEST_TOKEN_PARAMS.audience);
@@ -142,8 +158,7 @@ describe("IdaasClient.handleRedirect", () => {
       window.location.href = loginSuccessUrl;
 
       await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
-      // @ts-expect-error accessing private var
-      const storedToken = NO_DEFAULT_IDAAS_CLIENT.storageManager.getIdToken();
+      const storedToken = JSON.parse(localStorage.getItem(TEST_ID_TOKEN_KEY) as string);
 
       expect(storedToken).toBeDefined();
       expect(storedToken?.decoded).toBeDefined();

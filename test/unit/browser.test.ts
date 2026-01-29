@@ -1,10 +1,18 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { browserSupportsPasskey, openPopup } from "../../src/utils/browser";
+import { afterEach, beforeEach, describe, expect, it, jest, mock } from "bun:test";
+import { browserSupportsPasskey, listenToAuthorizePopup, openPopup } from "../../src/utils/browser";
 
 describe("browser.ts", () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   describe("openPopup", () => {
     let windowOpenMock: ReturnType<typeof mock>;
     let originalWindowOpen: typeof window.open;
+    const screenXDescriptor = Object.getOwnPropertyDescriptor(window, "screenX");
+    const screenYDescriptor = Object.getOwnPropertyDescriptor(window, "screenY");
+    const innerWidthDescriptor = Object.getOwnPropertyDescriptor(window, "innerWidth");
+    const innerHeightDescriptor = Object.getOwnPropertyDescriptor(window, "innerHeight");
 
     beforeEach(() => {
       originalWindowOpen = window.open;
@@ -15,14 +23,26 @@ describe("browser.ts", () => {
       window.open = windowOpenMock as unknown as typeof window.open;
     });
 
+    afterEach(() => {
+      window.open = originalWindowOpen;
+      if (screenXDescriptor) {
+        Object.defineProperty(window, "screenX", screenXDescriptor);
+      }
+      if (screenYDescriptor) {
+        Object.defineProperty(window, "screenY", screenYDescriptor);
+      }
+      if (innerWidthDescriptor) {
+        Object.defineProperty(window, "innerWidth", innerWidthDescriptor);
+      }
+      if (innerHeightDescriptor) {
+        Object.defineProperty(window, "innerHeight", innerHeightDescriptor);
+      }
+    });
+
     it("should open popup with correct dimensions", () => {
       const url = "https://example.com/authorize";
 
-      try {
-        openPopup(url);
-      } catch {
-        // May fail in test environment
-      }
+      const popup = openPopup(url);
 
       expect(windowOpenMock).toHaveBeenCalledTimes(1);
       const [calledUrl, name, features] = windowOpenMock.mock.calls[0] ?? [];
@@ -32,6 +52,7 @@ describe("browser.ts", () => {
       expect(features).toContain("width=500");
       expect(features).toContain("height=700");
       expect(features).toContain("popup");
+      expect(popup).toBeDefined();
     });
 
     it("should calculate centered position", () => {
@@ -40,11 +61,7 @@ describe("browser.ts", () => {
       Object.defineProperty(window, "innerWidth", { value: 1200, configurable: true });
       Object.defineProperty(window, "innerHeight", { value: 900, configurable: true });
 
-      try {
-        openPopup("https://example.com");
-      } catch {
-        // May fail in test environment
-      }
+      openPopup("https://example.com");
 
       const features = windowOpenMock.mock.calls[0]?.[2] as string;
       // left = 100 + (1200 - 500) / 2 = 450
@@ -64,9 +81,6 @@ describe("browser.ts", () => {
       window.open = windowOpenMock as unknown as typeof window.open;
 
       expect(() => openPopup("https://example.com")).toThrow("Unable to open popup, blocked by browser");
-
-      // Restore
-      window.open = originalWindowOpen;
     });
   });
 
@@ -82,6 +96,117 @@ describe("browser.ts", () => {
     it("should return boolean value", async () => {
       const result = await browserSupportsPasskey();
       expect([true, false]).toContain(result);
+    });
+  });
+
+  describe("listenToAuthorizePopup", () => {
+    it("resolves when authorization response is received", async () => {
+      const popup = {
+        closed: false,
+        close: mock(() => {}),
+      } as unknown as Window;
+
+      const promise = listenToAuthorizePopup(popup, "https://example.com/authorize");
+
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          origin: "https://example.com",
+          data: {
+            type: "authorization_response",
+            response: {
+              code: "auth-code",
+              state: "state",
+              error: null,
+              error_description: null,
+            },
+          },
+        }),
+      );
+
+      const response = await promise;
+
+      expect(response.code).toBe("auth-code");
+      expect(popup.close).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejects when authorization response includes error", async () => {
+      const popup = {
+        closed: false,
+        close: mock(() => {}),
+      } as unknown as Window;
+
+      const promise = listenToAuthorizePopup(popup, "https://example.com/authorize");
+
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          origin: "https://example.com",
+          data: {
+            type: "authorization_response",
+            response: {
+              error: "access_denied",
+            },
+          },
+        }),
+      );
+
+      await expect(promise).rejects.toThrow("access_denied");
+      expect(popup.close).toHaveBeenCalledTimes(1);
+    });
+
+    it("ignores non-authorization messages", async () => {
+      jest.useFakeTimers();
+      const popup = {
+        closed: false,
+        close: mock(() => {}),
+      } as unknown as Window;
+
+      const promise = listenToAuthorizePopup(popup, "https://example.com/authorize");
+
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          origin: "https://other.example.com",
+          data: {
+            type: "status_update",
+          },
+        }),
+      );
+
+      Object.defineProperty(popup, "closed", { value: true, configurable: true });
+      jest.advanceTimersByTime(1000);
+
+      await expect(promise).rejects.toThrow("Authentication was cancelled by the user");
+      jest.useRealTimers();
+    });
+
+    it("rejects when popup is closed by the user", async () => {
+      jest.useFakeTimers();
+      const popup = {
+        closed: false,
+        close: mock(() => {}),
+      } as unknown as Window;
+
+      const promise = listenToAuthorizePopup(popup, "https://example.com/authorize");
+
+      Object.defineProperty(popup, "closed", { value: true, configurable: true });
+      jest.advanceTimersByTime(1000);
+
+      await expect(promise).rejects.toThrow("Authentication was cancelled by the user");
+      jest.useRealTimers();
+    });
+
+    it("rejects when popup times out", async () => {
+      jest.useFakeTimers();
+      const popup = {
+        closed: false,
+        close: mock(() => {}),
+      } as unknown as Window;
+
+      const promise = listenToAuthorizePopup(popup, "https://example.com/authorize");
+
+      jest.advanceTimersByTime(300000);
+
+      await expect(promise).rejects.toThrow("User took too long to authenticate");
+      jest.useRealTimers();
     });
   });
 });

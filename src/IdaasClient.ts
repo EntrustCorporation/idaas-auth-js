@@ -133,13 +133,6 @@ export class IdaasClient {
   }
 
   /**
-   * @private used to access the storage manager for testing purposes.
-   */
-  private get storageManager(): StorageManager {
-    return this.#storageManager;
-  }
-
-  /**
    * Checks if the user is currently authenticated by verifying the presence of a valid ID token.
    *
    * @returns `true` when an ID token exists, `false` otherwise

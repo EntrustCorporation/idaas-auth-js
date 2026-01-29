@@ -25,4 +25,12 @@ describe("IdaasClient.getIdTokenClaims", () => {
 
     expect(user).toBeNull();
   });
+
+  test("returns null when stored id token lacks decoded claims", () => {
+    localStorage.setItem(TEST_ID_PAIR.key, JSON.stringify({ encoded: TEST_ID_PAIR.data.encoded }));
+
+    const user = NO_DEFAULT_IDAAS_CLIENT.getIdTokenClaims();
+
+    expect(user).toBeNull();
+  });
 });

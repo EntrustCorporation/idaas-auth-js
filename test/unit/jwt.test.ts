@@ -89,6 +89,15 @@ describe("jwt.ts", () => {
       }).toThrowError("match");
     });
 
+    test("throw error if alg claim is missing", () => {
+      const base64Url = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
+      const unsignedToken = `${base64Url({ typ: "JWT" })}.${base64Url(TEST_JWT_PAYLOAD)}.signature`;
+
+      expect(() => {
+        validateIdToken({ ...TEST_VALIDATE_ID_TOKEN_PARAMS, idToken: unsignedToken });
+      }).toThrowError("alg");
+    });
+
     test("throw error if alg claim is not supported", () => {
       expect(() => {
         validateIdToken({ ...TEST_VALIDATE_ID_TOKEN_PARAMS, idTokenSigningAlgValuesSupported: ["different"] });
@@ -96,8 +105,9 @@ describe("jwt.ts", () => {
     });
 
     test("throw error if token is expired", () => {
+      const expiredExp = Math.floor(Date.now() / 1000) - 60;
       expect(() => {
-        validateIdToken({ ...TEST_VALIDATE_ID_TOKEN_PARAMS, idToken: { ...TEST_JWT_PAYLOAD, exp: 0 } });
+        validateIdToken({ ...TEST_VALIDATE_ID_TOKEN_PARAMS, idToken: { ...TEST_JWT_PAYLOAD, exp: expiredExp } });
       }).toThrowError("exp");
     });
 
@@ -152,23 +162,33 @@ describe("jwt.ts", () => {
       expect(result).toBeNull();
     });
 
-    test("returns the JWT payload if no errors raised from jwtVerify", async () => {
-      // Mock createRemoteJWKSet to avoid actual network requests to JWKS endpoint
-      // @ts-expect-error - Mocking with simplified implementation for testing
-      const _spyOnCreateRemoteJWKSet = spyOn(jose, "createRemoteJWKSet").mockImplementationOnce(() => {
-        return async () => ({ keys: [] });
-      });
-
-      const _spyOnJwtVerify = spyOn(jose, "jwtVerify").mockImplementationOnce(
+    test("verifies JWT userinfo with the configured JWKS endpoint", async () => {
+      const jwksStub = Object.assign(async () => ({}) as unknown, {
+        coolingDown: false,
+        fresh: false,
+        reloading: false,
+        reload: async () => undefined,
+        jwks: () => undefined,
+      }) as ReturnType<typeof jose.createRemoteJWKSet>;
+      const createRemoteJWKSetSpy = spyOn(jose, "createRemoteJWKSet").mockImplementationOnce(() => jwksStub);
+      const jwtVerifySpy = spyOn(jose, "jwtVerify").mockImplementationOnce(
         // @ts-expect-error not full return type
-        async (userInfoToken) => ({ payload: jose.decodeJwt(userInfoToken) }),
+        async (userInfoToken, _jwkSet, _options) => {
+          return { payload: jose.decodeJwt(userInfoToken as string), protectedHeader: { alg: "RS256" } };
+        },
       );
 
       const result = await validateUserInfoToken({
         ...TEST_VALIDATE_USER_INFO_PARAMS,
         userInfoToken: TEST_ENCODED_TOKEN,
       });
-      expect(result).toBeTruthy();
+
+      expect(createRemoteJWKSetSpy).toHaveBeenCalledWith(new URL(TEST_VALIDATE_USER_INFO_PARAMS.jwksEndpoint));
+      expect(jwtVerifySpy).toHaveBeenCalledWith(TEST_ENCODED_TOKEN, jwksStub, {
+        issuer: TEST_VALIDATE_USER_INFO_PARAMS.issuer,
+        audience: TEST_VALIDATE_USER_INFO_PARAMS.clientId,
+      });
+      expect(result?.sub).toBeTruthy();
     });
   });
 

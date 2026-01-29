@@ -1,4 +1,4 @@
-import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import { afterAll, afterEach, beforeEach, describe, expect, jest, spyOn, test } from "bun:test";
 import type { AccessToken } from "../../../src/storage/StorageManager";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
@@ -20,16 +20,24 @@ describe("IdaasClient.getAccessToken", () => {
     jest.restoreAllMocks();
   });
 
+  let fetchSpy: ReturnType<typeof spyOn>;
+
+  beforeEach(() => {
+    // @ts-expect-error not full type
+    fetchSpy = spyOn(window, "fetch").mockImplementation(mockFetch);
+  });
+
   afterEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    fetchSpy.mockRestore();
   });
 
-  // @ts-expect-error not full type
-  const spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
   const storeToken = (token: AccessToken) => {
-    // @ts-expect-error private method call
-    NO_DEFAULT_IDAAS_CLIENT.storageManager.saveAccessToken(token);
+    const stored = localStorage.getItem(TEST_ACCESS_PAIR.key);
+    const tokens = stored ? (JSON.parse(stored) as AccessToken[]) : [];
+    tokens.push(token);
+    localStorage.setItem(TEST_ACCESS_PAIR.key, JSON.stringify(tokens));
   };
 
   test("uses audience provided if present", async () => {
@@ -96,6 +104,14 @@ describe("IdaasClient.getAccessToken", () => {
     expect(token).toStrictEqual("correctAcr");
   });
 
+  test("throws when no tokens match the requested acr values", async () => {
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, acr: "wrong", accessToken: "wrongAcr" });
+
+    await expect(
+      NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ acrValues: ["correct"], audience: TEST_AUDIENCE }),
+    ).rejects.toThrow("Requested token not found");
+  });
+
   test("removes a token with the requested scopes and audience that is expired and non-refreshable", async () => {
     storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, accessToken: "expiredToken", refreshToken: undefined });
     storeToken(TEST_ACCESS_TOKEN_OBJECT);
@@ -106,6 +122,26 @@ describe("IdaasClient.getAccessToken", () => {
     expect(token).toStrictEqual(TEST_ACCESS_TOKEN);
   });
 
+  test("removes expired tokens before selecting a matching token", async () => {
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const expiredToken = {
+      ...TEST_ACCESS_TOKEN_OBJECT,
+      expiresAt: nowSeconds - 1,
+      accessToken: "expiredToken",
+      refreshToken: undefined,
+    };
+
+    storeToken(expiredToken);
+    storeToken(TEST_ACCESS_TOKEN_OBJECT);
+
+    const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE });
+
+    const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_PAIR.key) as string);
+    expect(storedTokens.length).toBe(1);
+    expect(storedTokens[0].accessToken).toBe(TEST_ACCESS_TOKEN);
+    expect(token).toStrictEqual(TEST_ACCESS_TOKEN);
+  });
+
   test("refreshes a token with the requested scopes and audience that is expired and refreshable", async () => {
     storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, scope: "1" });
     storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, accessToken: "notRefreshed", scope: "1 2" });
@@ -113,7 +149,9 @@ describe("IdaasClient.getAccessToken", () => {
     const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ scope: "1", audience: TEST_AUDIENCE });
 
     // Verify API contract: refresh endpoint was called with correct grant type
-    const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
+    const tokenEndpointCall = fetchSpy.mock.calls.find(
+      (call: [RequestInfo, RequestInit?]) => call[0] === `${TEST_BASE_URI}/token`,
+    );
     expect(tokenEndpointCall).toBeDefined();
     expect(tokenEndpointCall?.[0]).toStrictEqual(`${TEST_BASE_URI}/token`);
     const body = tokenEndpointCall?.[1]?.body?.toString();
@@ -205,14 +243,23 @@ describe("IdaasClient.getAccessToken", () => {
     expect(token).toStrictEqual(TEST_ACCESS_TOKEN);
   });
 
-  test("removes a token with the requested scopes and audience that is expired and non-refreshable", async () => {
-    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, accessToken: "expiredToken", refreshToken: undefined });
-    storeToken(TEST_ACCESS_TOKEN_OBJECT);
+  test("throws when no matching tokens are stored", async () => {
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, scope: "1 2 3", audience: TEST_AUDIENCE });
 
-    const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE });
+    await expect(NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ scope: "1 2 3 4", audience: TEST_AUDIENCE })).rejects.toThrow(
+      "Requested token not found",
+    );
+  });
+
+  test("propagates refresh failures and retains stored token", async () => {
+    const expiredToken = { ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0 };
+    storeToken(expiredToken);
+    fetchSpy.mockImplementationOnce(() => Promise.reject(new Error("refresh failed")));
+
+    await expect(NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE })).rejects.toThrow("refresh failed");
 
     const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_PAIR.key) as string);
-    expect(storedTokens.length).toBe(1);
-    expect(token).toStrictEqual(TEST_ACCESS_TOKEN);
+    expect(storedTokens).toHaveLength(1);
+    expect(storedTokens[0].accessToken).toBe(expiredToken.accessToken);
   });
 });
