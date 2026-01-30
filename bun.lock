@@ -14,7 +14,7 @@
         "@commitlint/config-conventional": "20.3.1",
         "@happy-dom/global-registrator": "20.3.9",
         "@hey-api/openapi-ts": "0.90.10",
-        "@microsoft/api-extractor": "7.55.2",
+        "@microsoft/api-extractor": "7.55.5",
         "@playwright/test": "1.58.0",
         "@rslib/core": "0.19.3",
         "@tsconfig/bun": "1.0.10",
@@ -156,7 +156,7 @@
 
     "@loaderkit/resolve": ["@loaderkit/resolve@1.0.4", "", { "dependencies": { "@braidai/lang": "^1.0.0" } }, "sha512-rJzYKVcV4dxJv+vW6jlvagF8zvGxHJ2+HTr1e2qOejfmGhAApgJHl8Aog4mMszxceTRiKTTbnpgmTO1bEZHV/A=="],
 
-    "@microsoft/api-extractor": ["@microsoft/api-extractor@7.55.2", "", { "dependencies": { "@microsoft/api-extractor-model": "7.32.2", "@microsoft/tsdoc": "~0.16.0", "@microsoft/tsdoc-config": "~0.18.0", "@rushstack/node-core-library": "5.19.1", "@rushstack/rig-package": "0.6.0", "@rushstack/terminal": "0.19.5", "@rushstack/ts-command-line": "5.1.5", "diff": "~8.0.2", "lodash": "~4.17.15", "minimatch": "10.0.3", "resolve": "~1.22.1", "semver": "~7.5.4", "source-map": "~0.6.1", "typescript": "5.8.2" }, "bin": { "api-extractor": "bin/api-extractor" } }, "sha512-1jlWO4qmgqYoVUcyh+oXYRztZde/pAi7cSVzBz/rc+S7CoVzDasy8QE13dx6sLG4VRo8SfkkLbFORR6tBw4uGQ=="],
+    "@microsoft/api-extractor": ["@microsoft/api-extractor@7.55.5", "", { "dependencies": { "@microsoft/api-extractor-model": "7.32.2", "@microsoft/tsdoc": "~0.16.0", "@microsoft/tsdoc-config": "~0.18.0", "@rushstack/node-core-library": "5.19.1", "@rushstack/rig-package": "0.6.0", "@rushstack/terminal": "0.21.0", "@rushstack/ts-command-line": "5.1.7", "diff": "~8.0.2", "lodash": "~4.17.15", "minimatch": "10.0.3", "resolve": "~1.22.1", "semver": "~7.5.4", "source-map": "~0.6.1", "typescript": "5.8.2" }, "bin": { "api-extractor": "bin/api-extractor" } }, "sha512-QYpt3CmDle3ijYzRDhvD2mEUiTS1IqGVX25YrYsIJMpgf6XmhB991HdULMwdcsHY/ym0uM5GaqvNcQLa1IQKkw=="],
 
     "@microsoft/api-extractor-model": ["@microsoft/api-extractor-model@7.32.2", "", { "dependencies": { "@microsoft/tsdoc": "~0.16.0", "@microsoft/tsdoc-config": "~0.18.0", "@rushstack/node-core-library": "5.19.1" } }, "sha512-Ussc25rAalc+4JJs9HNQE7TuO9y6jpYQX9nWD1DhqUzYPBr3Lr7O9intf+ZY8kD5HnIqeIRJX7ccCT0QyBy2Ww=="],
 
@@ -264,9 +264,9 @@
 
     "@rushstack/rig-package": ["@rushstack/rig-package@0.6.0", "", { "dependencies": { "resolve": "~1.22.1", "strip-json-comments": "~3.1.1" } }, "sha512-ZQmfzsLE2+Y91GF15c65L/slMRVhF6Hycq04D4TwtdGaUAbIXXg9c5pKA5KFU7M4QMaihoobp9JJYpYcaY3zOw=="],
 
-    "@rushstack/terminal": ["@rushstack/terminal@0.19.5", "", { "dependencies": { "@rushstack/node-core-library": "5.19.1", "@rushstack/problem-matcher": "0.1.1", "supports-color": "~8.1.1" }, "peerDependencies": { "@types/node": "*" }, "optionalPeers": ["@types/node"] }, "sha512-6k5tpdB88G0K7QrH/3yfKO84HK9ggftfUZ51p7fePyCE7+RLLHkWZbID9OFWbXuna+eeCFE7AkKnRMHMxNbz7Q=="],
+    "@rushstack/terminal": ["@rushstack/terminal@0.21.0", "", { "dependencies": { "@rushstack/node-core-library": "5.19.1", "@rushstack/problem-matcher": "0.1.1", "supports-color": "~8.1.1" }, "peerDependencies": { "@types/node": "*" }, "optionalPeers": ["@types/node"] }, "sha512-cLaI4HwCNYmknM5ns4G+drqdEB6q3dCPV423+d3TZeBusYSSm09+nR7CnhzJMjJqeRcdMAaLnrA4M/3xDz4R3w=="],
 
-    "@rushstack/ts-command-line": ["@rushstack/ts-command-line@5.1.5", "", { "dependencies": { "@rushstack/terminal": "0.19.5", "@types/argparse": "1.0.38", "argparse": "~1.0.9", "string-argv": "~0.3.1" } }, "sha512-YmrFTFUdHXblYSa+Xc9OO9FsL/XFcckZy0ycQ6q7VSBsVs5P0uD9vcges5Q9vctGlVdu27w+Ct6IuJ458V0cTQ=="],
+    "@rushstack/ts-command-line": ["@rushstack/ts-command-line@5.1.7", "", { "dependencies": { "@rushstack/terminal": "0.21.0", "@types/argparse": "1.0.38", "argparse": "~1.0.9", "string-argv": "~0.3.1" } }, "sha512-Ugwl6flarZcL2nqH5IXFYk3UR3mBVDsVFlCQW/Oaqidvdb/5Ota6b/Z3JXWIdqV3rOR2/JrYoAHanWF5rgenXA=="],
 
     "@shikijs/engine-oniguruma": ["@shikijs/engine-oniguruma@3.21.0", "", { "dependencies": { "@shikijs/types": "3.21.0", "@shikijs/vscode-textmate": "^10.0.2" } }, "sha512-OYknTCct6qiwpQDqDdf3iedRdzj6hFlOPv5hMvI+hkWfCKs5mlJ4TXziBG9nyabLwGulrUjHiCq3xCspSzErYQ=="],
 
