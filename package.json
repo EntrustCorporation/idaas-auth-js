@@ -81,7 +81,7 @@
     "@commitlint/config-conventional": "20.3.1",
     "@happy-dom/global-registrator": "20.3.9",
     "@hey-api/openapi-ts": "0.90.10",
-    "@microsoft/api-extractor": "7.55.2",
+    "@microsoft/api-extractor": "7.55.5",
     "@playwright/test": "1.58.0",
     "@rslib/core": "0.19.3",
     "@tsconfig/bun": "1.0.10",
