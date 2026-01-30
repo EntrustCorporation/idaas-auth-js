@@ -26,7 +26,7 @@
         "oidc-provider": "9.6.0",
         "onfido-sdk-ui": "14.61.0",
         "prettier": "3.8.1",
-        "rsbuild-plugin-publint": "0.3.3",
+        "rsbuild-plugin-publint": "0.3.4",
         "typedoc": "0.28.16",
         "typedoc-plugin-markdown": "4.9.0",
         "typescript": "5.9.3",
@@ -744,7 +744,7 @@
 
     "rsbuild-plugin-dts": ["rsbuild-plugin-dts@0.19.3", "", { "dependencies": { "@ast-grep/napi": "0.37.0" }, "peerDependencies": { "@microsoft/api-extractor": "^7", "@rsbuild/core": "1.x", "@typescript/native-preview": "7.x", "typescript": "^5" }, "optionalPeers": ["@microsoft/api-extractor", "@typescript/native-preview", "typescript"] }, "sha512-TMHNAg+AehA3ERJ7Z3zASsPyyIIoLd7gLFZAFOfyzvttyMH5qEaQ1HtIzC4bKH17dDLVNduh8aCFtwNpUEfJvQ=="],
 
-    "rsbuild-plugin-publint": ["rsbuild-plugin-publint@0.3.3", "", { "dependencies": { "picocolors": "^1.1.1", "publint": "^0.3.12" }, "peerDependencies": { "@rsbuild/core": "1.x" }, "optionalPeers": ["@rsbuild/core"] }, "sha512-4vNUgeB8TGuHjT9tqtaQ82gUVIc9qj/5PR+rqOh679etcAriYs+g9wgYajt14hQUoZ5CvAdpBG9P0QKoGqRqQQ=="],
+    "rsbuild-plugin-publint": ["rsbuild-plugin-publint@0.3.4", "", { "dependencies": { "picocolors": "^1.1.1", "publint": "^0.3.15" }, "peerDependencies": { "@rsbuild/core": "^1.0.0 || ^2.0.0-0" }, "optionalPeers": ["@rsbuild/core"] }, "sha512-0oIeQlTNRQoiyi2K5RT6C0+3q8J1HZEX66pkTtDAvmNNHiLf+YyBn2bx8S2w5T7MEVt323ULKoGV4rRROIOatQ=="],
 
     "run-applescript": ["run-applescript@7.1.0", "", {}, "sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q=="],
 
