@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0](https://github.com/EntrustCorporation/idaas-auth-js/compare/v0.2.1...v1.0.0) (2026-02-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* migrate from typescript private to javascript private element
+
+### Bug Fixes
+
+* **passkey:** validate signature presence and handle userHandle correctly ([b1ce1f6](https://github.com/EntrustCorporation/idaas-auth-js/commit/b1ce1f65e5fe783056efcd90a73680f48d5e2db2)), closes [#163](https://github.com/EntrustCorporation/idaas-auth-js/issues/163)
+* remove error type in onfido init ([f68198e](https://github.com/EntrustCorporation/idaas-auth-js/commit/f68198eb6ee1a775457df77ee396b59a0f4f34bd))
+
+
+### Code Refactoring
+
+* migrate from typescript private to javascript private element ([97c510b](https://github.com/EntrustCorporation/idaas-auth-js/commit/97c510b9cdb9e20223b1a566122ab5cc47c3b067))
+
 ## [0.2.1](https://github.com/EntrustCorporation/idaas-auth-js/compare/v0.2.0...v0.2.1) (2025-11-15)
 
 
