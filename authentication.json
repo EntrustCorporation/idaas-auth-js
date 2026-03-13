@@ -8,7 +8,7 @@
       "url": "https://www.entrust.com/",
       "email": "support@entrust.com"
     },
-    "version": "5.43"
+    "version": "5.45"
   },
   "servers": [
     {
@@ -1113,6 +1113,9 @@
           "passthroughAuthenticationResponse": {
             "$ref": "#/components/schemas/PassthroughAuthenticationResponse"
           },
+          "passwordChallenge": {
+            "$ref": "#/components/schemas/PasswordChallenge"
+          },
           "pushMutualChallenge": {
             "type": "string",
             "description": "Push authentication mutual challenge."
@@ -1953,6 +1956,17 @@
         },
         "description": "Passthrough authenticator placeholder"
       },
+      "PasswordChallenge": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "namedPasswordId": {
+            "type": "string"
+          }
+        }
+      },
       "RequestDetail": {
         "type": "object",
         "properties": {
@@ -2217,8 +2231,9 @@
           },
           "origin": {
             "type": "string",
-            "description": "The origin of the client",
-            "example": "https://mycompany.example.com:443"
+            "description": "The origin of the client. This field is deprecated, use rpId instead.",
+            "example": "https://mycompany.example.com:443",
+            "deprecated": true
           },
           "passthroughAuthenticatorParms": {
             "$ref": "#/components/schemas/PassthroughAuthenticatorParms"
@@ -2231,6 +2246,11 @@
             "type": "string",
             "description": "API response based on Authenticator type. This is not a required field if Mobile Smart Credential, KBA, Token Push, Smart Login or Face Biometric authentication is being used.",
             "example": "7569582."
+          },
+          "rpId": {
+            "type": "string",
+            "description": "Specifies the domain name (relying party ID) of your application and the passkey is registered with. Provide the domain only (e.g., example.com), without protocol (https://). Required if using a custom domain different from your IDaaS tenant’s hostname.",
+            "example": "mycompany.example.com"
           },
           "secondFactorAuthenticator": {
             "type": "string",
@@ -2325,8 +2345,9 @@
           },
           "origin": {
             "type": "string",
-            "description": "The origin of the client",
-            "example": "https://mycompany.example.com:443"
+            "description": "The origin of the client. This field is deprecated, use rpId instead.",
+            "example": "https://mycompany.example.com:443",
+            "deprecated": true
           },
           "priority": {
             "type": "integer",
@@ -2359,6 +2380,11 @@
             "type": "boolean",
             "description": "Flag indicating whether the service should include in the response the default challenge.",
             "example": true
+          },
+          "rpId": {
+            "type": "string",
+            "description": "The Relying Party ID associated with the passkey. This identifies the domain or origin for which the passkey is registered. This field is mandatory if domain is outside of the IDaaS hostname.",
+            "example": "mycompany.example.com"
           },
           "summary": {
             "type": "string",
@@ -2509,6 +2535,9 @@
               "WHATSAPP"
             ]
           },
+          "passwordChallenge": {
+            "$ref": "#/components/schemas/PasswordChallenge"
+          },
           "passwordResetAllowed": {
             "type": "boolean",
             "description": "Flag to indicate if the user can initiate a password reset flow."
@@ -2575,6 +2604,10 @@
             "description": "if remainingAuthenticationAttempts is 0 then a lockoutExpiryDate of null means the lockout never expires. Otherwise a value of null means the user isn't locked out.",
             "format": "date-time",
             "example": "2019-02-20T13:15:27Z"
+          },
+          "name": {
+            "type": "string",
+            "description": "The users named password authentication that is locked out."
           },
           "remainingAuthenticationAttempts": {
             "type": "integer",
@@ -2727,7 +2760,7 @@
           },
           "rpId": {
             "type": "string",
-            "description": "The Relying Party ID associated with the passkey. This identifies the domain or origin for which the passkey is registered.",
+            "description": "Specifies the domain name (relying party ID) of your application and the passkey is registered with. Provide the domain only (e.g., example.com), without protocol (https://). Required if using a custom domain different from your IDaaS tenant’s hostname.",
             "example": "mycompany.example.com"
           },
           "secondFactorAuthenticator": {
