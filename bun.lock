@@ -20,7 +20,7 @@
         "@tsconfig/bun": "1.0.10",
         "@types/bun": "1.3.11",
         "@types/oidc-provider": "9.5.0",
-        "@types/web": "0.0.344",
+        "@types/web": "0.0.345",
         "dotenv": "17.3.1",
         "knip": "6.1.0",
         "oidc-provider": "9.7.1",
@@ -366,7 +366,7 @@
 
     "@types/unist": ["@types/unist@3.0.3", "", {}, "sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q=="],
 
-    "@types/web": ["@types/web@0.0.344", "", {}, "sha512-5CqToBLlIpnOfqd7KDOTC5aHWvc5XykMruv1h+FGl2MHSvZIxHjxt0WKNJspoGVHf95n8e88jMBATPFBhKRyLQ=="],
+    "@types/web": ["@types/web@0.0.345", "", {}, "sha512-n98OqjEZfqMmPWAFU8oROj0wuzFKPLuirFgtTS34QxEGWurVSq+osFTOP1QWGoDK58uwjoV/E6IC1KY6I/QWKg=="],
 
     "@types/whatwg-mimetype": ["@types/whatwg-mimetype@3.0.2", "", {}, "sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA=="],
 
