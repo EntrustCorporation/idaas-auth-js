@@ -76,7 +76,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@biomejs/biome": "2.4.9",
+    "@biomejs/biome": "2.4.10",
     "@commitlint/cli": "20.5.0",
     "@commitlint/config-conventional": "20.5.0",
     "@happy-dom/global-registrator": "20.8.9",
