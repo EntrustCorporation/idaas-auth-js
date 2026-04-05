@@ -91,7 +91,7 @@
     "dotenv": "17.4.0",
     "knip": "6.2.0",
     "oidc-provider": "9.7.1",
-    "onfido-sdk-ui": "14.70.0",
+    "onfido-sdk-ui": "14.71.0",
     "prettier": "3.8.1",
     "rsbuild-plugin-publint": "0.3.4",
     "typedoc": "0.28.18",
