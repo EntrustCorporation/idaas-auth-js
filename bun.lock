@@ -14,7 +14,7 @@
         "@commitlint/config-conventional": "20.5.0",
         "@happy-dom/global-registrator": "20.8.9",
         "@hey-api/openapi-ts": "0.95.0",
-        "@microsoft/api-extractor": "7.58.0",
+        "@microsoft/api-extractor": "7.58.1",
         "@playwright/test": "1.59.1",
         "@rslib/core": "0.20.3",
         "@tsconfig/bun": "1.0.10",
@@ -158,7 +158,7 @@
 
     "@loaderkit/resolve": ["@loaderkit/resolve@1.0.4", "", { "dependencies": { "@braidai/lang": "^1.0.0" } }, "sha512-rJzYKVcV4dxJv+vW6jlvagF8zvGxHJ2+HTr1e2qOejfmGhAApgJHl8Aog4mMszxceTRiKTTbnpgmTO1bEZHV/A=="],
 
-    "@microsoft/api-extractor": ["@microsoft/api-extractor@7.58.0", "", { "dependencies": { "@microsoft/api-extractor-model": "7.33.5", "@microsoft/tsdoc": "~0.16.0", "@microsoft/tsdoc-config": "~0.18.1", "@rushstack/node-core-library": "5.21.0", "@rushstack/rig-package": "0.7.2", "@rushstack/terminal": "0.22.4", "@rushstack/ts-command-line": "5.3.4", "diff": "~8.0.2", "lodash": "~4.17.23", "minimatch": "10.2.3", "resolve": "~1.22.1", "semver": "~7.5.4", "source-map": "~0.6.1", "typescript": "5.9.3" }, "bin": { "api-extractor": "bin/api-extractor" } }, "sha512-XcHlDylX5GblbGbs1eBoexjVyvdJMioTPuBCgCorE2rqijzTYxi6eudXyez3xACRxtH9aDtahoL9fYM4XTvQmg=="],
+    "@microsoft/api-extractor": ["@microsoft/api-extractor@7.58.1", "", { "dependencies": { "@microsoft/api-extractor-model": "7.33.5", "@microsoft/tsdoc": "~0.16.0", "@microsoft/tsdoc-config": "~0.18.1", "@rushstack/node-core-library": "5.21.0", "@rushstack/rig-package": "0.7.2", "@rushstack/terminal": "0.22.4", "@rushstack/ts-command-line": "5.3.4", "diff": "~8.0.2", "lodash": "~4.18.1", "minimatch": "10.2.3", "resolve": "~1.22.1", "semver": "~7.5.4", "source-map": "~0.6.1", "typescript": "5.9.3" }, "bin": { "api-extractor": "bin/api-extractor" } }, "sha512-kF3GFME4lN22O5zbnXk2RP4y/4PDQdps0xKiYTipMYprkwCmmpsWLZt/N2Fkbil540cSLfJX0BW7LkHzgMVUYg=="],
 
     "@microsoft/api-extractor-model": ["@microsoft/api-extractor-model@7.33.5", "", { "dependencies": { "@microsoft/tsdoc": "~0.16.0", "@microsoft/tsdoc-config": "~0.18.1", "@rushstack/node-core-library": "5.21.0" } }, "sha512-Xh4dXuusndVQqVz4nEN9xOp0DyzsKxeD2FFJkSPg4arAjDSKPcy6cAc7CaeBPA7kF2wV1fuDlo2p/bNMpVr8yg=="],
 
@@ -626,7 +626,7 @@
 
     "linkify-it": ["linkify-it@5.0.0", "", { "dependencies": { "uc.micro": "^2.0.0" } }, "sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ=="],
 
-    "lodash": ["lodash@4.17.23", "", {}, "sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w=="],
+    "lodash": ["lodash@4.18.1", "", {}, "sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q=="],
 
     "lodash.camelcase": ["lodash.camelcase@4.3.0", "", {}, "sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA=="],
 
