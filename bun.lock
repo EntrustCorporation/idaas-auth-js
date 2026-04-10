@@ -23,7 +23,7 @@
         "@types/web": "0.0.345",
         "dotenv": "17.4.1",
         "knip": "6.3.0",
-        "oidc-provider": "9.7.1",
+        "oidc-provider": "9.8.0",
         "onfido-sdk-ui": "14.71.0",
         "prettier": "3.8.1",
         "rsbuild-plugin-publint": "0.3.4",
@@ -688,7 +688,7 @@
 
     "ohash": ["ohash@2.0.11", "", {}, "sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ=="],
 
-    "oidc-provider": ["oidc-provider@9.7.1", "", { "dependencies": { "@koa/cors": "^5.0.0", "@koa/router": "^15.3.1", "debug": "^4.4.3", "eta": "^4.5.1", "jose": "^6.2.0", "jsesc": "^3.1.0", "koa": "^3.1.2", "nanoid": "^5.1.6", "quick-lru": "^7.3.0", "raw-body": "^3.0.2", "undici": "^7.22.0" } }, "sha512-yzOdAYxQEisPspCy6xVPrK++bYz71011uylwhR3XLDfb3r0NfVuJStApQvXoeMXj928nkZoxRTBC4ECYM94KOw=="],
+    "oidc-provider": ["oidc-provider@9.8.0", "", { "dependencies": { "@koa/cors": "^5.0.0", "@koa/router": "^15.4.0", "debug": "^4.4.3", "eta": "^4.5.1", "jose": "^6.2.2", "jsesc": "^3.1.0", "koa": "^3.2.0", "nanoid": "^5.1.7", "quick-lru": "^7.3.0", "raw-body": "^3.0.2" } }, "sha512-mfoSukUw9msQ2WIXlptnTLcxo4PRvkgS2mroMCnpbAclFJXRJpv8yBU0es/bAeP7iAmvHn4w0rJz07bUbgIQ3A=="],
 
     "on-finished": ["on-finished@2.4.1", "", { "dependencies": { "ee-first": "1.1.1" } }, "sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg=="],
 
@@ -831,8 +831,6 @@
     "uc.micro": ["uc.micro@2.1.0", "", {}, "sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A=="],
 
     "unbash": ["unbash@2.2.0", "", {}, "sha512-X2wH19RAPZE3+ldGicOkoj/SIA83OIxcJ6Cuaw23hf8Xc6fQpvZXY0SftE2JgS0QhYLUG4uwodSI3R53keyh7w=="],
-
-    "undici": ["undici@7.24.7", "", {}, "sha512-H/nlJ/h0ggGC+uRL3ovD+G0i4bqhvsDOpbDv7At5eFLlj2b41L8QliGbnl2H7SnDiYhENphh1tQFJZf+MyfLsQ=="],
 
     "undici-types": ["undici-types@7.18.2", "", {}, "sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w=="],
 
