@@ -94,7 +94,7 @@
     "onfido-sdk-ui": "14.71.0",
     "prettier": "3.8.2",
     "rsbuild-plugin-publint": "0.3.4",
-    "typedoc": "0.28.18",
+    "typedoc": "0.28.19",
     "typedoc-plugin-markdown": "4.11.0",
     "typescript": "6.0.2"
   }
