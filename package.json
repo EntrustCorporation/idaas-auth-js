@@ -90,7 +90,7 @@
     "@types/web": "0.0.345",
     "dotenv": "17.4.2",
     "knip": "6.4.1",
-    "oidc-provider": "9.8.1",
+    "oidc-provider": "9.8.2",
     "onfido-sdk-ui": "14.72.0",
     "prettier": "3.8.3",
     "rsbuild-plugin-publint": "0.3.4",
