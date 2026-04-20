@@ -23,7 +23,7 @@
         "@types/web": "0.0.345",
         "dotenv": "17.4.2",
         "knip": "6.4.1",
-        "oidc-provider": "9.8.1",
+        "oidc-provider": "9.8.2",
         "onfido-sdk-ui": "14.72.0",
         "prettier": "3.8.3",
         "rsbuild-plugin-publint": "0.3.4",
@@ -682,7 +682,7 @@
 
     "ohash": ["ohash@2.0.11", "", {}, "sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ=="],
 
-    "oidc-provider": ["oidc-provider@9.8.1", "", { "dependencies": { "@koa/cors": "^5.0.0", "@koa/router": "^15.4.0", "debug": "^4.4.3", "eta": "^4.5.1", "jose": "^6.2.2", "jsesc": "^3.1.0", "koa": "^3.2.0", "nanoid": "^5.1.7", "quick-lru": "^7.3.0", "raw-body": "^3.0.2" } }, "sha512-FXENOKmRXE3BEqeVgFlYjVRGUqEjap9+3U448IAE9R7ZTx83sfh5Q2R7xxViVyRXZx4VWZR0u8cUumv9rIVvnQ=="],
+    "oidc-provider": ["oidc-provider@9.8.2", "", { "dependencies": { "@koa/cors": "^5.0.0", "@koa/router": "^15.4.0", "debug": "^4.4.3", "eta": "^4.5.1", "jose": "^6.2.2", "jsesc": "^3.1.0", "koa": "^3.2.0", "nanoid": "^5.1.7", "quick-lru": "^7.3.0", "raw-body": "^3.0.2" } }, "sha512-Iu/VahRoAhgmzKdvqSX/4ZzrG11Zf6NHuhu1wLkoblBnMUIwud++D2lftK8jV/gLhRl3Fppa3RINYCf/675cjw=="],
 
     "on-finished": ["on-finished@2.4.1", "", { "dependencies": { "ee-first": "1.1.1" } }, "sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg=="],
 
