@@ -91,9 +91,32 @@ describe("IdaasClient.getAccessToken", () => {
     storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, acr: "wrong", accessToken: "wrongAcr" });
     storeToken(TEST_ACCESS_TOKEN_OBJECT);
 
-    const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ acrValues: ["correct"], audience: TEST_AUDIENCE });
+    const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ acrValues: "correct", audience: TEST_AUDIENCE });
 
     expect(token).toStrictEqual("correctAcr");
+  });
+
+  test("returns a token when any requested acr value matches", async () => {
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, acr: "urn:acr:bronze", accessToken: "bronzeToken" });
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, acr: "urn:acr:silver", accessToken: "silverToken" });
+
+    const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+      acrValues: "urn:acr:gold urn:acr:silver",
+      audience: TEST_AUDIENCE,
+    });
+
+    expect(token).toStrictEqual("silverToken");
+  });
+
+  test("throws when none of the requested acr values match", async () => {
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, acr: "urn:acr:bronze", accessToken: "bronzeToken" });
+
+    expect(
+      NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+        acrValues: "urn:acr:silver urn:acr:gold",
+        audience: TEST_AUDIENCE,
+      }),
+    ).rejects.toThrowError("Requested token not found");
   });
 
   test("removes a token with the requested scopes and audience that is expired and non-refreshable", async () => {

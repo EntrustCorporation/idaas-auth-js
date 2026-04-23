@@ -36,6 +36,11 @@ This section contains comprehensive guides for implementing authentication with 
   - Biometric authentication (Face)
   - Knowledge-based authentication (Grid, KBA)
 
+- **[Step-Up Authentication Guide](./step-up.md)** - Handle API `WWW-Authenticate` step-up challenges and satisfy them with `parseResponse` plus `requestChallenge`
+  - Parse RFC 9470 and RFC 6750 challenge responses
+  - Re-run authentication with required token constraints
+  - Retry protected API operations with upgraded tokens
+
 ## Security
 
 - **[Security Best Practices](./security-best-practices.md)** - Comprehensive security guidance for production deployments
@@ -45,12 +50,13 @@ This section contains comprehensive guides for implementing authentication with 
 
 ## Integration Guides
 
-- **[AWS API Gateway Integration](./aws-api-gateway.md)** - Complete guide for securing AWS REST APIs with IDaaS authentication
+- **[AWS API Gateway Integration](./aws-api-gateway.md)** - Protect AWS HTTP API endpoints using API Gateway built-in JWT authorizer and route scopes
   - Frontend SPA setup with SDK
-  - Lambda Authorizer deployment and configuration
-  - Step-up authentication for sensitive operations
+  - API Gateway JWT authorizer configuration (issuer + audience)
+  - Route-level scope enforcement (`authorizationScopes`)
+  - Optional step-up integration for sensitive operations
   - Security best practices for AWS deployments
-  - Complete React examples and troubleshooting
+  - Troubleshooting token audience and scope mismatch issues
 
 ## Technical Deep Dives
 
@@ -59,6 +65,12 @@ This section contains comprehensive guides for implementing authentication with 
   - Token exchange process
   - Security considerations
   - PKCE implementation details
+
+## Migration Notes
+
+- **[Upgrade Guide](./upgrade-guide.md)** - canonical landing page for breaking changes
+  - Add future breaking changes here as new versions are released
+  - Before/after examples for API changes
 
 ## Code Examples
 

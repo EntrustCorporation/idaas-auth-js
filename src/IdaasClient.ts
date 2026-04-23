@@ -8,6 +8,7 @@ import { RbaClient } from "./RbaClient";
 import { type AccessToken, StorageManager } from "./storage/StorageManager";
 import { calculateEpochExpiry } from "./utils/format";
 import { readAccessToken, validateUserInfoToken } from "./utils/jwt";
+import { parseStepUpChallenge } from "./utils/wwwAuthenticate";
 
 /**
  * A validated token response, contains the TokenResponse as well as the decoded and encoded id token.
@@ -45,8 +46,8 @@ export class IdaasClient {
       scope: tokenOptions.scope ?? "openid profile email",
       audience: tokenOptions.audience,
       useRefreshToken: tokenOptions.useRefreshToken ?? false,
-      maxAge: tokenOptions.maxAge ?? -1,
-      acrValues: tokenOptions.acrValues ?? [],
+      maxAge: tokenOptions.maxAge,
+      acrValues: tokenOptions.acrValues ?? "",
     };
 
     this.#context = new IdaasContext({
@@ -178,7 +179,7 @@ export class IdaasClient {
   public async getAccessToken({
     audience = this.#context.tokenOptions.audience,
     scope = this.#context.tokenOptions.scope,
-    acrValues = [],
+    acrValues = "",
   }: TokenOptions = {}): Promise<string | null> {
     // 1. Remove tokens that are no longer valid
     this.#storageManager.removeExpiredTokens();
@@ -187,23 +188,23 @@ export class IdaasClient {
     const now = Date.now();
     // buffer (in seconds) to refresh/delete early, ensures an expired token is not returned
     const buffer = 15;
-
     if (accessTokens) {
       // 2. Find all tokens with the required audience that possess all required scopes
       // Tokens that have the required audience (both undefined means match, or exact string match)
       accessTokens = accessTokens.filter((token) => token.audience === audience);
-
       // Tokens that have the required audience and all scopes
       accessTokens = accessTokens.filter((token) => {
         const tokenScopes = token.scope.split(" ");
         return requestedScopes.every((scope: string) => tokenScopes.includes(scope));
       });
 
-      if (acrValues && acrValues.length > 0) {
+      if (acrValues.trim().length > 0) {
+        const requestedAcrValues = acrValues.split(" ").filter(Boolean);
+
         // Tokens that have the required audience, all scopes, and a requested acr
         accessTokens = accessTokens.filter((token) => {
           if (token.acr) {
-            return acrValues.includes(token.acr);
+            return requestedAcrValues.includes(token.acr);
           }
 
           return false;
@@ -302,6 +303,31 @@ export class IdaasClient {
     }
 
     return claims;
+  }
+
+  /**
+   * Parses RFC 9470 / RFC 6750 authentication requirements from a protected resource response.
+   *
+   * When a protected resource returns an HTTP response with a `WWW-Authenticate: Bearer`
+   * header containing `error="insufficient_user_authentication"` (RFC 9470) or
+   * `error="insufficient_scope"` (RFC 6750), this method extracts the requested
+   * `acr_values`, `max_age`, and `scope` requirements from that header.
+   *
+   * @param response - The HTTP response from the protected resource containing the `WWW-Authenticate` header
+   * @returns Parsed authentication requirements from the response header
+   * @throws Error If the response has no `WWW-Authenticate` header
+   * @throws Error If the `WWW-Authenticate` header does not indicate a recognized Bearer challenge
+   *
+   * See [RFC 9470 - Step-Up Authentication Challenge Protocol](https://datatracker.ietf.org/doc/html/rfc9470)
+   * and [RFC 6750 - Bearer Token Usage](https://datatracker.ietf.org/doc/html/rfc6750).
+   */
+  public parseResponse(response: Response): TokenOptions {
+    const wwwAuthenticate = response.headers.get("WWW-Authenticate");
+    if (!wwwAuthenticate) {
+      throw new Error("Response does not contain a WWW-Authenticate header");
+    }
+
+    return parseStepUpChallenge(wwwAuthenticate);
   }
 
   // Service methods for OidcClient and RbaClient

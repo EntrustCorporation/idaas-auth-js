@@ -37,6 +37,7 @@ interface AuthenticationDetails {
   accessToken?: string;
   audience?: string;
   maxAge?: number;
+  acr?: string;
 }
 
 interface RequiredDetails {
@@ -340,6 +341,7 @@ export class AuthenticationTransaction {
       expiresAt: calculateEpochExpiry(expires_in),
       audience: this.#tokenOptions.audience,
       maxAge: this.#tokenOptions.maxAge,
+      acr: this.#tokenOptions.acrValues,
     };
   };
 
@@ -450,7 +452,7 @@ export class AuthenticationTransaction {
   }
 
   #shouldPoll = (method: string) => {
-    return method === "FACE" || method === "TOKENPUSH" || method === "SMARTCREDENTIALPUSH";
+    return method === "FACE" || method === "TOKENPUSH" || method === "SMARTCREDENTIALPUSH" || method === "MAGICLINK";
   };
 
   public getAuthenticationDetails = (): AuthenticationDetails => {

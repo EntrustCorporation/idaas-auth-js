@@ -202,7 +202,7 @@ describe("IdaasClient.oidc.login", () => {
 
     test("auth url contains acr_values if acrValues is passed", async () => {
       const thisTestDifferentAcr = "different";
-      await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { acrValues: [TEST_ACR_CLAIM, thisTestDifferentAcr] });
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { acrValues: `${TEST_ACR_CLAIM} ${thisTestDifferentAcr}` });
 
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0]?.value) as { url: string };
       const { acr_values: acrValuesFromUrl } = getUrlParams(authUrl);
@@ -221,8 +221,8 @@ describe("IdaasClient.oidc.login", () => {
       expect(acr_values).toBeUndefined();
     });
 
-    test("auth url does not contain claims request if acrValues is passed as empty array", async () => {
-      await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { acrValues: [] });
+    test("auth url does not contain claims request if acrValues is passed as empty string", async () => {
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { acrValues: "" });
 
       const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0]?.value) as { url: string };
       const { acr_values } = getUrlParams(authUrl);

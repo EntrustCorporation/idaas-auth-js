@@ -12,9 +12,10 @@ The configurable options for the `login` and `requestChallenge` methods.
 
 ### acrValues?
 
-> `optional` **acrValues?**: `string`[]
+> `optional` **acrValues?**: `string`
 
-Determines the strength/quality of the method used to authenticate the user.
+Space-delimited ACR values used to determine the strength/quality of the method used to authenticate the user.
+Example: `"knowledge possession"`
 
 ---
 

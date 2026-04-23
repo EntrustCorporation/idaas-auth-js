@@ -35,7 +35,7 @@ describe("generateAuthorizationUrl", () => {
       tokenOptions: {
         scope: "openid profile profile email",
         audience: "api://default",
-        acrValues: ["urn:acr:bronze", "urn:acr:silver"],
+        acrValues: "urn:acr:bronze urn:acr:silver",
         maxAge: 300,
         useRefreshToken: true,
       },
