@@ -166,8 +166,12 @@ export function parseStepUpChallenge(header: string): StepUpChallenge {
 
   const maxAge = params.get("max_age");
   if (maxAge !== undefined) {
+    if (!/^\d+$/.test(maxAge)) {
+      throw new Error(`Invalid max_age value: "${maxAge}"`);
+    }
+
     const parsed = Number.parseInt(maxAge, 10);
-    if (Number.isNaN(parsed) || parsed < 0) {
+    if (parsed < 0) {
       throw new Error(`Invalid max_age value: "${maxAge}"`);
     }
     challenge.maxAge = parsed;

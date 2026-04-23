@@ -122,6 +122,24 @@ describe("parseStepUpChallenge", () => {
     }).toThrowError('Invalid max_age value: "abc"');
   });
 
+  it("throws when max_age contains trailing characters", () => {
+    expect(() => {
+      parseStepUpChallenge('Bearer error="insufficient_user_authentication", max_age="10abc"');
+    }).toThrowError('Invalid max_age value: "10abc"');
+  });
+
+  it("throws when max_age includes a plus sign", () => {
+    expect(() => {
+      parseStepUpChallenge('Bearer error="insufficient_user_authentication", max_age="+5"');
+    }).toThrowError('Invalid max_age value: "+5"');
+  });
+
+  it("throws when max_age is a decimal string", () => {
+    expect(() => {
+      parseStepUpChallenge('Bearer error="insufficient_user_authentication", max_age="5.0"');
+    }).toThrowError('Invalid max_age value: "5.0"');
+  });
+
   it("throws when max_age is negative", () => {
     expect(() => {
       parseStepUpChallenge('Bearer error="insufficient_user_authentication", max_age="-1"');
