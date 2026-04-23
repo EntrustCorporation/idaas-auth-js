@@ -278,7 +278,7 @@ If the user is not authenticated (no stored ID token with a `sub` claim)
 
 ```typescript
 const apiResponse = await fetch("https://api.example.com/protected", {
-  headers: { Authorization: `Bearer ${accessToken}` }
+  headers: { Authorization: `Bearer ${accessToken}` },
 });
 
 if (apiResponse.status === 401) {
