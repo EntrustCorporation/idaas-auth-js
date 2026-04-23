@@ -35,9 +35,10 @@ function isTokenChar(char: string): boolean {
  */
 function parseAuthParams(header: string): Map<string, string> {
   const params = new Map<string, string>();
+  const normalizedHeader = header.trimStart();
 
   // Strip "Bearer" prefix (case-insensitive) and leading whitespace
-  const paramString = header.replace(/^Bearer\s*/i, "").trim();
+  const paramString = normalizedHeader.replace(/^Bearer\s*/i, "").trim();
   if (!paramString) {
     return params;
   }

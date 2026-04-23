@@ -135,6 +135,13 @@ describe("parseStepUpChallenge", () => {
     expect(result.acrValues).toEqual(["myACR"]);
   });
 
+  it("parses Bearer headers with leading whitespace", () => {
+    const header = '  Bearer error="insufficient_scope", scope="read write"';
+    const result = parseStepUpChallenge(header);
+
+    expect(result.scope).toBe("read write");
+  });
+
   it("handles extra whitespace between parameters", () => {
     const header = 'Bearer   error="insufficient_user_authentication",   acr_values="myACR",   max_age="30"';
     const result = parseStepUpChallenge(header);

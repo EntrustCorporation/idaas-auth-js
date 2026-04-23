@@ -193,6 +193,8 @@ describe("IdaasClient.stepUp", () => {
 
     expect(async () => {
       await NO_DEFAULT_IDAAS_CLIENT.stepUp(apiResponse);
-    }).toThrowError("User is not authenticated");
+    }).toThrowError(
+      "User is not authenticated. A valid ID token with a sub claim is required for step-up authentication.",
+    );
   });
 });
