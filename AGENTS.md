@@ -70,6 +70,7 @@ The SDK is organized around several main client classes:
   - `getIdTokenClaims()`: Retrieve user claims from stored ID token
   - `getAccessToken()`: Retrieve or request access tokens
   - `getUserInfo()`: Fetch user information from userinfo endpoint
+  - `parseResponse(response)`: Parse RFC 9470 / RFC 6750 authentication requirements from protected resource responses
 
 #### 2. **OidcClient**
 
@@ -200,7 +201,8 @@ src/
     ├── format.ts               # Data formatting utilities
     ├── jwt.ts                  # JWT parsing and validation
     ├── passkey.ts              # WebAuthn/FIDO helpers
-    └── url.ts                  # URL manipulation utilities
+    ├── url.ts                  # URL manipulation utilities
+    └── wwwAuthenticate.ts      # RFC 9470 step-up challenge parser
 ```
 
 ### Test Structure
@@ -537,6 +539,10 @@ await client.auth.faceBiometric("user@example.com");
 ### passkey.ts
 
 - WebAuthn credential creation and assertion helpers
+
+### wwwAuthenticate.ts
+
+- `parseStepUpChallenge()`: Parse RFC 9470 `WWW-Authenticate` Bearer challenge headers, extracting `acr_values`, `max_age`, and `scope`
 
 ### browser.ts
 

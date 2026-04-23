@@ -7,6 +7,7 @@ IDaaS Auth JS is the official JavaScript/TypeScript SDK for Entrust Identity-as-
 ### Key features
 
 - Standards-based OIDC authorization-code + PKCE with popup or redirect flows.
+- RFC 9470 and RFC 6750 step-up challenge handling via `parseResponse(response)` for protected API responses.
 - Risk-Based Authentication transaction management with challenge/submit/poll/cancel lifecycle.
 - Convenience authentication methods for passkeys (WebAuthn), password, OTP, soft token, magic link, face, smart credential, grid, KBA, and temporary access codes.
 
@@ -84,6 +85,8 @@ See the [Quickstart guide](docs/quickstart.md) for configuration options, redire
 - [OIDC Guide](docs/guides/oidc.md)
 - [RBA Guide](docs/guides/rba.md)
 - [Convenience Auth Guide](docs/guides/auth.md)
+- [Step-Up Authentication Guide](docs/guides/step-up.md)
+- [AWS API Gateway Integration](docs/guides/aws-api-gateway.md)
 - [JWT IDaaS Grant Type](docs/guides/jwt-idaas-grant.md)
 - [Self-Hosted UI Examples](docs/self-hosted.md)
 - [Troubleshooting](docs/troubleshooting.md)

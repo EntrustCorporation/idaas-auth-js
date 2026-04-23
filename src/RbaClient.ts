@@ -206,7 +206,7 @@ export class RbaClient {
       tokenOptions: {
         audience: tokenOptions?.audience ?? this.#context.tokenOptions.audience,
         scope: tokenOptions?.scope ?? this.#context.tokenOptions.scope,
-        acrValues: tokenOptions?.acrValues,
+        acrValues: tokenOptions?.acrValues ?? this.#context.tokenOptions.acrValues,
         useRefreshToken: tokenOptions?.useRefreshToken ?? this.#context.tokenOptions.useRefreshToken,
         maxAge: tokenOptions?.maxAge ?? this.#context.tokenOptions.maxAge,
       },
@@ -219,7 +219,7 @@ export class RbaClient {
       throw new Error("No authentication transaction in progress!");
     }
 
-    const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience } =
+    const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience, acr } =
       this.#authenticationTransaction.getAuthenticationDetails();
 
     // Require the access token, id token, and necessary claims
@@ -239,6 +239,7 @@ export class RbaClient {
       refreshToken,
       audience,
       maxAgeExpiry: maxAge ? calculateEpochExpiry(maxAge.toString()) : undefined,
+      acr,
     });
 
     this.#authenticationTransaction = undefined;

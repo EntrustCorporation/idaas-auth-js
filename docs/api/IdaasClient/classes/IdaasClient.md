@@ -220,3 +220,41 @@ Checks if the user is currently authenticated by verifying the presence of a val
 `boolean`
 
 `true` when an ID token exists, `false` otherwise
+
+---
+
+### parseResponse()
+
+> **parseResponse**(`response`): [`TokenOptions`](../../index/interfaces/TokenOptions.md)
+
+Parses RFC 9470 / RFC 6750 authentication requirements from a protected resource response.
+
+When a protected resource returns an HTTP response with a `WWW-Authenticate: Bearer`
+header containing `error="insufficient_user_authentication"` (RFC 9470) or
+`error="insufficient_scope"` (RFC 6750), this method extracts the requested
+`acr_values`, `max_age`, and `scope` requirements from that header.
+
+#### Parameters
+
+##### response
+
+`Response`
+
+The HTTP response from the protected resource containing the `WWW-Authenticate` header
+
+#### Returns
+
+[`TokenOptions`](../../index/interfaces/TokenOptions.md)
+
+Parsed authentication requirements from the response header
+
+#### Throws
+
+Error If the response has no `WWW-Authenticate` header
+
+#### Throws
+
+Error If the `WWW-Authenticate` header does not indicate a recognized Bearer challenge
+
+See [RFC 9470 - Step-Up Authentication Challenge Protocol](https://datatracker.ietf.org/doc/html/rfc9470)
+and [RFC 6750 - Bearer Token Usage](https://datatracker.ietf.org/doc/html/rfc6750).

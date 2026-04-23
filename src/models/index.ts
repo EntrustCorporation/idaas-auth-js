@@ -78,9 +78,10 @@ export interface TokenOptions {
   maxAge?: number;
 
   /**
-   * Determines the strength/quality of the method used to authenticate the user.
+   * Space-delimited ACR values used to determine the strength/quality of the method used to authenticate the user.
+   * Example: `"knowledge possession"`
    */
-  acrValues?: string[];
+  acrValues?: string;
 }
 
 /**

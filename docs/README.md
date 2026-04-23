@@ -43,6 +43,7 @@ Use `oidc` when you want Entrust to host the whole login: it handles PKCE, redir
   - [OIDC Guide](guides/oidc.md)
   - [RBA Guide](guides/rba.md)
   - [Convenience Auth Guide](guides/auth.md)
+  - [Step-Up Authentication Guide](guides/step-up.md)
   - [JWT IDaaS Grant Type (`jwt_idaas`)](guides/jwt-idaas-grant.md)
   - [AWS API Gateway Integration](guides/aws-api-gateway.md) - Complete guide for protecting AWS APIs with IDaaS authentication
 - Reference generated types in the [API Reference](api/README.md).
