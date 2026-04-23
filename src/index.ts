@@ -13,6 +13,7 @@ export type {
   SmartCredentialOptions,
   SoftTokenOptions,
   SoftTokenPushOptions,
+  StepUpOptions,
   TokenOptions,
   UserClaims,
 } from "./models";
@@ -25,3 +26,5 @@ export type {
   TempAccessCodeChallenge,
   TransactionDetail,
 } from "./models/openapi-ts";
+
+export type { StepUpChallenge } from "./utils/wwwAuthenticate";

@@ -21,6 +21,7 @@ This SDK simplifies integrating secure authentication into JavaScript SPAs using
 - Risk-based authentication (RBA)
 - Passwordless authentication (passkey, biometrics)
 - Single Sign-On (SSO)
+- Step-up authentication (RFC 9470 / RFC 6750)
 
 **Target Environment:** Browser-only (Single Page Applications running in web browsers)
 
@@ -70,6 +71,7 @@ The SDK is organized around several main client classes:
   - `getIdTokenClaims()`: Retrieve user claims from stored ID token
   - `getAccessToken()`: Retrieve or request access tokens
   - `getUserInfo()`: Fetch user information from userinfo endpoint
+  - `stepUp(response, options?)`: Handle RFC 9470 step-up authentication challenges from protected resource 401 responses
 
 #### 2. **OidcClient**
 
@@ -161,6 +163,8 @@ The SDK exports the following from `src/index.ts`:
 - `SoftTokenPushOptions`: Soft token push-specific options
 - `FaceBiometricOptions`: Face biometric authentication options
 - `SmartCredentialOptions`: Smart credential push options
+- `StepUpOptions`: Step-up authentication options
+- `StepUpChallenge`: Parsed step-up challenge from WWW-Authenticate header
 
 **Challenge Types:**
 
@@ -200,7 +204,8 @@ src/
     ├── format.ts               # Data formatting utilities
     ├── jwt.ts                  # JWT parsing and validation
     ├── passkey.ts              # WebAuthn/FIDO helpers
-    └── url.ts                  # URL manipulation utilities
+    ├── url.ts                  # URL manipulation utilities
+    └── wwwAuthenticate.ts      # RFC 9470 step-up challenge parser
 ```
 
 ### Test Structure
@@ -537,6 +542,10 @@ await client.auth.faceBiometric("user@example.com");
 ### passkey.ts
 
 - WebAuthn credential creation and assertion helpers
+
+### wwwAuthenticate.ts
+
+- `parseStepUpChallenge()`: Parse RFC 9470 `WWW-Authenticate` Bearer challenge headers, extracting `acr_values`, `max_age`, and `scope`
 
 ### browser.ts
 

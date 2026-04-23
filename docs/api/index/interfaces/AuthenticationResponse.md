@@ -12,7 +12,7 @@ The response from IDaaS when requesting or submitting an authentication challeng
 
 ### authenticationCompleted?
 
-> `optional` **authenticationCompleted**: `boolean`
+> `optional` **authenticationCompleted?**: `boolean`
 
 A flag indicating if authentication has been completed.
 
@@ -20,7 +20,7 @@ A flag indicating if authentication has been completed.
 
 ### faceChallenge?
 
-> `optional` **faceChallenge**: [`FaceChallenge`](../type-aliases/FaceChallenge.md)
+> `optional` **faceChallenge?**: [`FaceChallenge`](../type-aliases/FaceChallenge.md)
 
 Parameters required for completing the `FACE` authentication method.
 
@@ -28,7 +28,7 @@ Parameters required for completing the `FACE` authentication method.
 
 ### gridChallenge?
 
-> `optional` **gridChallenge**: [`GridChallenge`](../type-aliases/GridChallenge.md)
+> `optional` **gridChallenge?**: [`GridChallenge`](../type-aliases/GridChallenge.md)
 
 Parameters required for completing the `GRID` authentication method.
 
@@ -36,7 +36,7 @@ Parameters required for completing the `GRID` authentication method.
 
 ### kbaChallenge?
 
-> `optional` **kbaChallenge**: [`KbaChallenge`](../type-aliases/KbaChallenge.md)
+> `optional` **kbaChallenge?**: [`KbaChallenge`](../type-aliases/KbaChallenge.md)
 
 Parameters required for completing the `KBA` authentication method.
 
@@ -44,7 +44,7 @@ Parameters required for completing the `KBA` authentication method.
 
 ### method?
 
-> `optional` **method**: [`IdaasAuthenticationMethod`](../type-aliases/IdaasAuthenticationMethod.md)
+> `optional` **method?**: [`IdaasAuthenticationMethod`](../type-aliases/IdaasAuthenticationMethod.md)
 
 The method of authentication that will be used.
 
@@ -52,7 +52,7 @@ The method of authentication that will be used.
 
 ### passkeyChallenge?
 
-> `optional` **passkeyChallenge**: `PublicKeyCredentialRequestOptions`
+> `optional` **passkeyChallenge?**: `PublicKeyCredentialRequestOptions`
 
 The PublicKeyCredentialRequestOptions to be passed in the publicKey field to the navigator.credential.get() call.
 
@@ -60,7 +60,7 @@ The PublicKeyCredentialRequestOptions to be passed in the publicKey field to the
 
 ### pollForCompletion?
 
-> `optional` **pollForCompletion**: `boolean`
+> `optional` **pollForCompletion?**: `boolean`
 
 A flag indicating if `poll` should be called.
 
@@ -68,7 +68,7 @@ A flag indicating if `poll` should be called.
 
 ### pushMutualChallenge?
 
-> `optional` **pushMutualChallenge**: `string`
+> `optional` **pushMutualChallenge?**: `string`
 
 Push authentication mutual challenge for token or Face Biometric.
 
@@ -76,7 +76,7 @@ Push authentication mutual challenge for token or Face Biometric.
 
 ### secondFactorMethod?
 
-> `optional` **secondFactorMethod**: [`IdaasAuthenticationMethod`](../type-aliases/IdaasAuthenticationMethod.md)
+> `optional` **secondFactorMethod?**: [`IdaasAuthenticationMethod`](../type-aliases/IdaasAuthenticationMethod.md)
 
 The second factor authenticator that will be used.
 
@@ -84,7 +84,7 @@ The second factor authenticator that will be used.
 
 ### tempAccessCodeChallenge?
 
-> `optional` **tempAccessCodeChallenge**: [`TempAccessCodeChallenge`](../type-aliases/TempAccessCodeChallenge.md)
+> `optional` **tempAccessCodeChallenge?**: [`TempAccessCodeChallenge`](../type-aliases/TempAccessCodeChallenge.md)
 
 Parameters defining the behaviour of the `TEMP_ACCESS_CODE` authentication method.
 
@@ -92,7 +92,7 @@ Parameters defining the behaviour of the `TEMP_ACCESS_CODE` authentication metho
 
 ### token?
 
-> `optional` **token**: `string`
+> `optional` **token?**: `string`
 
 The authorization token (IDaaS JWT).
 
@@ -100,6 +100,6 @@ The authorization token (IDaaS JWT).
 
 ### userId?
 
-> `optional` **userId**: `string`
+> `optional` **userId?**: `string`
 
 The user ID of the authenticated user.

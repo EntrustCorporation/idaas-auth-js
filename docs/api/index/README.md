@@ -19,6 +19,8 @@
 - [SmartCredentialOptions](interfaces/SmartCredentialOptions.md)
 - [SoftTokenOptions](interfaces/SoftTokenOptions.md)
 - [SoftTokenPushOptions](interfaces/SoftTokenPushOptions.md)
+- [StepUpChallenge](interfaces/StepUpChallenge.md)
+- [StepUpOptions](interfaces/StepUpOptions.md)
 - [TokenOptions](interfaces/TokenOptions.md)
 - [UserClaims](interfaces/UserClaims.md)
 

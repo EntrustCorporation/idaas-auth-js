@@ -13,7 +13,7 @@ Provides methods for OIDC authentication flows and RBA challenge handling.
 
 ### Constructor
 
-> **new IdaasClient**(`options`, `tokenOptions`): `IdaasClient`
+> **new IdaasClient**(`options`, `tokenOptions?`): `IdaasClient`
 
 Creates a new IdaasClient instance for handling OIDC authentication flows.
 
@@ -25,7 +25,7 @@ Creates a new IdaasClient instance for handling OIDC authentication flows.
 
 Configuration options for the client including issuer URL, client ID, and storage type
 
-##### tokenOptions
+##### tokenOptions?
 
 [`TokenOptions`](../../index/interfaces/TokenOptions.md) = `{}`
 
@@ -138,7 +138,7 @@ authenticator explicitly allows anonymous flows (e.g., passkey with discoverable
 
 ### getAccessToken()
 
-> **getAccessToken**(`options`): `Promise`\<`string` \| `null`\>
+> **getAccessToken**(`options?`): `Promise`\<`string` \| `null`\>
 
 Retrieves a cached access token matching the specified criteria.
 
@@ -147,7 +147,7 @@ the SDK automatically performs a token refresh.
 
 #### Parameters
 
-##### options
+##### options?
 
 [`TokenOptions`](../../index/interfaces/TokenOptions.md) = `{}`
 
@@ -220,3 +220,81 @@ Checks if the user is currently authenticated by verifying the presence of a val
 `boolean`
 
 `true` when an ID token exists, `false` otherwise
+
+---
+
+### stepUp()
+
+> **stepUp**(`response`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+
+Handles an OAuth 2.0 step-up authentication challenge per RFC 9470.
+
+When a protected resource returns an HTTP response with a `WWW-Authenticate: Bearer`
+header containing `error="insufficient_user_authentication"` (RFC 9470) or
+`error="insufficient_scope"` (RFC 6750), this method parses the challenge and initiates
+the appropriate authentication flow to obtain a new access token that satisfies the
+resource's requirements.
+
+The method automatically:
+
+1. Extracts `acr_values`, `max_age`, and `scope` from the `WWW-Authenticate` header
+2. Uses the authenticated user's ID (from the stored ID token) to request a challenge
+3. If the authenticator supports polling (e.g., push notification, magic link), polls until completion and returns the final result
+4. Otherwise, returns the [AuthenticationResponse](../../index/interfaces/AuthenticationResponse.md) so you can present the challenge to the user and call `rba.submitChallenge()` / `rba.poll()`
+
+#### Parameters
+
+##### response
+
+`Response`
+
+The HTTP response from the protected resource containing the `WWW-Authenticate` header
+
+##### options?
+
+[`StepUpOptions`](../../index/interfaces/StepUpOptions.md) = `{}`
+
+Optional parameters to customize the authentication challenge request
+
+#### Returns
+
+`Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+
+Authentication response — either the final result (for poll-based flows) or the challenge details (for interactive flows)
+
+#### Throws
+
+If the response has no `WWW-Authenticate` header
+
+#### Throws
+
+If the `WWW-Authenticate` header does not indicate a step-up challenge
+
+#### Throws
+
+If the user is not authenticated (no stored ID token with a `sub` claim)
+
+#### Example
+
+```typescript
+const apiResponse = await fetch("https://api.example.com/protected", {
+  headers: { Authorization: `Bearer ${accessToken}` },
+});
+
+if (apiResponse.status === 401) {
+  const result = await client.stepUp(apiResponse);
+
+  if (!result.authenticationCompleted) {
+    // Interactive authenticator — present challenge to user, then submit
+    await client.rba.submitChallenge({ response: userInput });
+  }
+
+  // Retry the original request with the new access token
+  const newToken = await client.getAccessToken();
+}
+```
+
+#### See
+
+- [RFC 9470 — Step-Up Authentication Challenge Protocol](https://datatracker.ietf.org/doc/html/rfc9470)
+- [RFC 6750 — Bearer Token Usage](https://datatracker.ietf.org/doc/html/rfc6750)
