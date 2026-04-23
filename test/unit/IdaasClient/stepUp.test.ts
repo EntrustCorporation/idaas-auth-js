@@ -53,7 +53,11 @@ describe("IdaasClient.stepUp", () => {
     await NO_DEFAULT_IDAAS_CLIENT.stepUp(apiResponse);
 
     expect(spyRequestChallenge).toHaveBeenCalledTimes(1);
-    const callArgs = spyRequestChallenge.mock.calls[0]!;
+    const callArgs = spyRequestChallenge.mock.calls[0];
+    expect(callArgs).toBeDefined();
+    if (!callArgs) {
+      throw new Error("requestChallenge was not called");
+    }
     const authParams = callArgs[0];
     const tokenOptions = callArgs[1];
     expect(authParams).toEqual({ userId: "testingsubclaim" });
@@ -76,7 +80,11 @@ describe("IdaasClient.stepUp", () => {
 
     await NO_DEFAULT_IDAAS_CLIENT.stepUp(apiResponse);
 
-    const callArgs = spyRequestChallenge.mock.calls[0]!;
+    const callArgs = spyRequestChallenge.mock.calls[0];
+    expect(callArgs).toBeDefined();
+    if (!callArgs) {
+      throw new Error("requestChallenge was not called");
+    }
     const tokenOptions = callArgs[1];
     expect(tokenOptions).toEqual({
       acrValues: ["myACR"],
@@ -123,7 +131,11 @@ describe("IdaasClient.stepUp", () => {
       strict: true,
     });
 
-    const callArgs = spyRequestChallenge.mock.calls[0]!;
+    const callArgs = spyRequestChallenge.mock.calls[0];
+    expect(callArgs).toBeDefined();
+    if (!callArgs) {
+      throw new Error("requestChallenge was not called");
+    }
     const authParams = callArgs[0];
     expect(authParams).toEqual({
       userId: "testingsubclaim",
@@ -163,7 +175,11 @@ describe("IdaasClient.stepUp", () => {
     await NO_DEFAULT_IDAAS_CLIENT.stepUp(apiResponse);
 
     expect(spyRequestChallenge).toHaveBeenCalledTimes(1);
-    const callArgs = spyRequestChallenge.mock.calls[0]!;
+    const callArgs = spyRequestChallenge.mock.calls[0];
+    expect(callArgs).toBeDefined();
+    if (!callArgs) {
+      throw new Error("requestChallenge was not called");
+    }
     const tokenOptions = callArgs[1];
     expect(tokenOptions).toEqual({
       acrValues: undefined,

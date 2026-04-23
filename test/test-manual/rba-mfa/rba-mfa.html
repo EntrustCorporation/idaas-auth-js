@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>IDaaS - RBA-MFA Testing</title>
     <meta charset="utf-8" />
@@ -9,7 +9,7 @@
   <body>
     <div id="app">
       <h1>IDaaS - RBA-MFA Testing</h1>
-      <button id="back-button">Back</button>
+      <button type="button" id="back-button">Back</button>
       <div id="request-challenge-area" class="button-group" style="display: block">
         <h3>MFA Authentication</h3>
         <input
@@ -17,10 +17,10 @@
           id="request-challenge-password-input"
           style="width: 300px; padding: 8px; margin-right: 10px"
         />
-        <button id="request-challenge-password" data-testid="challenge">
+        <button type="button" id="request-challenge-password" data-testid="challenge">
           Submit Password
         </button>
-        <button id="request-challenge-passwordless" data-testid="challenge-passwordless">
+        <button type="button" id="request-challenge-passwordless" data-testid="challenge-passwordless">
           Start without Password
         </button>
       </div>
@@ -28,6 +28,7 @@
       <div class="button-group">
         <h3>Authentication Actions</h3>
         <button
+          type="button"
           id="cancel-auth"
           data-testid="cancel-auth"
           style="background: #dc3545"
@@ -43,7 +44,7 @@
           id="submit-response-input"
           style="width: 300px; padding: 8px; margin-right: 10px"
         />
-        <button type="button"id="submit-response" style="background: #28a745">Submit</button>
+        <button type="button" id="submit-response" style="background: #28a745">Submit</button>
       </div>
       
       <div id="submit-password-area" class="result" style="display: none">

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>IDaaS - Magic Link Testing</title>
     <meta charset="utf-8" />
@@ -9,11 +9,11 @@
   <body>
     <div id="app">
       <h1>IDaaS Auth - Magic Link Testing</h1>
-      <button id="back-button">Back</button>
+      <button type="button" id="back-button">Back</button>
       <div class="button-group">
         <h3>Magic Link Authentication Methods</h3>
 
-        <button id="request-challenge-token" data-testid="challenge-token">
+        <button type="button" id="request-challenge-token" data-testid="challenge-token">
           🔗 Magic Link
         </button>
 
@@ -22,6 +22,7 @@
       <div class="button-group">
         <h3>Authentication Actions</h3>
         <button
+          type="button"
           id="cancel-auth"
           data-testid="cancel-auth"
           style="background: #dc3545"

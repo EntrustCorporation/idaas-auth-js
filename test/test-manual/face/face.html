@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>IDaaS - Face Testing</title>
     <meta charset="utf-8" />
@@ -9,15 +9,19 @@
   <body>
     <div id="app">
       <h1>IDaaS Auth - Face Testing</h1>
-      <button id="back-button">Back</button>
+      <button type="button" id="back-button">Back</button>
       <div class="button-group">
         <h3>Face Authentication Methods</h3>
 
-        <button id="request-challenge-face" data-testid="challenge-face">
+        <button type="button" id="request-challenge-face" data-testid="challenge-face">
           🔐  Face
         </button>
 
-        <button id="request-challenge-face-mobile-mutual" data-testid="challenge-face-mobile-mutual">
+        <button
+          type="button"
+          id="request-challenge-face-mobile-mutual"
+          data-testid="challenge-face-mobile-mutual"
+        >
           🔐  Face Mobile Mutual
         </button>
 
@@ -31,6 +35,7 @@
       <div class="button-group">
         <h3>Authentication Actions</h3>
         <button
+          type="button"
           id="cancel-auth"
           data-testid="cancel-auth"
           style="background: #dc3545"
