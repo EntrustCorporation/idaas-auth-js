@@ -45,7 +45,7 @@ export class IdaasClient {
       scope: tokenOptions.scope ?? "openid profile email",
       audience: tokenOptions.audience,
       useRefreshToken: tokenOptions.useRefreshToken ?? false,
-      maxAge: tokenOptions.maxAge ?? -1,
+      maxAge: tokenOptions.maxAge,
       acrValues: tokenOptions.acrValues ?? [],
     };
 
