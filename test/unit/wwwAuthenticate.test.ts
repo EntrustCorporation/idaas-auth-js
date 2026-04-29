@@ -49,14 +49,6 @@ describe("parseStepUpChallenge", () => {
     expect(result.scope).toBe("openid profile");
   });
 
-  it("parses error_description", () => {
-    const header =
-      'Bearer error="insufficient_user_authentication", error_description="A different authentication level is required", acr_values="myACR"';
-    const result = parseStepUpChallenge(header);
-
-    expect(result.acrValues).toEqual(["myACR"]);
-  });
-
   it("parses unquoted token values with RFC 9110 token characters", () => {
     const header = 'Bearer error="insufficient_scope", error_description=step-up!, scope=read';
     const result = parseStepUpChallenge(header);
@@ -72,14 +64,16 @@ describe("parseStepUpChallenge", () => {
     expect(result.acrValues).toEqual(["myACR"]);
   });
 
-  it("parses all parameters together", () => {
+  it("parses supported parameters and ignores error_description", () => {
     const header =
       'Bearer error="insufficient_user_authentication", error_description="Step up required", acr_values="urn:acr:mfa", max_age="60", scope="openid transactions"';
     const result = parseStepUpChallenge(header);
 
-    expect(result.acrValues).toEqual(["urn:acr:mfa"]);
-    expect(result.maxAge).toBe(60);
-    expect(result.scope).toBe("openid transactions");
+    expect(result).toEqual({
+      acrValues: ["urn:acr:mfa"],
+      maxAge: 60,
+      scope: "openid transactions",
+    });
   });
 
   it("handles unquoted parameter values", () => {
@@ -173,11 +167,11 @@ describe("parseStepUpChallenge", () => {
     expect(result.maxAge).toBeUndefined();
   });
 
-  it("parses insufficient_scope error with error_description", () => {
+  it("ignores error_description for insufficient_scope challenges", () => {
     const header =
       'Bearer error="insufficient_scope", error_description="Token lacks required privileges", scope="openid transactions"';
     const result = parseStepUpChallenge(header);
 
-    expect(result.scope).toBe("openid transactions");
+    expect(result).toEqual({ scope: "openid transactions" });
   });
 });

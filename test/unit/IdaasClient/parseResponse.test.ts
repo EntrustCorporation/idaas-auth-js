@@ -43,18 +43,6 @@ describe("IdaasClient.parseResponse", () => {
     expect(result).toEqual({ scope: "read write" });
   });
 
-  test("includes error_description when present", () => {
-    const apiResponse = createStepUpResponse(
-      'Bearer error="insufficient_user_authentication", error_description="Need MFA", acr_values="myACR"',
-    );
-
-    const result = NO_DEFAULT_IDAAS_CLIENT.parseResponse(apiResponse);
-
-    expect(result).toEqual({
-      acrValues: ["myACR"],
-    });
-  });
-
   test("throws when response has no WWW-Authenticate header", () => {
     const apiResponse = new Response(null, { status: 401 });
 

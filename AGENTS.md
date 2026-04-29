@@ -21,7 +21,6 @@ This SDK simplifies integrating secure authentication into JavaScript SPAs using
 - Risk-based authentication (RBA)
 - Passwordless authentication (passkey, biometrics)
 - Single Sign-On (SSO)
-- Step-up authentication (RFC 9470 / RFC 6750)
 
 **Target Environment:** Browser-only (Single Page Applications running in web browsers)
 
@@ -71,7 +70,7 @@ The SDK is organized around several main client classes:
   - `getIdTokenClaims()`: Retrieve user claims from stored ID token
   - `getAccessToken()`: Retrieve or request access tokens
   - `getUserInfo()`: Fetch user information from userinfo endpoint
-  - `stepUp(response, options?)`: Handle RFC 9470 step-up authentication challenges from protected resource 401 responses
+  - `parseResponse(response)`: Parse RFC 9470 / RFC 6750 authentication requirements from protected resource responses
 
 #### 2. **OidcClient**
 
