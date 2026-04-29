@@ -13,7 +13,7 @@ Provides methods for OIDC authentication flows and RBA challenge handling.
 
 ### Constructor
 
-> **new IdaasClient**(`options`, `tokenOptions`): `IdaasClient`
+> **new IdaasClient**(`options`, `tokenOptions?`): `IdaasClient`
 
 Creates a new IdaasClient instance for handling OIDC authentication flows.
 
@@ -25,7 +25,7 @@ Creates a new IdaasClient instance for handling OIDC authentication flows.
 
 Configuration options for the client including issuer URL, client ID, and storage type
 
-##### tokenOptions
+##### tokenOptions?
 
 [`TokenOptions`](../../index/interfaces/TokenOptions.md) = `{}`
 
@@ -138,7 +138,7 @@ authenticator explicitly allows anonymous flows (e.g., passkey with discoverable
 
 ### getAccessToken()
 
-> **getAccessToken**(`options`): `Promise`\<`string` \| `null`\>
+> **getAccessToken**(`options?`): `Promise`\<`string` \| `null`\>
 
 Retrieves a cached access token matching the specified criteria.
 
@@ -147,7 +147,7 @@ the SDK automatically performs a token refresh.
 
 #### Parameters
 
-##### options
+##### options?
 
 [`TokenOptions`](../../index/interfaces/TokenOptions.md) = `{}`
 
@@ -220,3 +220,64 @@ Checks if the user is currently authenticated by verifying the presence of a val
 `boolean`
 
 `true` when an ID token exists, `false` otherwise
+
+---
+
+### parseResponse()
+
+> **parseResponse**(`response`): [`StepUpChallenge`](../../index/interfaces/StepUpChallenge.md)
+
+Parses RFC 9470 / RFC 6750 authentication requirements from a protected resource response.
+
+When a protected resource returns an HTTP response with a `WWW-Authenticate: Bearer`
+header containing `error="insufficient_user_authentication"` (RFC 9470) or
+`error="insufficient_scope"` (RFC 6750), this method extracts the requested
+`acr_values`, `max_age`, and `scope` requirements from that header.
+
+#### Parameters
+
+##### response
+
+`Response`
+
+The HTTP response from the protected resource containing the `WWW-Authenticate` header
+
+#### Returns
+
+[`StepUpChallenge`](../../index/interfaces/StepUpChallenge.md)
+
+Parsed authentication requirements from the response header
+
+#### Throws
+
+If the response has no `WWW-Authenticate` header
+
+#### Throws
+
+If the `WWW-Authenticate` header does not indicate a recognized Bearer challenge
+
+#### Example
+
+```typescript
+const apiResponse = await fetch("https://api.example.com/protected", {
+  headers: { Authorization: `Bearer ${accessToken}` }
+});
+
+if (apiResponse.status === 401) {
+  const requirements = client.parseResponse(apiResponse);
+
+  await client.rba.requestChallenge(
+    { userId: "user@example.com" },
+    {
+      acrValues: requirements.acrValues,
+      maxAge: requirements.maxAge,
+      scope: requirements.scope
+    }
+  );
+}
+```
+
+#### See
+
+- [RFC 9470 — Step-Up Authentication Challenge Protocol](https://datatracker.ietf.org/doc/html/rfc9470)
+- [RFC 6750 — Bearer Token Usage](https://datatracker.ietf.org/doc/html/rfc6750)

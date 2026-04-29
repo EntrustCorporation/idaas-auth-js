@@ -3,6 +3,7 @@ import * as jwt from "../../../src/utils/jwt";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
   TEST_ACCESS_TOKEN_KEY,
+  TEST_ACR_CLAIM,
   TEST_BASE_URI,
   TEST_CLIENT_ID,
   TEST_CODE,
@@ -17,6 +18,17 @@ import { mockFetch, storeData } from "../helpers";
 describe("IdaasClient.handleRedirect", () => {
   // @ts-expect-error not full type
   const spyOnFetch = spyOn(window, "fetch").mockImplementation(mockFetch);
+  spyOn(jwt, "readAccessToken").mockImplementation(() => {
+    return {
+      sub: "testingsubclaim",
+      acr: TEST_ACR_CLAIM,
+      nbf: "0",
+      exp: "9999999999",
+      iat: "0",
+      iss: TEST_BASE_URI,
+      jti: "testing-jti",
+    };
+  });
   // Mock JWT validation to avoid complex crypto operations in tests
   spyOn(jwt, "validateIdToken").mockImplementation(() => {
     return { decodedJwt: TEST_ID_TOKEN_OBJECT.decoded, idToken: TEST_ID_TOKEN_OBJECT.encoded };
@@ -124,7 +136,7 @@ describe("IdaasClient.handleRedirect", () => {
       expect(localStorage.getItem(TEST_ACCESS_TOKEN_KEY)).not.toBeNull();
     });
 
-    test("stores access token with correct scope and audience", async () => {
+    test("stores access token with correct scope, audience, and acr", async () => {
       storeData({ clientParams: true, tokenParams: true });
       window.location.href = loginSuccessUrl;
 
@@ -134,6 +146,7 @@ describe("IdaasClient.handleRedirect", () => {
 
       expect(storedToken?.scope).toStrictEqual(TEST_SCOPE);
       expect(storedToken?.audience).toStrictEqual(TEST_TOKEN_PARAMS.audience);
+      expect(storedToken?.acr).toStrictEqual(TEST_ACR_CLAIM);
       expect(storedToken?.expiresAt).toBeGreaterThan(Math.floor(Date.now() / 1000));
     });
 

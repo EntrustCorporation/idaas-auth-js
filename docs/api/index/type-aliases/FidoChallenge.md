@@ -14,7 +14,7 @@ If the authentication challenge is of type FIDO, the FIDOChallenge will contain 
 
 ### allowCredentials?
 
-> `optional` **allowCredentials**: `string`[]
+> `optional` **allowCredentials?**: `string`[]
 
 The list of IDs of the FIDO tokens registered for the user. Each value is base-64 encoded.
 

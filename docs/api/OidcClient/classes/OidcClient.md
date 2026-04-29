@@ -79,7 +79,7 @@ If token validation fails
 
 ### login()
 
-> **login**(`options`, `tokenOptions`): `Promise`\<`string` \| `null`\>
+> **login**(`options?`, `tokenOptions?`): `Promise`\<`string` \| `null`\>
 
 Initiates the OIDC authorization code flow to authenticate the user.
 
@@ -98,13 +98,13 @@ The flow uses PKCE (Proof Key for Code Exchange) for security and obtains:
 
 #### Parameters
 
-##### options
+##### options?
 
 [`OidcLoginOptions`](../../index/interfaces/OidcLoginOptions.md) = `{}`
 
 Login options including popup mode and redirect URI
 
-##### tokenOptions
+##### tokenOptions?
 
 [`TokenOptions`](../../index/interfaces/TokenOptions.md) = `{}`
 
@@ -124,7 +124,7 @@ The access token if using popup mode, otherwise `null`
 
 ### logout()
 
-> **logout**(`options`): `Promise`\<`void`\>
+> **logout**(`options?`): `Promise`\<`void`\>
 
 Logs the user out by clearing the local session and redirecting to the identity provider's logout endpoint.
 
@@ -139,7 +139,7 @@ the identity provider will redirect the user back to that URI after logout.
 
 #### Parameters
 
-##### options
+##### options?
 
 [`OidcLogoutOptions`](../../index/interfaces/OidcLogoutOptions.md) = `{}`
 

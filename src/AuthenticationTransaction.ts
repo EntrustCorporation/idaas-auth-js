@@ -24,6 +24,7 @@ import type {
   UserChallengeParameters,
 } from "./models/openapi-ts";
 import { calculateEpochExpiry } from "./utils/format";
+import { readAccessToken } from "./utils/jwt";
 import { buildFidoResponse, buildPubKeyRequestOptions } from "./utils/passkey";
 import { generateAuthorizationUrl } from "./utils/url";
 
@@ -37,6 +38,7 @@ interface AuthenticationDetails {
   accessToken?: string;
   audience?: string;
   maxAge?: number;
+  acr?: string;
 }
 
 interface RequiredDetails {
@@ -332,6 +334,8 @@ export class AuthenticationTransaction {
       throw new Error("failed to fetch refresh token from IDaaS");
     }
 
+    const acr = readAccessToken(access_token)?.acr;
+
     this.#authenticationDetails = {
       ...this.#authenticationDetails,
       idToken: id_token as string,
@@ -340,6 +344,7 @@ export class AuthenticationTransaction {
       expiresAt: calculateEpochExpiry(expires_in),
       audience: this.#tokenOptions.audience,
       maxAge: this.#tokenOptions.maxAge,
+      acr,
     };
   };
 

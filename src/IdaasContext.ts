@@ -3,9 +3,10 @@ import type { TokenOptions } from "./models";
 
 /**
  * Normalized token options with defaults applied.
- * All properties except audience are required (audience is optional per OIDC spec).
+ * All properties except audience are required (audience & maxAge is optional per OIDC spec).
  */
-export type NormalizedTokenOptions = Required<Omit<TokenOptions, "audience">> & Pick<TokenOptions, "audience">;
+export type NormalizedTokenOptions = Required<Omit<TokenOptions, "audience" | "maxAge">> &
+  Pick<TokenOptions, "audience" | "maxAge">;
 
 /**
  * Services class to provide shared functionality to OIDC and RBA clients

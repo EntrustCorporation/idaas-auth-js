@@ -14,7 +14,7 @@ Knowledge-based authenticator required for authentication to Identity as a Servi
 
 ### id?
 
-> `optional` **id**: `string`
+> `optional` **id?**: `string`
 
 ---
 

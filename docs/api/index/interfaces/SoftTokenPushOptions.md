@@ -16,6 +16,6 @@ The configurable options when requesting a TOKENPUSH authentication challenge.
 
 ### mutualChallenge?
 
-> `optional` **mutualChallenge**: `boolean`
+> `optional` **mutualChallenge?**: `boolean`
 
 Determines if the user must answer a mutual challenge for the TOKENPUSH authenticator.
