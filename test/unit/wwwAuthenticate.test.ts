@@ -54,7 +54,6 @@ describe("parseStepUpChallenge", () => {
       'Bearer error="insufficient_user_authentication", error_description="A different authentication level is required", acr_values="myACR"';
     const result = parseStepUpChallenge(header);
 
-    expect(result.errorDescription).toBe("A different authentication level is required");
     expect(result.acrValues).toEqual(["myACR"]);
   });
 
@@ -62,7 +61,6 @@ describe("parseStepUpChallenge", () => {
     const header = 'Bearer error="insufficient_scope", error_description=step-up!, scope=read';
     const result = parseStepUpChallenge(header);
 
-    expect(result.errorDescription).toBe("step-up!");
     expect(result.scope).toBe("read");
   });
 
@@ -71,7 +69,6 @@ describe("parseStepUpChallenge", () => {
       'Bearer error="insufficient_user_authentication", error_description="Need \\"MFA\\", now", acr_values="myACR"';
     const result = parseStepUpChallenge(header);
 
-    expect(result.errorDescription).toBe('Need "MFA", now');
     expect(result.acrValues).toEqual(["myACR"]);
   });
 
@@ -83,7 +80,6 @@ describe("parseStepUpChallenge", () => {
     expect(result.acrValues).toEqual(["urn:acr:mfa"]);
     expect(result.maxAge).toBe(60);
     expect(result.scope).toBe("openid transactions");
-    expect(result.errorDescription).toBe("Step up required");
   });
 
   it("handles unquoted parameter values", () => {
@@ -183,6 +179,5 @@ describe("parseStepUpChallenge", () => {
     const result = parseStepUpChallenge(header);
 
     expect(result.scope).toBe("openid transactions");
-    expect(result.errorDescription).toBe("Token lacks required privileges");
   });
 });

@@ -2,7 +2,7 @@ import type { JWTPayload } from "jose";
 import { AuthClient } from "./AuthClient";
 import { getUserInfo, type RefreshTokenRequest, requestToken, type TokenResponse } from "./api";
 import { IdaasContext, type NormalizedTokenOptions } from "./IdaasContext";
-import type { AuthenticationResponse, IdaasClientOptions, StepUpOptions, TokenOptions, UserClaims } from "./models";
+import type { IdaasClientOptions, TokenOptions, UserClaims } from "./models";
 import { OidcClient } from "./OidcClient";
 import { RbaClient } from "./RbaClient";
 import { type AccessToken, StorageManager } from "./storage/StorageManager";
@@ -46,7 +46,7 @@ export class IdaasClient {
       scope: tokenOptions.scope ?? "openid profile email",
       audience: tokenOptions.audience,
       useRefreshToken: tokenOptions.useRefreshToken ?? false,
-      maxAge: tokenOptions.maxAge ?? -1,
+      maxAge: tokenOptions.maxAge,
       acrValues: tokenOptions.acrValues ?? [],
     };
 
@@ -188,12 +188,10 @@ export class IdaasClient {
     const now = Date.now();
     // buffer (in seconds) to refresh/delete early, ensures an expired token is not returned
     const buffer = 15;
-
     if (accessTokens) {
       // 2. Find all tokens with the required audience that possess all required scopes
       // Tokens that have the required audience (both undefined means match, or exact string match)
       accessTokens = accessTokens.filter((token) => token.audience === audience);
-
       // Tokens that have the required audience and all scopes
       accessTokens = accessTokens.filter((token) => {
         const tokenScopes = token.scope.split(" ");
@@ -306,26 +304,17 @@ export class IdaasClient {
   }
 
   /**
-   * Handles an OAuth 2.0 step-up authentication challenge per RFC 9470.
+   * Parses RFC 9470 / RFC 6750 authentication requirements from a protected resource response.
    *
    * When a protected resource returns an HTTP response with a `WWW-Authenticate: Bearer`
    * header containing `error="insufficient_user_authentication"` (RFC 9470) or
-   * `error="insufficient_scope"` (RFC 6750), this method parses the challenge and initiates
-   * the appropriate authentication flow to obtain a new access token that satisfies the
-   * resource's requirements.
-   *
-   * The method automatically:
-   * 1. Extracts `acr_values`, `max_age`, and `scope` from the `WWW-Authenticate` header
-   * 2. Uses the authenticated user's ID (from the stored ID token) to request a challenge
-   * 3. If the authenticator supports polling (e.g., push notification, magic link), polls until completion and returns the final result
-   * 4. Otherwise, returns the {@link AuthenticationResponse} so you can present the challenge to the user and call `rba.submitChallenge()` / `rba.poll()`
+   * `error="insufficient_scope"` (RFC 6750), this method extracts the requested
+   * `acr_values`, `max_age`, and `scope` requirements from that header.
    *
    * @param response - The HTTP response from the protected resource containing the `WWW-Authenticate` header
-   * @param options - Optional parameters to customize the authentication challenge request
-   * @returns Authentication response — either the final result (for poll-based flows) or the challenge details (for interactive flows)
+   * @returns Parsed authentication requirements from the response header
    * @throws {Error} If the response has no `WWW-Authenticate` header
-   * @throws {Error} If the `WWW-Authenticate` header does not indicate a step-up challenge
-   * @throws {Error} If the user is not authenticated (no stored ID token with a `sub` claim)
+   * @throws {Error} If the `WWW-Authenticate` header does not indicate a recognized Bearer challenge
    *
    * @example
    * ```typescript
@@ -334,56 +323,29 @@ export class IdaasClient {
    * });
    *
    * if (apiResponse.status === 401) {
-   *   const result = await client.stepUp(apiResponse);
+   *   const requirements = client.parseResponse(apiResponse);
    *
-   *   if (!result.authenticationCompleted) {
-   *     // Interactive authenticator — present challenge to user, then submit
-   *     await client.rba.submitChallenge({ response: userInput });
-   *   }
-   *
-   *   // Retry the original request with the new access token
-   *   const newToken = await client.getAccessToken();
+   *   await client.rba.requestChallenge(
+   *     { userId: "user@example.com" },
+   *     {
+   *       acrValues: requirements.acrValues,
+   *       maxAge: requirements.maxAge,
+   *       scope: requirements.scope,
+   *     },
+   *   );
    * }
    * ```
    *
    * @see {@link https://datatracker.ietf.org/doc/html/rfc9470 RFC 9470 — Step-Up Authentication Challenge Protocol}
    * @see {@link https://datatracker.ietf.org/doc/html/rfc6750 RFC 6750 — Bearer Token Usage}
    */
-  public async stepUp(response: Response, options: StepUpOptions = {}): Promise<AuthenticationResponse> {
+  public parseResponse(response: Response): TokenOptions {
     const wwwAuthenticate = response.headers.get("WWW-Authenticate");
     if (!wwwAuthenticate) {
       throw new Error("Response does not contain a WWW-Authenticate header");
     }
 
-    const challenge = parseStepUpChallenge(wwwAuthenticate);
-
-    const idToken = this.#storageManager.getIdToken();
-    const userId = idToken?.decoded.sub as string | undefined;
-    if (!userId) {
-      throw new Error(
-        "User is not authenticated. A valid ID token with a sub claim is required for step-up authentication.",
-      );
-    }
-
-    const tokenOptions: TokenOptions = {
-      acrValues: challenge.acrValues,
-      maxAge: challenge.maxAge,
-      scope: challenge.scope,
-    };
-
-    const challengeResponse = await this.#rbaClient.requestChallenge(
-      {
-        userId,
-        ...options,
-      },
-      tokenOptions,
-    );
-
-    if (challengeResponse.pollForCompletion) {
-      return await this.#rbaClient.poll();
-    }
-
-    return challengeResponse;
+    return parseStepUpChallenge(wwwAuthenticate);
   }
 
   // Service methods for OidcClient and RbaClient

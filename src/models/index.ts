@@ -361,24 +361,3 @@ export type IdaasAuthenticationMethod =
   | "PASSKEY"
   | "FACE"
   | "EXTERNAL";
-
-/**
- * Options for the `stepUp` method, allowing additional authentication request parameters
- * to be passed through to `requestChallenge` beyond what is parsed from the WWW-Authenticate header.
- */
-export interface StepUpOptions {
-  /**
-   * The preferred method of authentication for the step-up challenge.
-   */
-  preferredAuthenticationMethod?: IdaasAuthenticationMethod;
-
-  /**
-   * Determines if the preferred authentication method must be used.
-   */
-  strict?: boolean;
-
-  /**
-   * The transaction details to include in the step-up challenge request for risk evaluation.
-   */
-  transactionDetails?: TransactionDetail[];
-}

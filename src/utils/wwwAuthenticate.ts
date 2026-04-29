@@ -1,23 +1,4 @@
-/**
- * Parsed step-up authentication challenge from a WWW-Authenticate header.
- *
- * Per RFC 9470 (OAuth 2.0 Step-Up Authentication Challenge Protocol), a resource server
- * returns this challenge when the current access token does not meet the authentication
- * requirements for the requested resource.
- */
-export interface StepUpChallenge {
-  /** Authentication context class references required, parsed from `acr_values`. */
-  acrValues?: string[];
-
-  /** Maximum acceptable authentication age in seconds, parsed from `max_age`. */
-  maxAge?: number;
-
-  /** Required scopes, parsed from `scope`. */
-  scope?: string;
-
-  /** Human-readable error description, parsed from `error_description`. */
-  errorDescription?: string;
-}
+import type { TokenOptions } from "../models";
 
 const STEP_UP_ERRORS = ["insufficient_user_authentication", "insufficient_scope"] as const;
 
@@ -143,7 +124,7 @@ function parseAuthParams(header: string): Map<string, string> {
  * @see {@link https://datatracker.ietf.org/doc/html/rfc9470 RFC 9470}
  * @see {@link https://datatracker.ietf.org/doc/html/rfc6750 RFC 6750}
  */
-export function parseStepUpChallenge(header: string): StepUpChallenge {
+export function parseStepUpChallenge(header: string): TokenOptions {
   if (!header.trim().match(/^Bearer\s/i)) {
     throw new Error("WWW-Authenticate header does not use the Bearer scheme");
   }
@@ -157,7 +138,7 @@ export function parseStepUpChallenge(header: string): StepUpChallenge {
     );
   }
 
-  const challenge: StepUpChallenge = {};
+  const challenge: TokenOptions = {};
 
   const acrValues = params.get("acr_values");
   if (acrValues) {
@@ -180,11 +161,6 @@ export function parseStepUpChallenge(header: string): StepUpChallenge {
   const scope = params.get("scope");
   if (scope) {
     challenge.scope = scope;
-  }
-
-  const errorDescription = params.get("error_description");
-  if (errorDescription) {
-    challenge.errorDescription = errorDescription;
   }
 
   return challenge;

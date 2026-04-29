@@ -223,24 +223,16 @@ Checks if the user is currently authenticated by verifying the presence of a val
 
 ---
 
-### stepUp()
+### parseResponse()
 
-> **stepUp**(`response`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **parseResponse**(`response`): [`StepUpChallenge`](../../index/interfaces/StepUpChallenge.md)
 
-Handles an OAuth 2.0 step-up authentication challenge per RFC 9470.
+Parses RFC 9470 / RFC 6750 authentication requirements from a protected resource response.
 
 When a protected resource returns an HTTP response with a `WWW-Authenticate: Bearer`
 header containing `error="insufficient_user_authentication"` (RFC 9470) or
-`error="insufficient_scope"` (RFC 6750), this method parses the challenge and initiates
-the appropriate authentication flow to obtain a new access token that satisfies the
-resource's requirements.
-
-The method automatically:
-
-1. Extracts `acr_values`, `max_age`, and `scope` from the `WWW-Authenticate` header
-2. Uses the authenticated user's ID (from the stored ID token) to request a challenge
-3. If the authenticator supports polling (e.g., push notification, magic link), polls until completion and returns the final result
-4. Otherwise, returns the [AuthenticationResponse](../../index/interfaces/AuthenticationResponse.md) so you can present the challenge to the user and call `rba.submitChallenge()` / `rba.poll()`
+`error="insufficient_scope"` (RFC 6750), this method extracts the requested
+`acr_values`, `max_age`, and `scope` requirements from that header.
 
 #### Parameters
 
@@ -250,17 +242,11 @@ The method automatically:
 
 The HTTP response from the protected resource containing the `WWW-Authenticate` header
 
-##### options?
-
-[`StepUpOptions`](../../index/interfaces/StepUpOptions.md) = `{}`
-
-Optional parameters to customize the authentication challenge request
-
 #### Returns
 
-`Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+[`StepUpChallenge`](../../index/interfaces/StepUpChallenge.md)
 
-Authentication response — either the final result (for poll-based flows) or the challenge details (for interactive flows)
+Parsed authentication requirements from the response header
 
 #### Throws
 
@@ -268,11 +254,7 @@ If the response has no `WWW-Authenticate` header
 
 #### Throws
 
-If the `WWW-Authenticate` header does not indicate a step-up challenge
-
-#### Throws
-
-If the user is not authenticated (no stored ID token with a `sub` claim)
+If the `WWW-Authenticate` header does not indicate a recognized Bearer challenge
 
 #### Example
 
@@ -282,15 +264,16 @@ const apiResponse = await fetch("https://api.example.com/protected", {
 });
 
 if (apiResponse.status === 401) {
-  const result = await client.stepUp(apiResponse);
+  const requirements = client.parseResponse(apiResponse);
 
-  if (!result.authenticationCompleted) {
-    // Interactive authenticator — present challenge to user, then submit
-    await client.rba.submitChallenge({ response: userInput });
-  }
-
-  // Retry the original request with the new access token
-  const newToken = await client.getAccessToken();
+  await client.rba.requestChallenge(
+    { userId: "user@example.com" },
+    {
+      acrValues: requirements.acrValues,
+      maxAge: requirements.maxAge,
+      scope: requirements.scope
+    }
+  );
 }
 ```
 
