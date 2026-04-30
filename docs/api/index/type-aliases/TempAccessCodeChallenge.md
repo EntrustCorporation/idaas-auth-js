@@ -14,7 +14,7 @@ Information about the temporary access code settings.
 
 ### adminContact?
 
-> `optional` **adminContact**: `string`
+> `optional` **adminContact?**: `string`
 
 An optional admin contact value (like an admin email address or phone number) to be displayed in the admin contact message.
 
@@ -22,6 +22,6 @@ An optional admin contact value (like an admin email address or phone number) to
 
 ### enableAdminContact?
 
-> `optional` **enableAdminContact**: `boolean`
+> `optional` **enableAdminContact?**: `boolean`
 
 Indicates if the admin contact message should be displayed for this challenge.

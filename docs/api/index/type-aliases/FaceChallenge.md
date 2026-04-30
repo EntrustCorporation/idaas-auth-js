@@ -14,7 +14,7 @@ Parameters returned to initialize a Face Biometric authenticator.
 
 ### device?
 
-> `optional` **device**: `"WEB"` \| `"MOBILE"`
+> `optional` **device?**: `"WEB"` \| `"MOBILE"`
 
 Which device to use for registration and authentication.
 
@@ -22,7 +22,7 @@ Which device to use for registration and authentication.
 
 ### id?
 
-> `optional` **id**: `string`
+> `optional` **id?**: `string`
 
 The ID of the Face Biometric to get.
 
@@ -30,7 +30,7 @@ The ID of the Face Biometric to get.
 
 ### qrCode?
 
-> `optional` **qrCode**: `string`
+> `optional` **qrCode?**: `string`
 
 QR Code to use to launch the mobile flow.
 
@@ -38,7 +38,7 @@ QR Code to use to launch the mobile flow.
 
 ### sdkToken?
 
-> `optional` **sdkToken**: `string`
+> `optional` **sdkToken?**: `string`
 
 The SDK token generated for the user.
 
@@ -46,6 +46,6 @@ The SDK token generated for the user.
 
 ### workflowRunId?
 
-> `optional` **workflowRunId**: `string`
+> `optional` **workflowRunId?**: `string`
 
 Workflow run ID to use for the user.

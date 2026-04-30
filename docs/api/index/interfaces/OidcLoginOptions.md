@@ -12,7 +12,7 @@ The configurable options specific to the OIDC `login` method.
 
 ### popup?
 
-> `optional` **popup**: `boolean`
+> `optional` **popup?**: `boolean`
 
 Determines the method of login that will be used to authenticate the user.
 The default setting is `false`.
@@ -21,7 +21,7 @@ The default setting is `false`.
 
 ### redirectUri?
 
-> `optional` **redirectUri**: `string`
+> `optional` **redirectUri?**: `string`
 
 The URI to be redirected to after a successful login. The default value is the current page.
 This URI must be included in the `Login Redirect URI(s)` field in your IDaaS client application settings.

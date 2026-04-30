@@ -12,7 +12,7 @@ The configurable options when submitting a response to an authentication challen
 
 ### kbaChallengeAnswers?
 
-> `optional` **kbaChallengeAnswers**: `string`[]
+> `optional` **kbaChallengeAnswers?**: `string`[]
 
 The user's answers to the KBA challenge questions.
 Answers must be in the order of the questions returned when requesting the challenge.
@@ -21,7 +21,7 @@ Answers must be in the order of the questions returned when requesting the chall
 
 ### passkeyResponse?
 
-> `optional` **passkeyResponse**: `PublicKeyCredential`
+> `optional` **passkeyResponse?**: `PublicKeyCredential`
 
 The credential returned from navigator.credentials.get(credentialRequestOptions).
 
@@ -29,6 +29,6 @@ The credential returned from navigator.credentials.get(credentialRequestOptions)
 
 ### response?
 
-> `optional` **response**: `string`
+> `optional` **response?**: `string`
 
 The user's response to the authentication challenge.

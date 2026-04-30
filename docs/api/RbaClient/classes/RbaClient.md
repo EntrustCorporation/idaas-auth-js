@@ -146,7 +146,7 @@ If no authentication transaction is in progress
 
 ### requestChallenge()
 
-> **requestChallenge**(`options`, `tokenOptions?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **requestChallenge**(`options?`, `tokenOptions?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
 
 Initiates a risk-based authentication challenge based on configured Resource Rules.
 
@@ -168,7 +168,7 @@ The response indicates:
 
 #### Parameters
 
-##### options
+##### options?
 
 [`AuthenticationRequestParams`](../../index/interfaces/AuthenticationRequestParams.md) = `{}`
 
@@ -194,7 +194,7 @@ Authentication response containing the challenge and method details
 
 ### submitChallenge()
 
-> **submitChallenge**(`options`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **submitChallenge**(`options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
 
 Submits the user's response to an authentication challenge.
 
@@ -212,7 +212,7 @@ Upon successful completion, tokens are automatically stored and can be retrieved
 
 #### Parameters
 
-##### options
+##### options?
 
 [`AuthenticationSubmissionParams`](../../index/interfaces/AuthenticationSubmissionParams.md) = `{}`
 
