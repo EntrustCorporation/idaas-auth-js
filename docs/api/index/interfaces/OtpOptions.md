@@ -10,7 +10,7 @@
 
 ### otpDeliveryAttribute?
 
-> `optional` **otpDeliveryAttribute**: `string`
+> `optional` **otpDeliveryAttribute?**: `string`
 
 The name of the delivery attribute to use for the OTP challenge, such as a "business-email".
 
@@ -18,6 +18,6 @@ The name of the delivery attribute to use for the OTP challenge, such as a "busi
 
 ### otpDeliveryType?
 
-> `optional` **otpDeliveryType**: `"EMAIL"` \| `"SMS"` \| `"VOICE"` \| `"WECHAT"` \| `"WHATSAPP"`
+> `optional` **otpDeliveryType?**: `"EMAIL"` \| `"SMS"` \| `"VOICE"` \| `"WECHAT"` \| `"WHATSAPP"`
 
 The delivery type for the OTP challenge.

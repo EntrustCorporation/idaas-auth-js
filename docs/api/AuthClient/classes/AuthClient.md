@@ -64,7 +64,7 @@ Terminates the current authentication transaction and cleans up any pending stat
 
 ### faceBiometric()
 
-> **faceBiometric**(`userId`, `mutualChallenge`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **faceBiometric**(`userId`, `mutualChallenge?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
 
 Authenticate using Face.
 Requests a FACE challenge, then initializes the Onfido Web SDK and polls for completion on onComplete.
@@ -90,7 +90,7 @@ Flow:
 
 The user ID to authenticate.
 
-##### mutualChallenge
+##### mutualChallenge?
 
 [`FaceBiometricOptions`](../../index/interfaces/FaceBiometricOptions.md) = `{}`
 
@@ -192,7 +192,7 @@ AuthenticationResponse containing information regarding the authentication reque
 
 ### otp()
 
-> **otp**(`userId`, `options`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **otp**(`userId`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
 
 Requests an One-Time Password (OTP) to be sent to the user.
 
@@ -224,7 +224,7 @@ You can optionally specify a delivery type and/or attribute to override the user
 
 The user's unique identifier
 
-##### options
+##### options?
 
 [`OtpOptions`](../../index/interfaces/OtpOptions.md) = `{}`
 
@@ -366,7 +366,7 @@ AuthenticationResponse containing information regarding the authentication reque
 
 ### smartCredential()
 
-> **smartCredential**(`userId`, `options`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **smartCredential**(`userId`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
 
 Authenticate using Smart Credential Push.
 Requests a SMARTCREDENTIALPUSH challenge, then immediately starts polling for completion.
@@ -379,7 +379,7 @@ Requests a SMARTCREDENTIALPUSH challenge, then immediately starts polling for co
 
 The user ID to authenticate.
 
-##### options
+##### options?
 
 [`SmartCredentialOptions`](../../index/interfaces/SmartCredentialOptions.md) = `{}`
 
@@ -395,7 +395,7 @@ AuthenticationResponse containing information regarding the authentication reque
 
 ### softToken()
 
-> **softToken**(`userId`, `options`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **softToken**(`userId`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
 
 Authenticate using Entrust Soft Token.
 
@@ -417,7 +417,7 @@ The `mutualChallenge` option is ignored unless `push` is true.
 
 The user ID to authenticate.
 
-##### options
+##### options?
 
 [`SoftTokenOptions`](../../index/interfaces/SoftTokenOptions.md) = `{}`
 

@@ -12,7 +12,7 @@ Options for smart credential authentication.
 
 ### pushMessageIdentifier?
 
-> `optional` **pushMessageIdentifier**: `string`
+> `optional` **pushMessageIdentifier?**: `string`
 
 Defines an identifier to retrieve customized SDK push message configuration.
 
@@ -20,6 +20,6 @@ Defines an identifier to retrieve customized SDK push message configuration.
 
 ### summary?
 
-> `optional` **summary**: `string`
+> `optional` **summary?**: `string`
 
 The push authentication challenge that appears in the user's mobile application.

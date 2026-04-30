@@ -13,7 +13,7 @@ Provides methods for OIDC authentication flows and RBA challenge handling.
 
 ### Constructor
 
-> **new IdaasClient**(`options`, `tokenOptions`): `IdaasClient`
+> **new IdaasClient**(`options`, `tokenOptions?`): `IdaasClient`
 
 Creates a new IdaasClient instance for handling OIDC authentication flows.
 
@@ -25,7 +25,7 @@ Creates a new IdaasClient instance for handling OIDC authentication flows.
 
 Configuration options for the client including issuer URL, client ID, and storage type
 
-##### tokenOptions
+##### tokenOptions?
 
 [`TokenOptions`](../../index/interfaces/TokenOptions.md) = `{}`
 
@@ -138,7 +138,7 @@ authenticator explicitly allows anonymous flows (e.g., passkey with discoverable
 
 ### getAccessToken()
 
-> **getAccessToken**(`options`): `Promise`\<`string` \| `null`\>
+> **getAccessToken**(`options?`): `Promise`\<`string` \| `null`\>
 
 Retrieves a cached access token matching the specified criteria.
 
@@ -147,7 +147,7 @@ the SDK automatically performs a token refresh.
 
 #### Parameters
 
-##### options
+##### options?
 
 [`TokenOptions`](../../index/interfaces/TokenOptions.md) = `{}`
 

@@ -28,7 +28,7 @@ The issuer to be used for validation of JWTs and for fetching API endpoints, typ
 
 ### storageType?
 
-> `optional` **storageType**: `"memory"` \| `"localstorage"`
+> `optional` **storageType?**: `"memory"` \| `"localstorage"`
 
 The storage mechanism to use for ID and access tokens.
 

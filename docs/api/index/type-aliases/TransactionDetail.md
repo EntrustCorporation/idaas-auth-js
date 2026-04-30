@@ -14,7 +14,7 @@ Transaction detail item and its value used with push authenticators and with off
 
 ### detail?
 
-> `optional` **detail**: `string`
+> `optional` **detail?**: `string`
 
 The transaction detail name.
 
@@ -22,12 +22,12 @@ The transaction detail name.
 
 ### usage?
 
-> `optional` **usage**: (`"RBA"` \| `"TVS"`)[]
+> `optional` **usage?**: (`"RBA"` \| `"TVS"`)[]
 
 ---
 
 ### value?
 
-> `optional` **value**: `string`
+> `optional` **value?**: `string`
 
 The transaction detail value.

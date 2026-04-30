@@ -12,7 +12,7 @@ The configurable options when requesting an authentication challenge.
 
 ### faceBiometricOptions?
 
-> `optional` **faceBiometricOptions**: [`FaceBiometricOptions`](FaceBiometricOptions.md)
+> `optional` **faceBiometricOptions?**: [`FaceBiometricOptions`](FaceBiometricOptions.md)
 
 Options available during FACE authentication.
 
@@ -20,7 +20,7 @@ Options available during FACE authentication.
 
 ### otpOptions?
 
-> `optional` **otpOptions**: [`OtpOptions`](OtpOptions.md)
+> `optional` **otpOptions?**: [`OtpOptions`](OtpOptions.md)
 
 Options available during OTP authentication.
 
@@ -28,7 +28,7 @@ Options available during OTP authentication.
 
 ### password?
 
-> `optional` **password**: `string`
+> `optional` **password?**: `string`
 
 The user's password to submit for MFA flows.
 
@@ -36,7 +36,7 @@ The user's password to submit for MFA flows.
 
 ### preferredAuthenticationMethod?
 
-> `optional` **preferredAuthenticationMethod**: [`IdaasAuthenticationMethod`](../type-aliases/IdaasAuthenticationMethod.md)
+> `optional` **preferredAuthenticationMethod?**: [`IdaasAuthenticationMethod`](../type-aliases/IdaasAuthenticationMethod.md)
 
 The preferred method of authentication.
 
@@ -44,7 +44,7 @@ The preferred method of authentication.
 
 ### smartCredentialOptions?
 
-> `optional` **smartCredentialOptions**: [`SmartCredentialOptions`](SmartCredentialOptions.md)
+> `optional` **smartCredentialOptions?**: [`SmartCredentialOptions`](SmartCredentialOptions.md)
 
 Options available during SMARTCREDENTIALPUSH authentication.
 
@@ -52,7 +52,7 @@ Options available during SMARTCREDENTIALPUSH authentication.
 
 ### softTokenPushOptions?
 
-> `optional` **softTokenPushOptions**: [`SoftTokenPushOptions`](SoftTokenPushOptions.md)
+> `optional` **softTokenPushOptions?**: [`SoftTokenPushOptions`](SoftTokenPushOptions.md)
 
 Options available during TOKENPUSH authentication.
 
@@ -60,7 +60,7 @@ Options available during TOKENPUSH authentication.
 
 ### strict?
 
-> `optional` **strict**: `boolean`
+> `optional` **strict?**: `boolean`
 
 Determines if the preferred authentication method must be used.
 
@@ -68,7 +68,7 @@ Determines if the preferred authentication method must be used.
 
 ### transactionDetails?
 
-> `optional` **transactionDetails**: [`TransactionDetail`](../type-aliases/TransactionDetail.md)[]
+> `optional` **transactionDetails?**: [`TransactionDetail`](../type-aliases/TransactionDetail.md)[]
 
 The transaction details of the request.
 
@@ -76,6 +76,6 @@ The transaction details of the request.
 
 ### userId?
 
-> `optional` **userId**: `string`
+> `optional` **userId?**: `string`
 
 The user ID of the user to request the challenge for.
