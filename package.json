@@ -80,7 +80,7 @@
     "@commitlint/cli": "20.5.3",
     "@commitlint/config-conventional": "20.5.3",
     "@happy-dom/global-registrator": "20.9.0",
-    "@hey-api/openapi-ts": "0.97.0",
+    "@hey-api/openapi-ts": "0.97.1",
     "@microsoft/api-extractor": "7.58.7",
     "@playwright/test": "1.59.1",
     "@rslib/core": "0.21.3",
