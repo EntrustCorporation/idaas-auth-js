@@ -55,24 +55,20 @@ export const getTokenParams = (): TokenParams => {
   };
 };
 
-export const mockFetch = async (url: string) => {
+export const mockFetch = async (url: string): Promise<Response> => {
   switch (url) {
     case `${TEST_BASE_URI}/token`: {
-      return Promise.resolve({
-        json: () => Promise.resolve(TEST_TOKEN_RESPONSE),
-      });
+      return new Response(JSON.stringify(TEST_TOKEN_RESPONSE), { headers: { "Content-Type": "application/json" } });
     }
     case `${TEST_BASE_URI}/issuer/.well-known/openid-configuration`: {
-      return Promise.resolve({
-        json: () => Promise.resolve(TEST_OIDC_CONFIG),
-      });
+      return new Response(JSON.stringify(TEST_OIDC_CONFIG), { headers: { "Content-Type": "application/json" } });
     }
     case `${TEST_BASE_URI}/userinfo`: {
-      return Promise.resolve({
-        text: () => Promise.resolve(TEST_USER_INFO_STR),
-      });
+      return new Response(TEST_USER_INFO_STR, { headers: { "Content-Type": "application/json" } });
     }
   }
+
+  return new Response("not found", { status: 404 });
 };
 
 interface StoreData {

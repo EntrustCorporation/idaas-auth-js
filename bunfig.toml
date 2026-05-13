@@ -6,6 +6,9 @@ linker = "isolated"
 preload = "./happydom.ts"
 coverage = true
 root = "./test/unit"
+coverageThreshold = { line = 1.0, function = 1.0, statement = 1.0 }
 coveragePathIgnorePatterns = [
-    "**/models/openapi-ts/**"
+    "src/models/openapi-ts/**",
+    "happydom.ts",
+    "test/**",
 ]
