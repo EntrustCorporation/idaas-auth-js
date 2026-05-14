@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/EntrustCorporation/idaas-auth-js/compare/v1.0.0...v2.0.0) (2026-05-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* tokenOptions.acrValues type changed from string[] to string
+
+### Features
+
+* add parseResponse for stepup ([b3a5abc](https://github.com/EntrustCorporation/idaas-auth-js/commit/b3a5abc1ba849fad070bfc15186794255a8dd717))
+
 ## [1.0.0](https://github.com/EntrustCorporation/idaas-auth-js/compare/v0.2.1...v1.0.0) (2026-03-13)
 
 
