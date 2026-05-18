@@ -38,7 +38,10 @@ export class IdaasClient {
    * @param options Configuration options for the client including issuer URL, client ID, and storage type
    * @param tokenOptions Default token options including audience, scope, and refresh token settings
    */
-  constructor({ issuerUrl, clientId, storageType = "memory" }: IdaasClientOptions, tokenOptions: TokenOptions = {}) {
+  constructor(
+    { issuerUrl, clientId, storageType = "memory", allowedIdTokenSigningAlgorithms }: IdaasClientOptions,
+    tokenOptions: TokenOptions = {},
+  ) {
     this.#storageManager = new StorageManager(clientId, storageType);
 
     // Normalize token options with defaults (audience remains optional per OIDC spec)
@@ -55,6 +58,7 @@ export class IdaasClient {
       issuerUrl,
       clientId,
       tokenOptions: normalizedTokenOptions,
+      allowedIdTokenSigningAlgorithms,
     });
 
     // Initialize clients with this.#context instance as the context provider

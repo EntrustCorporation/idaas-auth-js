@@ -32,7 +32,7 @@ describe("IdaasClient.handleRedirect", () => {
     };
   });
   // Mock JWT validation to avoid complex crypto operations in tests
-  const spyOnValidateIdToken = spyOn(jwt, "validateIdToken").mockImplementation(() => {
+  const spyOnValidateIdToken = spyOn(jwt, "validateIdToken").mockImplementation(async () => {
     return { decodedJwt: TEST_ID_TOKEN_OBJECT.decoded, idToken: TEST_ID_TOKEN_OBJECT.encoded };
   });
   const loginSuccessUrl = `${TEST_BASE_URI}?code=${TEST_CODE}&state=${TEST_STATE}`;

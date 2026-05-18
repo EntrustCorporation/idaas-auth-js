@@ -16,6 +16,7 @@ export class IdaasContext {
   readonly #issuerUrl: string;
   readonly #clientId: string;
   readonly #tokenOptions: NormalizedTokenOptions;
+  readonly #allowedIdTokenSigningAlgorithms?: string[];
 
   #config?: OidcConfig;
 
@@ -23,12 +24,15 @@ export class IdaasContext {
     issuerUrl,
     clientId,
     tokenOptions,
+    allowedIdTokenSigningAlgorithms,
   }: {
     issuerUrl: string;
     clientId: string;
     tokenOptions: NormalizedTokenOptions;
+    allowedIdTokenSigningAlgorithms?: string[];
   }) {
     this.#tokenOptions = tokenOptions;
+    this.#allowedIdTokenSigningAlgorithms = allowedIdTokenSigningAlgorithms;
     this.#issuerUrl = issuerUrl;
     this.#clientId = clientId;
   }
@@ -43,6 +47,10 @@ export class IdaasContext {
 
   get tokenOptions() {
     return this.#tokenOptions;
+  }
+
+  get allowedIdTokenSigningAlgorithms() {
+    return this.#allowedIdTokenSigningAlgorithms;
   }
 
   /**

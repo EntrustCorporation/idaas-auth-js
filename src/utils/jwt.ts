@@ -1,13 +1,31 @@
 import { createRemoteJWKSet, decodeJwt, decodeProtectedHeader, type JWTPayload, jwtVerify } from "jose";
 import type { UserClaims } from "../models";
 
+export const DEFAULT_ALLOWED_ID_TOKEN_SIGNING_ALGORITHMS = [
+  "PS256",
+  "PS384",
+  "PS512",
+  "RS256",
+  "RS384",
+  "RS512",
+  "EC256",
+  "ES384",
+  "ES512",
+];
+
+const isAllowedIdTokenSigningAlgorithm = (value: string): boolean => {
+  return DEFAULT_ALLOWED_ID_TOKEN_SIGNING_ALGORITHMS.includes(value);
+};
+
 export interface ValidateIdTokenParams {
   idToken?: string | JWTPayload;
   issuer: string;
   clientId: string;
   nonce: string;
   idTokenSigningAlgValuesSupported: string[];
+  allowedIdTokenSigningAlgorithms?: string[];
   acrValuesSupported?: string[];
+  jwksEndpoint: string;
 }
 
 export interface ValidateUserInfoTokenParams {
@@ -32,17 +50,24 @@ export interface DecodedAccessToken {
 /**
  * Validate the signed ID token received from the /token endpoint in accordance with the OIDC specification.
  *
- * Note: Since this client only supports the Authorization Code flow, we are able to skip JWT signature validation
- * and instead rely on TLS, as described in 3.1.3.7 #6 of the OIDC core specification.
+ * Validates the token by checking:
+ * - Required claims (sub, iat, iss, aud, exp, nonce)
+ * - Claim values (issuer, audience/azp, nonce)
+ * - Token expiration (exp) and not-before (nbf) times with clock skew leeway
+ * - Algorithm is supported
+ * - JWT signature against the OpenID Provider's JWKS endpoint
+ *
  * See more at: https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
  */
-export const validateIdToken = ({
+export const validateIdToken = async ({
   idToken,
   issuer,
   clientId,
   nonce,
   idTokenSigningAlgValuesSupported,
+  allowedIdTokenSigningAlgorithms,
   acrValuesSupported,
+  jwksEndpoint,
 }: ValidateIdTokenParams) => {
   if (!idToken) {
     throw new Error("No ID token supplied");
@@ -54,6 +79,7 @@ export const validateIdToken = ({
   let alg: string | undefined;
 
   try {
+    // eject if this happens, don't allow unsigned token
     if (typeof idToken !== "string") {
       // If the token is not a jwt string, use it directly as an unsigned object
       stringifiedToken = JSON.stringify(idToken);
@@ -75,6 +101,10 @@ export const validateIdToken = ({
 
   if (!decodedJwt.iat) {
     throw new Error("Issued At (iat) claim is missing from ID token");
+  }
+
+  if (typeof decodedJwt.iat !== "number" || !Number.isFinite(decodedJwt.iat)) {
+    throw new Error("Issued At (iat) claim must be a valid numeric timestamp");
   }
 
   if (!decodedJwt.iss) {
@@ -119,17 +149,6 @@ export const validateIdToken = ({
     }
   }
 
-  // Validate alg against default RS256
-  if (!alg) {
-    throw new Error("Algorithm (alg) claim is missing from ID token");
-  }
-
-  if (!idTokenSigningAlgValuesSupported.includes(alg)) {
-    throw new Error(
-      `Algorithm (alg) claim ${alg} in the ID token ${alg} is not one of the supported ${idTokenSigningAlgValuesSupported}`,
-    );
-  }
-
   // Default 15s leeway to account for clock skew issues with nbf and exp claims
   const leeway = 15;
 
@@ -139,6 +158,17 @@ export const validateIdToken = ({
 
   if (now > expDate) {
     throw new Error(`Expiration Time (exp) claim ${decodedJwt.exp} indicates that this token is now expired at ${now}`);
+  }
+
+  if (decodedJwt.iat > decodedJwt.exp) {
+    throw new Error(
+      `Issued At (iat) claim ${decodedJwt.iat} must not be later than Expiration Time (exp) claim ${decodedJwt.exp}`,
+    );
+  }
+
+  const iatDate = new Date((decodedJwt.iat - leeway) * 1000);
+  if (now < iatDate) {
+    throw new Error(`Issued At (iat) claim ${decodedJwt.iat} indicates that this token was issued in the future`);
   }
 
   if (decodedJwt.nbf) {
@@ -165,6 +195,57 @@ export const validateIdToken = ({
     throw new Error(
       `Authentication Context Class Reference (acr) claim ${acrClaim} is not one of the supported ${acrValuesSupported}`,
     );
+  }
+
+  if (!alg) {
+    throw new Error("Algorithm (alg) claim is missing from ID token");
+  }
+
+  if (allowedIdTokenSigningAlgorithms?.length === 0) {
+    throw new Error("Allowed ID token signing algorithms list cannot be empty when provided");
+  }
+
+  const requestedAllowedAlgorithms = allowedIdTokenSigningAlgorithms ?? DEFAULT_ALLOWED_ID_TOKEN_SIGNING_ALGORITHMS;
+  const invalidAlgorithms = requestedAllowedAlgorithms.filter(
+    (requestedAlg) => !isAllowedIdTokenSigningAlgorithm(requestedAlg),
+  );
+
+  if (invalidAlgorithms.length > 0) {
+    throw new Error(
+      `Allowed ID token signing algorithms contains unsupported values: ${invalidAlgorithms.join(", ")}. Supported values are ${DEFAULT_ALLOWED_ID_TOKEN_SIGNING_ALGORITHMS.join(", ")}`,
+    );
+  }
+
+  const effectiveAllowedAlgorithms = requestedAllowedAlgorithms.filter((requestedAlg) =>
+    idTokenSigningAlgValuesSupported.includes(requestedAlg),
+  );
+
+  if (effectiveAllowedAlgorithms.length === 0) {
+    throw new Error(
+      `No allowed ID token signing algorithms are supported by the OpenID Provider. Requested: ${requestedAllowedAlgorithms.join(", ")}; Provider supports: ${idTokenSigningAlgValuesSupported.join(", ")}`,
+    );
+  }
+
+  if (!effectiveAllowedAlgorithms.includes(alg)) {
+    throw new Error(
+      `Algorithm (alg) claim ${alg} in the ID token is not one of the allowed algorithms ${effectiveAllowedAlgorithms}`,
+    );
+  }
+
+  // Verify the JWT signature against the JWKS endpoint if the token is signed
+  if (typeof idToken === "string") {
+    const jwks = createRemoteJWKSet(new URL(jwksEndpoint));
+
+    try {
+      await jwtVerify(idToken, jwks, {
+        audience: clientId,
+        issuer,
+      });
+    } catch (error) {
+      throw new Error(
+        `ID token signature verification failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   return { idToken: stringifiedToken, decodedJwt };

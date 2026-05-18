@@ -10,7 +10,7 @@ export const TEST_CLIENT_ID = "testingclientid";
 export const TEST_ID_TOKEN = "testingidtoken";
 export const TEST_NONCE = "testingnonce";
 export const TEST_ISSUER_URI = `${TEST_BASE_URI}/issuer`;
-export const TEST_ID_TOKEN_SIGNING_ALG_SUPPORTED = ["none", "123"];
+export const TEST_ID_TOKEN_SIGNING_ALG_SUPPORTED = ["RS256", "PS256"];
 export const TEST_SCOPE = "openid profile email";
 export const TEST_AUDIENCE = `${TEST_BASE_URI}/audience`;
 export const TEST_ACCESS_TOKEN = "testingaccesstoken";
@@ -96,6 +96,7 @@ export const TEST_VALIDATE_ID_TOKEN_PARAMS: ValidateIdTokenParams = {
   nonce: TEST_NONCE,
   idTokenSigningAlgValuesSupported: TEST_ID_TOKEN_SIGNING_ALG_SUPPORTED,
   acrValuesSupported: TEST_ACR_SUPPORTED,
+  jwksEndpoint: TEST_JWKS_ENDPOINT,
 };
 
 export const TEST_ID_TOKEN_OBJECT: IdToken = {
