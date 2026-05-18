@@ -15,11 +15,12 @@ This guide lists common issues encountered when integrating the IDaaS Auth JS SD
 
 ## Hosted OIDC flows (`oidc`)
 
-| Symptom                                    | Likely cause                                                                         | Fix                                                                                              |
-| ------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| Popup window blocked or immediately closed | Browser blocked popups.                                                              | Switch to redirect flow (`popup: false`) or ask users to allow popups for your domain.           |
-| `invalid_redirect_uri` error               | Redirect URI sent by SDK isn’t registered.                                           | Update the tenant app configuration or pass the correct `redirectUri` to `login`.                |
-| `state mismatch`/`invalid_state`           | Callback handled without original state (e.g., multiple clients or double handling). | Use a single `IdaasClient` instance per request and call `handleRedirect()` only once per login. |
+| Symptom                                    | Likely cause                                                                            | Fix                                                                                                                                                                      |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Popup window blocked or immediately closed | Browser blocked popups.                                                                 | Switch to redirect flow (`popup: false`) or ask users to allow popups for your domain.                                                                                   |
+| `invalid_redirect_uri` error               | Redirect URI sent by SDK isn’t registered.                                              | Update the tenant app configuration or pass the correct `redirectUri` to `login`.                                                                                        |
+| `state mismatch`/`invalid_state`           | Callback handled without original state (e.g., multiple clients or double handling).    | Use a single `IdaasClient` instance per request and call `handleRedirect()` only once per login.                                                                         |
+| OIDC login fails during token validation   | ID token was signed with an algorithm not allowed by `allowedIdTokenSigningAlgorithms`. | Ensure `allowedIdTokenSigningAlgorithms` matches the ID token signing algorithm(s) configured in your IDaaS SPA application. Or remove the override to use SDK defaults. |
 
 ---
 

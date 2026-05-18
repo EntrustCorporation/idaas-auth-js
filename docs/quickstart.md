@@ -26,7 +26,9 @@ const idaas = new IdaasClient(
   {
     issuerUrl: "https://example.trustedauth.com", // OIDC issuer from your tenant
     clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", // Your application's client ID
-    storageType: "localstorage" // "memory" | "localstorage"
+    storageType: "localstorage", // Optional, defaults to "memory". Use "localstorage" to persist tokens across reloads.
+    // Optional: restrict accepted ID token signing algorithms for OIDC validation
+    allowedIdTokenSigningAlgorithms: ["RS256"]
   },
   {
     scope: "openid profile email", // defaults provided; override as needed
@@ -35,6 +37,9 @@ const idaas = new IdaasClient(
   }
 );
 ```
+
+If `allowedIdTokenSigningAlgorithms` is set, OIDC login only succeeds when the returned ID token is signed with one of the allowed algorithms.
+The configured value must match the ID token signing algorithm(s) defined in your IDaaS SPA application settings.
 
 The client exposes three facades:
 

@@ -17,7 +17,8 @@ const idaas = new IdaasClient(
   {
     issuerUrl: "https://example.trustedauth.com",
     clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    storageType: "localstorage"
+    storageType: "localstorage",
+    allowedIdTokenSigningAlgorithms: ["RS256"]
   },
   {
     scope: "openid profile email",
@@ -26,6 +27,22 @@ const idaas = new IdaasClient(
   }
 );
 ```
+
+### Restrict ID token signing algorithms
+
+Use `allowedIdTokenSigningAlgorithms` in `IdaasClient` options to control which ID token signature algorithms are accepted during OIDC validation.
+
+```typescript
+const idaas = new IdaasClient({
+  issuerUrl: "https://example.trustedauth.com",
+  clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  allowedIdTokenSigningAlgorithms: ["RS256", "PS256"]
+});
+```
+
+If the ID token returned by the OIDC flow uses an algorithm not in this list, login fails and throws an error.
+
+Set this list to match the ID token signing algorithm(s) configured for your IDaaS SPA application. If they do not match, OIDC login will fail during token validation.
 
 ## Login
 

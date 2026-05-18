@@ -61,7 +61,9 @@ import { IdaasClient } from "@entrustcorp/idaas-auth-js";
 const idaas = new IdaasClient({
   issuerUrl: "https://example.us.trustedauth.com/api/oidc",
   clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  storageType: "localstorage"
+  storageType: "localstorage", // Optional, defaults to "memory"
+  // Optional: restrict ID token signature algorithms accepted during OIDC validation
+  allowedIdTokenSigningAlgorithms: ["RS256"]
 });
 
 // Popup flow (auto stores tokens)
@@ -70,6 +72,8 @@ await idaas.oidc.login({ popup: true });
 // Use tokens
 const accessToken = await idaas.getAccessToken();
 ```
+
+When `allowedIdTokenSigningAlgorithms` is provided, OIDC login/token exchange validates the ID token signature algorithm against this allowlist and rejects tokens signed with algorithms outside the list. The configured value must match the ID token signing algorithm(s) defined in your IDaaS SPA application settings.
 
 See the [Quickstart guide](docs/quickstart.md) for configuration options, redirect flows, error handling, and self-hosted examples.
 

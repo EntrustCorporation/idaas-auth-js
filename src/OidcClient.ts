@@ -211,7 +211,7 @@ export class OidcClient {
     nonce: string,
     requireIdToken: boolean,
   ) {
-    const { token_endpoint, id_token_signing_alg_values_supported, acr_values_supported } =
+    const { token_endpoint, id_token_signing_alg_values_supported, acr_values_supported, jwks_uri } =
       await this.#context.getConfig();
 
     const tokenRequest: AccessTokenRequest = {
@@ -228,13 +228,15 @@ export class OidcClient {
       return { tokenResponse };
     }
 
-    const { decodedJwt: decodedIdToken, idToken } = validateIdToken({
+    const { decodedJwt: decodedIdToken, idToken } = await validateIdToken({
       clientId: this.#context.clientId,
       idToken: tokenResponse.id_token,
       issuer: this.#context.issuerUrl,
       nonce,
       idTokenSigningAlgValuesSupported: id_token_signing_alg_values_supported,
+      allowedIdTokenSigningAlgorithms: this.#context.allowedIdTokenSigningAlgorithms,
       acrValuesSupported: acr_values_supported,
+      jwksEndpoint: jwks_uri,
     });
 
     return { tokenResponse, decodedIdToken, encodedIdToken: idToken };
