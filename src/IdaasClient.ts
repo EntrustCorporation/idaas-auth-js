@@ -15,8 +15,8 @@ import { parseStepUpChallenge } from "./utils/wwwAuthenticate";
  */
 export interface ValidatedTokenResponse {
   tokenResponse: TokenResponse;
-  decodedIdToken: JWTPayload;
-  encodedIdToken: string;
+  decodedIdToken?: JWTPayload;
+  encodedIdToken?: string;
 }
 /**
  * The main client class for interacting with IDaaS authentication services.
@@ -48,6 +48,7 @@ export class IdaasClient {
       useRefreshToken: tokenOptions.useRefreshToken ?? false,
       maxAge: tokenOptions.maxAge,
       acrValues: tokenOptions.acrValues ?? "",
+      includeOpenidScope: tokenOptions.includeOpenidScope ?? true,
     };
 
     this.#context = new IdaasContext({

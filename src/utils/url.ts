@@ -44,7 +44,11 @@ export const generateAuthorizationUrl = async (
 
   // Process scope (default to empty string if not provided)
   const scopeAsArray = options.tokenOptions.scope ? options.tokenOptions.scope.split(" ").filter(Boolean) : [];
-  scopeAsArray.push("openid");
+
+  // Add openid scope if requested (for OIDC authentication to receive ID token)
+  if (options.tokenOptions.includeOpenidScope !== false) {
+    scopeAsArray.push("openid");
+  }
 
   if (options.tokenOptions.useRefreshToken) {
     scopeAsArray.push("offline_access");

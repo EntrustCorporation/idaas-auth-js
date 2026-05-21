@@ -37,6 +37,25 @@ See the [OidcLoginOptions reference](../api/README.md#oidcloginoptions) for comp
 
 See the [TokenOptions reference](../api/README.md#tokenoptions) for complete details on all available options and their defaults.
 
+### Omitting `openid` with `includeOpenidScope: false`
+
+`oidc.login()` supports `includeOpenidScope: false`. When set, the SDK does not automatically append `openid` to the requested scope.
+
+- The flow can be OAuth-only, and no ID token is required.
+- Use this for access-token-only or step-up scenarios where existing sign-in state is already established.
+
+Use this when you only need an access token and do not want to request an ID token.
+
+```typescript
+await idaas.oidc.login(
+  { popup: true },
+  {
+    includeOpenidScope: false,
+    scope: "api:read"
+  }
+);
+```
+
 ### Popup (recommended for SPAs)
 
 ```typescript

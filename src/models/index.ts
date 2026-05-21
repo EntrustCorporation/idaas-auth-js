@@ -60,7 +60,7 @@ export interface TokenOptions {
    *
    * This defaults to the `globalScope` in your `IdaasClientOptions` if not set. If you are setting extra scopes and require `profile` and `email` to be included then you must include them in the provided scope.
    *
-   * Note: The `openid` scope is always applied regardless of this setting.
+   * Note: By default, the `openid` scope is automatically included so you receive an ID token. Only set `includeOpenidScope` to `false` if you want to omit the `openid` scope and perform OAuth authorization without an ID token.
    */
   scope?: string;
 
@@ -82,6 +82,16 @@ export interface TokenOptions {
    * Example: `"knowledge possession"`
    */
   acrValues?: string;
+
+  /**
+   * Controls whether the `openid` scope is automatically added to the authorization request.
+   *
+   * When `true` (default), the `openid` scope is added and the flow expects an ID token. When `false`, the SDK omits
+   * automatic `openid` appending and does not require an ID token.
+   *
+   * @default true
+   */
+  includeOpenidScope?: boolean;
 }
 
 /**

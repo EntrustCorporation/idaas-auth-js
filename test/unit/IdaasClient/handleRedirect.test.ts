@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, jest, spyOn, test } 
 import * as jwt from "../../../src/utils/jwt";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
+  TEST_ACCESS_TOKEN,
   TEST_ACCESS_TOKEN_KEY,
   TEST_ACR_CLAIM,
   TEST_BASE_URI,
@@ -11,6 +12,7 @@ import {
   TEST_ID_TOKEN_OBJECT,
   TEST_SCOPE,
   TEST_STATE,
+  TEST_TOKEN_PAIR,
   TEST_TOKEN_PARAMS,
 } from "../constants";
 import { mockFetch, storeData } from "../helpers";
@@ -30,7 +32,7 @@ describe("IdaasClient.handleRedirect", () => {
     };
   });
   // Mock JWT validation to avoid complex crypto operations in tests
-  spyOn(jwt, "validateIdToken").mockImplementation(() => {
+  const spyOnValidateIdToken = spyOn(jwt, "validateIdToken").mockImplementation(() => {
     return { decodedJwt: TEST_ID_TOKEN_OBJECT.decoded, idToken: TEST_ID_TOKEN_OBJECT.encoded };
   });
   const loginSuccessUrl = `${TEST_BASE_URI}?code=${TEST_CODE}&state=${TEST_STATE}`;
@@ -161,6 +163,38 @@ describe("IdaasClient.handleRedirect", () => {
       expect(storedToken).toBeDefined();
       expect(storedToken?.decoded).toBeDefined();
       expect(storedToken?.encoded).toBeDefined();
+    });
+
+    test("preserves existing ID token when openid scope is omitted", async () => {
+      const tokenResponseWithoutIdToken = {
+        access_token: TEST_ACCESS_TOKEN,
+        expires_in: "300",
+        token_type: "Bearer",
+      };
+
+      localStorage.setItem(
+        TEST_TOKEN_PAIR.key,
+        JSON.stringify({ ...TEST_TOKEN_PARAMS, scope: "profile email", requireIdToken: false }),
+      );
+      storeData({ clientParams: true, idToken: true });
+      window.location.href = loginSuccessUrl;
+
+      // @ts-expect-error not full type
+      spyOn(window, "fetch").mockImplementation((url: string) => {
+        if (url === `${TEST_BASE_URI}/token`) {
+          return Promise.resolve({
+            json: () => Promise.resolve(tokenResponseWithoutIdToken),
+          } as Response);
+        }
+
+        return mockFetch(url);
+      });
+
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+
+      expect(spyOnValidateIdToken).not.toHaveBeenCalled();
+      expect(localStorage.getItem(TEST_ID_TOKEN_KEY)).not.toBeNull();
+      expect(localStorage.getItem(TEST_ACCESS_TOKEN_KEY)).not.toBeNull();
     });
   });
 });
