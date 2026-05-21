@@ -118,6 +118,10 @@ export class OidcClient {
       throw new Error("Failed to recover IDaaS client state from local storage");
     }
     const { codeVerifier, redirectUri, state, nonce } = clientParams;
+    const tokenParams = this.#storageManager.getTokenParams();
+    if (!tokenParams) {
+      throw new Error("No token params stored, unable to parse");
+    }
 
     const authorizeCode = this.#validateAuthorizeResponse(authorizeResponse, state);
 
@@ -126,8 +130,9 @@ export class OidcClient {
       codeVerifier,
       redirectUri,
       nonce,
+      tokenParams.requireIdToken ?? true,
     );
-    this.#parseAndSaveTokenResponse(validatedTokenResponse);
+    this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
     return null;
   }
 
@@ -199,7 +204,13 @@ export class OidcClient {
     return code;
   }
 
-  async #requestAndValidateTokens(code: string, codeVerifier: string, redirectUri: string, nonce: string) {
+  async #requestAndValidateTokens(
+    code: string,
+    codeVerifier: string,
+    redirectUri: string,
+    nonce: string,
+    requireIdToken: boolean,
+  ) {
     const { token_endpoint, id_token_signing_alg_values_supported, acr_values_supported } =
       await this.#context.getConfig();
 
@@ -212,6 +223,10 @@ export class OidcClient {
     };
 
     const tokenResponse = await requestToken(token_endpoint, tokenRequest);
+
+    if (!tokenResponse.id_token && !requireIdToken) {
+      return { tokenResponse };
+    }
 
     const { decodedJwt: decodedIdToken, idToken } = validateIdToken({
       clientId: this.#context.clientId,
@@ -244,16 +259,11 @@ export class OidcClient {
    * Extracts access token, ID token, and refresh token (if available).
    * @param validatedTokenResponse The validated response from the token endpoint
    */
-  #parseAndSaveTokenResponse(validatedTokenResponse: ValidatedTokenResponse): void {
+  #parseAndSaveTokenResponse(validatedTokenResponse: ValidatedTokenResponse, tokenParams: TokenParams): void {
     const { tokenResponse, decodedIdToken, encodedIdToken } = validatedTokenResponse;
     const { refresh_token, access_token, expires_in } = tokenResponse;
     const authTime = readAccessToken(access_token)?.auth_time;
     const expiresAt = calculateEpochExpiry(expires_in, authTime);
-    const tokenParams = this.#storageManager.getTokenParams();
-
-    if (!tokenParams) {
-      throw new Error("No token params stored, unable to parse");
-    }
 
     const { audience, scope, maxAge } = tokenParams;
     const maxAgeExpiry = maxAge ? calculateEpochExpiry(maxAge.toString(), authTime) : undefined;
@@ -273,10 +283,13 @@ export class OidcClient {
       acr,
     };
 
-    this.#storageManager.saveIdToken({
-      encoded: encodedIdToken,
-      decoded: decodedIdToken,
-    });
+    if (encodedIdToken && decodedIdToken) {
+      this.#storageManager.saveIdToken({
+        encoded: encodedIdToken,
+        decoded: decodedIdToken,
+      });
+    }
+
     this.#storageManager.saveAccessToken(newAccessToken);
   }
 
@@ -303,6 +316,7 @@ export class OidcClient {
     const tokenParams: TokenParams = {
       audience: tokenOptions.audience ?? this.#context.tokenOptions.audience,
       scope: usedScope,
+      requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
     };
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
@@ -319,9 +333,10 @@ export class OidcClient {
       codeVerifier,
       finalRedirectUri,
       nonce,
+      tokenParams.requireIdToken ?? true,
     );
 
-    this.#parseAndSaveTokenResponse(validatedTokenResponse);
+    this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
 
     // redirect only if the redirectUri is not the current uri
     if (formatUrl(window.location.href) !== formatUrl(finalRedirectUri)) {
@@ -354,6 +369,7 @@ export class OidcClient {
     const tokenParams: TokenParams = {
       audience: tokenOptions.audience ?? this.#context.tokenOptions.audience,
       scope: usedScope,
+      requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
     };
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {

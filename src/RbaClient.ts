@@ -200,15 +200,25 @@ export class RbaClient {
   ) => {
     const oidcConfig = await this.#context.getConfig();
 
+    // Scope normalization: preserve caller/context scope as-is and only provide a fallback when none exists.
+    // includeOpenidScope controls automatic `openid` appending in URL generation and should not remove explicit scope values.
+    let normalizedScope = tokenOptions?.scope ?? this.#context.tokenOptions.scope;
+    const effectiveincludeOpenidScope =
+      tokenOptions?.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope;
+    if (effectiveincludeOpenidScope === false && !tokenOptions?.scope && !this.#context.tokenOptions.scope) {
+      normalizedScope = "profile email";
+    }
+
     this.#authenticationTransaction = new AuthenticationTransaction({
       oidcConfig,
       authenticationRequestParams,
       tokenOptions: {
         audience: tokenOptions?.audience ?? this.#context.tokenOptions.audience,
-        scope: tokenOptions?.scope ?? this.#context.tokenOptions.scope,
+        scope: normalizedScope,
         acrValues: tokenOptions?.acrValues ?? this.#context.tokenOptions.acrValues,
         useRefreshToken: tokenOptions?.useRefreshToken ?? this.#context.tokenOptions.useRefreshToken,
         maxAge: tokenOptions?.maxAge ?? this.#context.tokenOptions.maxAge,
+        includeOpenidScope: effectiveincludeOpenidScope,
       },
       clientId: this.#context.clientId,
     });
@@ -222,16 +232,13 @@ export class RbaClient {
     const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience, acr } =
       this.#authenticationTransaction.getAuthenticationDetails();
 
-    // Require the access token, id token, and necessary claims
-    if (!(idToken && accessToken && expiresAt && scope)) {
+    // Only require accessToken for OAuth-only flows
+    const requireIdToken = this.#authenticationTransaction.requiresIdToken();
+    if (!accessToken || !expiresAt || !scope || (requireIdToken && !idToken)) {
       throw new Error("Error retrieving tokens from transaction");
     }
 
-    // Saving tokens
-    this.#storageManager.saveIdToken({
-      encoded: idToken,
-      decoded: decodeJwt(idToken),
-    });
+    // Save access token always
     this.#storageManager.saveAccessToken({
       accessToken,
       expiresAt,
@@ -241,6 +248,14 @@ export class RbaClient {
       maxAgeExpiry: maxAge ? calculateEpochExpiry(maxAge.toString()) : undefined,
       acr,
     });
+
+    // Save ID token only if present
+    if (idToken) {
+      this.#storageManager.saveIdToken({
+        encoded: idToken,
+        decoded: decodeJwt(idToken),
+      });
+    }
 
     this.#authenticationTransaction = undefined;
   };

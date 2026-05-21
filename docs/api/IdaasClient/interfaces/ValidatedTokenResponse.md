@@ -10,15 +10,15 @@ A validated token response, contains the TokenResponse as well as the decoded an
 
 ## Properties
 
-### decodedIdToken
+### decodedIdToken?
 
-> **decodedIdToken**: `JWTPayload`
+> `optional` **decodedIdToken?**: `JWTPayload`
 
 ---
 
-### encodedIdToken
+### encodedIdToken?
 
-> **encodedIdToken**: `string`
+> `optional` **encodedIdToken?**: `string`
 
 ---
 

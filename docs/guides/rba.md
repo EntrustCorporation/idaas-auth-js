@@ -69,6 +69,22 @@ See the [AuthenticationRequestParams reference](../api/README.md#authenticationr
 
 See the [TokenOptions reference](../api/README.md#tokenoptions) for complete details on all available options and their defaults.
 
+#### OAuth without an ID token
+
+Use RBA token options with `includeOpenidScope: false` when you need OAuth authorization without requesting an ID token.
+
+```typescript
+await idaas.rba.requestChallenge(
+  {
+    userId: "user@example.com"
+  },
+  {
+    includeOpenidScope: false,
+    scope: "api:read"
+  }
+);
+```
+
 ## Rendering the challenge
 
 Use the response payload to decide what UI to show. For example, if `challenge.method === "OTP"` display an input for the code; if it’s `"PASSKEY"` trigger a WebAuthn ceremony.

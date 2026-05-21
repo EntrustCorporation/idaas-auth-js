@@ -77,7 +77,7 @@ The SDK is organized around several main client classes:
 - **Location:** `src/OidcClient.ts`
 - **Purpose:** Handle OIDC flows (Authorization Code + PKCE)
 - **Methods:**
-  - `login()`: Initiate login via redirect or popup
+  - `login()`: Initiate login via redirect or popup (`includeOpenidScope: false` is supported to omit automatic `openid` scope appending)
   - `logout()`: Log user out with optional redirect
   - `handleRedirect()`: Process OAuth callback after redirect
 
@@ -480,6 +480,36 @@ await client.login({
 });
 ```
 
+### Pattern: OAuth Authorization Without ID Token
+
+Use `includeOpenidScope: false` when you need OAuth authorization without requesting an ID token. This works with both OIDC and RBA flows.
+
+```typescript
+// OIDC authentication with ID token (default)
+await client.login({
+  popup: true
+  // includeOpenidScope defaults to true
+});
+
+// OIDC authorization without ID token
+await client.login(
+  { popup: true },
+  {
+    includeOpenidScope: false,
+    scope: "api:read"
+  }
+);
+
+// RBA authorization without ID token
+await client.rba.requestChallenge(
+  { userId: "user@example.com" },
+  {
+    includeOpenidScope: false,
+    scope: "api:read"
+  }
+);
+```
+
 ### Pattern: Transaction Details for RBA
 
 Pass contextual information for risk assessment:
@@ -786,4 +816,4 @@ Despite `package.json` specifying `"engines": { "bun": ">= 1", "node": ">= 22" }
 
 ---
 
-_Last updated: November 7, 2025 (streamlined for clarity and removed unnecessary details)_
+_Last updated: May 28, 2026 (updated OIDC includeOpenidScope behavior and examples)_

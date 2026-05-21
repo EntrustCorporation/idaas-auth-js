@@ -25,6 +25,7 @@ export interface ClientParams {
 export interface TokenParams {
   audience?: string;
   scope: string;
+  requireIdToken?: boolean;
 
   // RFC 9470
   maxAge?: number;

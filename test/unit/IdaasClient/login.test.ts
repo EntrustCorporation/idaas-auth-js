@@ -137,6 +137,18 @@ describe("IdaasClient.oidc.login", () => {
         expect(scopeArr).toContain("test_scope2");
       });
 
+      test("openid scope is omitted when includeOpenidScope is false", async () => {
+        await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { scope: "profile email", includeOpenidScope: false });
+
+        const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0]?.value) as { url: string };
+        const { scope } = getUrlParams(authUrl);
+        const scopeArr = scope.split(" ");
+
+        expect(scopeArr).toContain("profile");
+        expect(scopeArr).toContain("email");
+        expect(scopeArr).not.toContain("openid");
+      });
+
       test("default scope used if none supplied in client constructor or login call", async () => {
         await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 

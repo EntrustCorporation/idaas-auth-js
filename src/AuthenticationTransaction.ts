@@ -325,8 +325,10 @@ export class AuthenticationTransaction {
       requestBody,
     );
 
-    if (!(id_token && access_token)) {
-      throw new Error("failed to fetch id token and access token from IDaaS");
+    // If includeOpenidScope is false, do not require id_token
+    const requireIdToken = this.#tokenOptions.includeOpenidScope !== false;
+    if ((requireIdToken && !(id_token && access_token)) || (!requireIdToken && !access_token)) {
+      throw new Error("failed to fetch required tokens from IDaaS");
     }
 
     if (this.#tokenOptions.useRefreshToken && !refresh_token) {
@@ -335,7 +337,7 @@ export class AuthenticationTransaction {
 
     this.#authenticationDetails = {
       ...this.#authenticationDetails,
-      idToken: id_token as string,
+      idToken: id_token as string | undefined,
       accessToken: access_token as string,
       refreshToken: refresh_token as string,
       expiresAt: calculateEpochExpiry(expires_in),
@@ -457,6 +459,10 @@ export class AuthenticationTransaction {
 
   public getAuthenticationDetails = (): AuthenticationDetails => {
     return this.#authenticationDetails;
+  };
+
+  public requiresIdToken = (): boolean => {
+    return this.#tokenOptions.includeOpenidScope !== false;
   };
 
   #constructUserChallengeParams = (): UserChallengeParameters => {
