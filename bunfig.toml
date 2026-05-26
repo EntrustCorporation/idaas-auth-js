@@ -3,7 +3,7 @@
 linker = "isolated"
 
 [test]
-preload = "./happydom.ts"
+preload = ["./happydom.ts"]
 coverage = true
 root = "./test/unit"
 coveragePathIgnorePatterns = [
