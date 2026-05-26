@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.1.0](https://github.com/EntrustCorporation/idaas-auth-js/compare/v2.0.0...v2.1.0) (2026-05-26)
+
+
+### Features
+
+* update IDaaS API to v5.45 ([ffb3277](https://github.com/EntrustCorporation/idaas-auth-js/commit/ffb32776623965cfdcfd3f60119db6213c94cb1c))
+* update IDaaS API to v5.46 ([0926a88](https://github.com/EntrustCorporation/idaas-auth-js/commit/0926a88d98dc1974d29b1ebfc3d37b7182c6e308))
+
+
+### Bug Fixes
+
+* pin fflate to 0.8.2 to fix attw lint:types check ([1c85638](https://github.com/EntrustCorporation/idaas-auth-js/commit/1c8563870bc4e9a7980933c0b61282bbe1c4a26b))
+* update IDaaS API download URL and add error handling ([eb958e5](https://github.com/EntrustCorporation/idaas-auth-js/commit/eb958e5b7558f80834ddc94773b75f48f308a8ef))
+* use array syntax for bunfig.toml preload ([1a154c7](https://github.com/EntrustCorporation/idaas-auth-js/commit/1a154c7ada8bd0b523c90a364f5c527069f4bf04))
+
 ## [2.0.0](https://github.com/EntrustCorporation/idaas-auth-js/compare/v1.0.0...v2.0.0) (2026-05-14)
 
 
