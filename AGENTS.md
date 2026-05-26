@@ -287,6 +287,17 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) f
 
 **Key types**: `feat` (minor bump), `fix` (patch bump), `feat!` or `BREAKING CHANGE:` (major bump)
 
+**IMPORTANT — `chore:` vs `fix:`**: Only use `fix:` for bugs in the **published SDK** itself. Use `chore:` for CI, build tooling, dependency pins, config files, and anything that doesn't affect SDK consumers. Release Please includes `fix:` in changelogs and triggers patch releases; it ignores `chore:` entirely. Using `fix:` for CI-only changes creates spurious releases.
+
+| Change type                                           | Correct type   |
+| ----------------------------------------------------- | -------------- |
+| Bug fix in SDK code                                   | `fix:`         |
+| New SDK feature                                       | `feat:`        |
+| CI workflow fix                                       | `chore:`       |
+| Build tooling fix (e.g. dependency pin)               | `chore:`       |
+| Config file update (e.g. `bunfig.toml`, `.gitignore`) | `chore:`       |
+| Dependency update                                     | `chore(deps):` |
+
 **Validation**: Run `bun run lint:commits` to validate locally. CI enforces this.
 
 ### Testing
