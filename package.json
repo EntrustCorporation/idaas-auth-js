@@ -63,6 +63,9 @@
     "test:manual": "bun run test/test-manual/app.ts",
     "postinstall": "bun run api:generate"
   },
+  "overrides": {
+    "fflate": "0.8.2"
+  },
   "dependencies": {
     "jose": "^6.1.0"
   },
