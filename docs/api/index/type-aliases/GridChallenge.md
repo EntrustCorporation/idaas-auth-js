@@ -12,6 +12,14 @@ If the authentication challenge is of type grid, the GridChallenge object will c
 
 ## Properties
 
+### cellAlphabets
+
+> **cellAlphabets**: `string`
+
+The cellAlphabets value specifies the characters that are valid for the cells in the grid challenge.
+
+---
+
 ### challenge
 
 > **challenge**: `GridChallengeCell`[]
