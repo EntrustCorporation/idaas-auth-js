@@ -5,7 +5,7 @@ import type { AuthorizeResponse, OidcLoginOptions, OidcLogoutOptions, TokenOptio
 import type { AccessToken, StorageManager, TokenParams } from "./storage/StorageManager";
 import { listenToAuthorizePopup, openPopup } from "./utils/browser";
 import { calculateEpochExpiry, formatUrl, sanitizeUri } from "./utils/format";
-import { readAccessToken, validateIdToken } from "./utils/jwt";
+import { readAccessToken, validateIdToken, validateReturnedAccessTokenAcr } from "./utils/jwt";
 import { generateAuthorizationUrl } from "./utils/url";
 
 /**
@@ -262,7 +262,8 @@ export class OidcClient {
   #parseAndSaveTokenResponse(validatedTokenResponse: ValidatedTokenResponse, tokenParams: TokenParams): void {
     const { tokenResponse, decodedIdToken, encodedIdToken } = validatedTokenResponse;
     const { refresh_token, access_token, expires_in } = tokenResponse;
-    const authTime = readAccessToken(access_token)?.auth_time;
+    const decodedAccessToken = readAccessToken(access_token);
+    const authTime = decodedAccessToken?.auth_time;
     const expiresAt = calculateEpochExpiry(expires_in, authTime);
 
     const { audience, scope, maxAge } = tokenParams;
@@ -270,8 +271,12 @@ export class OidcClient {
 
     this.#storageManager.removeTokenParams();
 
-    const token = readAccessToken(access_token);
-    const acr = token?.acr ?? undefined;
+    const acr = decodedAccessToken?.acr ?? undefined;
+
+    validateReturnedAccessTokenAcr({
+      requestedAcrValues: tokenParams.acrValue,
+      returnedAcr: acr,
+    });
 
     const newAccessToken: AccessToken = {
       refreshToken: refresh_token,
@@ -318,6 +323,11 @@ export class OidcClient {
       scope: usedScope,
       requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
     };
+
+    const acrValues = tokenOptions.acrValues ?? this.#context.tokenOptions.acrValues;
+    if (acrValues && acrValues.trim().length > 0) {
+      tokenParams.acrValue = acrValues;
+    }
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
       tokenParams.maxAge = tokenOptions.maxAge;
@@ -371,6 +381,11 @@ export class OidcClient {
       scope: usedScope,
       requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
     };
+
+    const acrValues = tokenOptions.acrValues ?? this.#context.tokenOptions.acrValues;
+    if (acrValues && acrValues.trim().length > 0) {
+      tokenParams.acrValue = acrValues;
+    }
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
       tokenParams.maxAge = tokenOptions.maxAge;

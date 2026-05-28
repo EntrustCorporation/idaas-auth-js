@@ -29,6 +29,11 @@ export interface DecodedAccessToken {
   jti: string;
 }
 
+interface ValidateReturnedAccessTokenAcrParams {
+  requestedAcrValues?: string;
+  returnedAcr?: string;
+}
+
 /**
  * Validate the signed ID token received from the /token endpoint in accordance with the OIDC specification.
  *
@@ -213,4 +218,37 @@ export const readAccessToken = (encodedToken: string): DecodedAccessToken | null
     return null;
   }
   return decodedToken;
+};
+
+/**
+ * Ensures that the returned access token ACR satisfies the requested ACR values.
+ */
+export const validateReturnedAccessTokenAcr = ({
+  requestedAcrValues,
+  returnedAcr,
+}: ValidateReturnedAccessTokenAcrParams): void => {
+  const requestedAcrValuesAsString = requestedAcrValues?.trim() ?? "";
+
+  // No ACR constraints were requested.
+  if (requestedAcrValuesAsString.length === 0) {
+    return;
+  }
+
+  const requestedAcrs = requestedAcrValuesAsString.split(" ").filter(Boolean);
+
+  if (requestedAcrs.length === 0) {
+    return;
+  }
+
+  if (!returnedAcr) {
+    throw new Error(
+      `Returned access token is missing the acr claim for requested acrValues: "${requestedAcrValuesAsString}"`,
+    );
+  }
+
+  if (!requestedAcrs.includes(returnedAcr)) {
+    throw new Error(
+      `Returned access token acr "${returnedAcr}" does not satisfy requested acrValues: "${requestedAcrValuesAsString}"`,
+    );
+  }
 };

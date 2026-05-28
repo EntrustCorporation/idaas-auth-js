@@ -470,13 +470,13 @@ Specify required authentication strength:
 // Require knowledge-based authentication
 await client.login({
   popup: true,
-  acrValues: ["knowledge"] // e.g., password, KBA
+  acrValues: "knowledge" // e.g., password, KBA
 });
 
 // Require possession-based authentication
 await client.login({
   popup: true,
-  acrValues: ["possession"] // e.g., OTP, soft token
+  acrValues: "possession" // e.g., OTP, soft token
 });
 ```
 
@@ -509,6 +509,8 @@ await client.rba.requestChallenge(
   }
 );
 ```
+
+When `acrValues` is requested, token completion now fails fast if the returned access token `acr` claim is missing or does not match one of the requested values.
 
 ### Pattern: Transaction Details for RBA
 

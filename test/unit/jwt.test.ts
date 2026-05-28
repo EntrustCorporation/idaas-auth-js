@@ -1,6 +1,11 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import * as jose from "jose";
-import { readAccessToken, validateIdToken, validateUserInfoToken } from "../../src/utils/jwt";
+import {
+  readAccessToken,
+  validateIdToken,
+  validateReturnedAccessTokenAcr,
+  validateUserInfoToken,
+} from "../../src/utils/jwt";
 import {
   TEST_CLIENT_ID,
   TEST_ENCODED_TOKEN,
@@ -181,6 +186,44 @@ describe("jwt.ts", () => {
     test("returns null if the passed token is not a JWT", () => {
       const result = readAccessToken("not a JWT");
       expect(result).toBeNull();
+    });
+  });
+
+  describe("validateReturnedAccessTokenAcr", () => {
+    test("does not throw when no acrValues are requested", () => {
+      expect(() => {
+        validateReturnedAccessTokenAcr({
+          requestedAcrValues: "",
+          returnedAcr: undefined,
+        });
+      }).not.toThrow();
+    });
+
+    test("does not throw when returned acr matches any requested acr", () => {
+      expect(() => {
+        validateReturnedAccessTokenAcr({
+          requestedAcrValues: "urn:acr:bronze urn:acr:silver",
+          returnedAcr: "urn:acr:silver",
+        });
+      }).not.toThrow();
+    });
+
+    test("throws when acrValues are requested and returned acr claim is missing", () => {
+      expect(() => {
+        validateReturnedAccessTokenAcr({
+          requestedAcrValues: "knowledge possession",
+          returnedAcr: undefined,
+        });
+      }).toThrowError("missing the acr claim");
+    });
+
+    test("throws when returned acr does not satisfy requested acrValues", () => {
+      expect(() => {
+        validateReturnedAccessTokenAcr({
+          requestedAcrValues: "knowledge possession",
+          returnedAcr: "inherence",
+        });
+      }).toThrowError("does not satisfy requested acrValues");
     });
   });
 });

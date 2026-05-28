@@ -40,6 +40,8 @@ Choose your approach:
 - Hosted path: wait for login completion, then call `getAccessToken(stepUpTokenOptions)`.
 - Hosted redirect mode: complete `idaas.oidc.handleRedirect()` before calling `getAccessToken(stepUpTokenOptions)`.
 
+If `stepUpTokenOptions.acrValues` is present, the SDK enforces fail-fast ACR validation while processing returned tokens. The flow throws when the returned access token `acr` claim is missing or does not satisfy any requested value.
+
 5. Retry the protected API call with the upgraded token.
 
 ## Sequence diagram

@@ -111,6 +111,56 @@ describe("IdaasClient.handleRedirect", () => {
       }).toThrowError();
     });
 
+    test("throws if requested acrValues are not satisfied by returned access token acr", () => {
+      storeData({ clientParams: true, tokenParams: true });
+      localStorage.setItem(
+        `entrust.${TEST_CLIENT_ID}.tokenParams`,
+        JSON.stringify({ ...TEST_TOKEN_PARAMS, acrValue: "knowledge possession" }),
+      );
+      window.location.href = loginSuccessUrl;
+
+      spyOn(jwt, "readAccessToken").mockImplementationOnce(() => {
+        return {
+          sub: "testingsubclaim",
+          acr: "inherence",
+          nbf: "0",
+          exp: "9999999999",
+          iat: "0",
+          iss: TEST_BASE_URI,
+          jti: "testing-jti",
+        };
+      });
+
+      expect(async () => {
+        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+      }).toThrowError("does not satisfy requested acrValues");
+    });
+
+    test("throws if acrValues are requested but returned access token acr claim is missing", () => {
+      storeData({ clientParams: true, tokenParams: true });
+      localStorage.setItem(
+        `entrust.${TEST_CLIENT_ID}.tokenParams`,
+        JSON.stringify({ ...TEST_TOKEN_PARAMS, acrValue: "knowledge" }),
+      );
+      window.location.href = loginSuccessUrl;
+
+      spyOn(jwt, "readAccessToken").mockImplementationOnce(() => {
+        return {
+          sub: "testingsubclaim",
+          acr: "",
+          nbf: "0",
+          exp: "9999999999",
+          iat: "0",
+          iss: TEST_BASE_URI,
+          jti: "testing-jti",
+        };
+      });
+
+      expect(async () => {
+        await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+      }).toThrowError("missing the acr claim");
+    });
+
     test("removes tokenParams from storage after processing", async () => {
       storeData({ clientParams: true, tokenParams: true });
       window.location.href = loginSuccessUrl;

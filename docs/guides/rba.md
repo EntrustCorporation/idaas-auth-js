@@ -85,6 +85,8 @@ await idaas.rba.requestChallenge(
 );
 ```
 
+When `tokenOptions.acrValues` is provided, the SDK validates that the returned access token `acr` claim satisfies one of the requested values. If the `acr` claim is missing or does not match, the flow fails and throws.
+
 ## Rendering the challenge
 
 Use the response payload to decide what UI to show. For example, if `challenge.method === "OTP"` display an input for the code; if it’s `"PASSKEY"` trigger a WebAuthn ceremony.
@@ -112,6 +114,8 @@ You must use different properties for KBA & Passkey submissions.
 
 `submitChallenge` returns an `AuthenticationResponse` containing tokens (when the flow ends immediately) or a status update instructing you to poll.
 
+If `acrValues` was requested for the transaction, token completion fails fast if the returned access token `acr` does not satisfy the requested values.
+
 ## Polling asynchronous methods
 
 Some authenticators (push, face) require user action on another device. Use `poll` to check status until the user completes the task or the transaction times out.
@@ -125,6 +129,8 @@ try {
 ```
 
 `poll` returns the same `AuthenticationResponse` shape. Stop polling when status equals `COMPLETED`, `FAILED`, or `CANCELLED`.
+
+If polling completes authentication and `acrValues` was requested, token completion still enforces the same `acr` validation rules.
 
 ## Cancelling a transaction
 

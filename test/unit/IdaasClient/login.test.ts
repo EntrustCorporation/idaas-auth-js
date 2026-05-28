@@ -95,6 +95,13 @@ describe("IdaasClient.oidc.login", () => {
       expect(localStorage.getItem(TEST_TOKEN_PAIR.key)).toBeTruthy();
     });
 
+    test("token params contain requested acr values", async () => {
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { acrValues: "knowledge possession" });
+
+      const tokenParams = JSON.parse(localStorage.getItem(TEST_TOKEN_PAIR.key) as string);
+      expect(tokenParams.acrValue).toBe("knowledge possession");
+    });
+
     test("generates authorization URL with all required parameters", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 

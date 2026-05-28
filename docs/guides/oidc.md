@@ -110,6 +110,7 @@ await fetch("https://api.example.com/me", {
 - `getAccessToken(options?)` gets the locally stored access token, or issues a refresh-token grant if needed (when refresh tokens are enabled).
 - `getIdTokenClaims()` returns decoded claims or `null` if no ID token is stored.
 - `isAuthenticated()` returns `true` when valid tokens are cached.
+- If `tokenOptions.acrValues` is provided during login, token processing fails fast when the returned access token `acr` claim is missing or does not match one of the requested values.
 
 ## Logout
 
@@ -139,6 +140,7 @@ Common issues:
 
 - **Popup blocked** – use redirect flow or instruct users to allow popups.
 - **`invalid_redirect_uri`** – confirm the URI matches the OIDC application configuration.
+- **ACR mismatch during login** – if you request `acrValues`, ensure your IDaaS policy can return an access token whose `acr` satisfies one of those values.
 
 ## Testing tip
 

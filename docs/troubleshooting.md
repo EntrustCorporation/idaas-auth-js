@@ -15,11 +15,13 @@ This guide lists common issues encountered when integrating the IDaaS Auth JS SD
 
 ## Hosted OIDC flows (`oidc`)
 
-| Symptom                                    | Likely cause                                                                         | Fix                                                                                              |
-| ------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| Popup window blocked or immediately closed | Browser blocked popups.                                                              | Switch to redirect flow (`popup: false`) or ask users to allow popups for your domain.           |
-| `invalid_redirect_uri` error               | Redirect URI sent by SDK isn’t registered.                                           | Update the tenant app configuration or pass the correct `redirectUri` to `login`.                |
-| `state mismatch`/`invalid_state`           | Callback handled without original state (e.g., multiple clients or double handling). | Use a single `IdaasClient` instance per request and call `handleRedirect()` only once per login. |
+| Symptom                                                                 | Likely cause                                                                         | Fix                                                                                              |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Popup window blocked or immediately closed                              | Browser blocked popups.                                                              | Switch to redirect flow (`popup: false`) or ask users to allow popups for your domain.           |
+| `invalid_redirect_uri` error                                            | Redirect URI sent by SDK isn’t registered.                                           | Update the tenant app configuration or pass the correct `redirectUri` to `login`.                |
+| `state mismatch`/`invalid_state`                                        | Callback handled without original state (e.g., multiple clients or double handling). | Use a single `IdaasClient` instance per request and call `handleRedirect()` only once per login. |
+| `Returned access token is missing the acr claim...`                     | `acrValues` was requested, but returned token had no `acr` claim.                    | Confirm tenant policy emits `acr` for the requested flow, or request compatible `acrValues`.     |
+| `Returned access token acr ... does not satisfy requested acrValues...` | `acrValues` requested does not match authentication result.                          | Adjust requested `acrValues` or tenant policy so at least one requested value can be returned.   |
 
 ---
 
@@ -34,13 +36,14 @@ This guide lists common issues encountered when integrating the IDaaS Auth JS SD
 
 ## RBA / self-hosted flows (`rba`, `auth`)
 
-| Symptom                                      | Likely cause                                                            | Fix                                                                                   |
-| -------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `userId required` errors                     | Missing first argument on RBA/auth helpers.                             | Supply `userId` (only passkey discoverable flows may omit it).                        |
-| `INVALID_TRANSACTION`                        | Calling `submit`/`poll` after the transaction expired or was cancelled. | Restart with `requestChallenge` or `authenticate*`.                                   |
-| OTP never arrives                            | Wrong delivery channel/attribute.                                       | Specify `otpDeliveryType`/`otpDeliveryAttribute` or update the user profile in IDaaS. |
-| Push/face flows never complete               | No polling or Onfido capture incomplete.                                | Call `auth.poll()`.                                                                   |
-| Passkey flow rejected with `NotAllowedError` | User cancelled the browser prompt or WebAuthn unsupported.              | Prompt the user again or detect support via `browserSupportsPasskey()`.               |
+| Symptom                                      | Likely cause                                                                             | Fix                                                                                     |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `userId required` errors                     | Missing first argument on RBA/auth helpers.                                              | Supply `userId` (only passkey discoverable flows may omit it).                          |
+| `INVALID_TRANSACTION`                        | Calling `submit`/`poll` after the transaction expired or was cancelled.                  | Restart with `requestChallenge` or `authenticate*`.                                     |
+| OTP never arrives                            | Wrong delivery channel/attribute.                                                        | Specify `otpDeliveryType`/`otpDeliveryAttribute` or update the user profile in IDaaS.   |
+| Push/face flows never complete               | No polling or Onfido capture incomplete.                                                 | Call `auth.poll()`.                                                                     |
+| Passkey flow rejected with `NotAllowedError` | User cancelled the browser prompt or WebAuthn unsupported.                               | Prompt the user again or detect support via `browserSupportsPasskey()`.                 |
+| ACR validation errors on completion          | Transaction requested `acrValues`, but returned token `acr` is missing or not requested. | Align `acrValues` with policy/authenticator outcome so one requested value is returned. |
 
 ---
 
