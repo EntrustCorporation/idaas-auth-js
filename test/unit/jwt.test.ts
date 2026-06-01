@@ -12,6 +12,9 @@ import {
 const TEST_RS256_HEADER = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url");
 const TEST_RS256_PAYLOAD = Buffer.from(JSON.stringify(TEST_JWT_PAYLOAD)).toString("base64url");
 const TEST_RS256_TOKEN = `${TEST_RS256_HEADER}.${TEST_RS256_PAYLOAD}.signature`;
+const createRs256Token = (payload: object) => {
+  return `${TEST_RS256_HEADER}.${Buffer.from(JSON.stringify(payload)).toString("base64url")}.signature`;
+};
 
 describe("jwt.ts", () => {
   describe("validateIdToken", () => {
@@ -203,6 +206,65 @@ describe("jwt.ts", () => {
         idToken: { ...TEST_JWT_PAYLOAD, acr: "different" },
       });
       expect(promise).rejects.toThrow("supported");
+    });
+
+    test("throw error if requested acr values are provided but acr claim is missing", async () => {
+      // @ts-expect-error - simplified mock implementation for testing
+      const _spyOnCreateRemoteJWKSet = spyOn(jose, "createRemoteJWKSet").mockImplementationOnce(() => {
+        return async () => ({ keys: [] });
+      });
+
+      const _spyOnJwtVerify = spyOn(jose, "jwtVerify").mockImplementationOnce(
+        // @ts-expect-error not full return type
+        async () => ({ payload: { ...TEST_JWT_PAYLOAD, acr: undefined } }),
+      );
+
+      const promise = validateIdToken({
+        ...TEST_VALIDATE_ID_TOKEN_PARAMS,
+        idToken: createRs256Token({ ...TEST_JWT_PAYLOAD, acr: undefined }),
+        requestedAcrValues: ["1"],
+      });
+      expect(promise).rejects.toThrow("acr");
+    });
+
+    test("throw error if acr claim is not one of requested acr values", async () => {
+      // @ts-expect-error - simplified mock implementation for testing
+      const _spyOnCreateRemoteJWKSet = spyOn(jose, "createRemoteJWKSet").mockImplementationOnce(() => {
+        return async () => ({ keys: [] });
+      });
+
+      const _spyOnJwtVerify = spyOn(jose, "jwtVerify").mockImplementationOnce(
+        // @ts-expect-error not full return type
+        async () => ({ payload: { ...TEST_JWT_PAYLOAD, acr: "1" } }),
+      );
+
+      const promise = validateIdToken({
+        ...TEST_VALIDATE_ID_TOKEN_PARAMS,
+        idToken: createRs256Token({ ...TEST_JWT_PAYLOAD, acr: "1" }),
+        requestedAcrValues: ["2"],
+      });
+      expect(promise).rejects.toThrow("requested");
+    });
+
+    test("successful validation when acr claim is one of requested acr values", async () => {
+      // @ts-expect-error - simplified mock implementation for testing
+      const _spyOnCreateRemoteJWKSet = spyOn(jose, "createRemoteJWKSet").mockImplementationOnce(() => {
+        return async () => ({ keys: [] });
+      });
+
+      const _spyOnJwtVerify = spyOn(jose, "jwtVerify").mockImplementationOnce(
+        // @ts-expect-error not full return type
+        async () => ({ payload: { ...TEST_JWT_PAYLOAD, acr: "1" } }),
+      );
+
+      const result = await validateIdToken({
+        ...TEST_VALIDATE_ID_TOKEN_PARAMS,
+        idToken: createRs256Token({ ...TEST_JWT_PAYLOAD, acr: "1" }),
+        requestedAcrValues: ["2", "1"],
+      });
+
+      expect(typeof result.idToken).toBe("string");
+      expect(result.decodedJwt.sub).toBeTruthy();
     });
 
     test("successful validation with single aud returns a decoded id token and an encoded id token", async () => {

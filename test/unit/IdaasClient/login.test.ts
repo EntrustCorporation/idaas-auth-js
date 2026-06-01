@@ -95,6 +95,17 @@ describe("IdaasClient.oidc.login", () => {
       expect(localStorage.getItem(TEST_TOKEN_PAIR.key)).toBeTruthy();
     });
 
+    test("token params include acrValues when acrValues are passed", async () => {
+      const acrValues = `${TEST_ACR_CLAIM} different`;
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { acrValues });
+
+      const tokenParamsRaw = localStorage.getItem(TEST_TOKEN_PAIR.key);
+      expect(tokenParamsRaw).toBeTruthy();
+
+      const tokenParams = JSON.parse(tokenParamsRaw as string) as { acrValues?: string };
+      expect(tokenParams.acrValues).toBe(acrValues);
+    });
+
     test("generates authorization URL with all required parameters", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 

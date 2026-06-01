@@ -30,6 +30,7 @@ import { generateAuthorizationUrl } from "./utils/url";
 interface AuthenticationDetails {
   method?: IdaasAuthenticationMethod;
   secondFactor?: IdaasAuthenticationMethod;
+  nonce?: string;
   scope?: string;
   expiresAt?: number;
   idToken?: string;
@@ -82,11 +83,13 @@ export class AuthenticationTransaction {
    */
   public async requestAuthChallenge(): Promise<AuthenticationResponse> {
     // 1. Generate /authorizejwt URL and fetch OIDC details
-    const { url, codeVerifier } = await generateAuthorizationUrl(this.#oidcConfig, {
+    const { url, codeVerifier, nonce } = await generateAuthorizationUrl(this.#oidcConfig, {
       clientId: this.#clientId,
       tokenOptions: this.#tokenOptions,
       type: "jwt",
     });
+
+    this.#authenticationDetails.nonce = nonce;
 
     const { authRequestKey, applicationId } = await getAuthRequestId(url);
 

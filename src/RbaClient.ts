@@ -10,6 +10,7 @@ import type {
 } from "./models";
 import type { StorageManager } from "./storage/StorageManager";
 import { calculateEpochExpiry } from "./utils/format";
+import { validateIdToken } from "./utils/jwt";
 
 /**
  * Risk-Based Authentication (RBA) client for self-hosted authentication flows.
@@ -107,7 +108,7 @@ export class RbaClient {
     this.#storageManager.saveIdaasSessionToken({ token: authenticationResponse.token || "" });
 
     if (authenticationResponse.authenticationCompleted) {
-      this.#handleAuthenticationTransactionSuccess();
+      await this.#handleAuthenticationTransactionSuccess();
     }
 
     return authenticationResponse;
@@ -167,7 +168,7 @@ export class RbaClient {
     const authenticationResponse = await this.#authenticationTransaction.pollForAuthCompletion();
 
     if (authenticationResponse.authenticationCompleted) {
-      this.#handleAuthenticationTransactionSuccess();
+      await this.#handleAuthenticationTransactionSuccess();
     }
     return authenticationResponse;
   }
@@ -224,12 +225,12 @@ export class RbaClient {
     });
   };
 
-  #handleAuthenticationTransactionSuccess = () => {
+  #handleAuthenticationTransactionSuccess = async () => {
     if (!this.#authenticationTransaction) {
       throw new Error("No authentication transaction in progress!");
     }
 
-    const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience, acr } =
+    const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience, acr, nonce } =
       this.#authenticationTransaction.getAuthenticationDetails();
 
     // Only require accessToken for OAuth-only flows
@@ -251,9 +252,27 @@ export class RbaClient {
 
     // Save ID token only if present
     if (idToken) {
+      if (!nonce) {
+        throw new Error("Nonce (nonce) claim is missing from ID token validation context");
+      }
+
+      const { id_token_signing_alg_values_supported, acr_values_supported, jwks_uri } = await this.#context.getConfig();
+      const requestedAcrValues = acr?.split(" ").filter(Boolean);
+
+      const { idToken: encodedIdToken, decodedJwt } = await validateIdToken({
+        idToken,
+        issuer: this.#context.issuerUrl,
+        clientId: this.#context.clientId,
+        nonce,
+        idTokenSigningAlgValuesSupported: id_token_signing_alg_values_supported,
+        acrValuesSupported: acr_values_supported,
+        jwksEndpoint: jwks_uri,
+        requestedAcrValues,
+      });
+
       this.#storageManager.saveIdToken({
-        encoded: idToken,
-        decoded: decodeJwt(idToken),
+        encoded: encodedIdToken,
+        decoded: decodedJwt ?? decodeJwt(idToken),
       });
     }
 

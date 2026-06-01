@@ -165,6 +165,20 @@ describe("IdaasClient.handleRedirect", () => {
       expect(storedToken?.encoded).toBeDefined();
     });
 
+    test("passes requested acr values to id token validation", async () => {
+      const requestedAcrValues = "1 2";
+      localStorage.setItem(
+        TEST_TOKEN_PAIR.key,
+        JSON.stringify({ ...TEST_TOKEN_PARAMS, acrValues: requestedAcrValues, requireIdToken: true }),
+      );
+      storeData({ clientParams: true });
+      window.location.href = loginSuccessUrl;
+
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+
+      expect(spyOnValidateIdToken).toHaveBeenCalledWith(expect.objectContaining({ requestedAcrValues: ["1", "2"] }));
+    });
+
     test("preserves existing ID token when openid scope is omitted", async () => {
       const tokenResponseWithoutIdToken = {
         access_token: TEST_ACCESS_TOKEN,
