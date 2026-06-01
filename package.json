@@ -64,7 +64,7 @@
     "postinstall": "bun run api:generate"
   },
   "overrides": {
-    "fflate": "0.8.2"
+    "fflate": "0.8.3"
   },
   "dependencies": {
     "jose": "^6.1.0"
