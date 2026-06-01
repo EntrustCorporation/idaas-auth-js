@@ -131,6 +131,7 @@ export class OidcClient {
       redirectUri,
       nonce,
       tokenParams.requireIdToken ?? true,
+      tokenParams.acrValues?.split(" ").filter(Boolean),
     );
     this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
     return null;
@@ -210,6 +211,7 @@ export class OidcClient {
     redirectUri: string,
     nonce: string,
     requireIdToken: boolean,
+    requestedAcrValues?: string[],
   ) {
     const { token_endpoint, id_token_signing_alg_values_supported, acr_values_supported, jwks_uri } =
       await this.#context.getConfig();
@@ -237,6 +239,7 @@ export class OidcClient {
       allowedIdTokenSigningAlgorithms: this.#context.allowedIdTokenSigningAlgorithms,
       acrValuesSupported: acr_values_supported,
       jwksEndpoint: jwks_uri,
+      requestedAcrValues,
     });
 
     return { tokenResponse, decodedIdToken, encodedIdToken: idToken };
@@ -319,6 +322,7 @@ export class OidcClient {
       audience: tokenOptions.audience ?? this.#context.tokenOptions.audience,
       scope: usedScope,
       requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
+      acrValues: tokenOptions.acrValues ?? this.#context.tokenOptions.acrValues,
     };
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
@@ -336,6 +340,7 @@ export class OidcClient {
       finalRedirectUri,
       nonce,
       tokenParams.requireIdToken ?? true,
+      tokenParams.acrValues?.split(" ").filter(Boolean),
     );
 
     this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
@@ -372,6 +377,7 @@ export class OidcClient {
       audience: tokenOptions.audience ?? this.#context.tokenOptions.audience,
       scope: usedScope,
       requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
+      acrValues: tokenOptions.acrValues ?? this.#context.tokenOptions.acrValues,
     };
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {

@@ -26,6 +26,7 @@ export interface TokenParams {
   audience?: string;
   scope: string;
   requireIdToken?: boolean;
+  acrValues?: string;
 
   // RFC 9470
   maxAge?: number;

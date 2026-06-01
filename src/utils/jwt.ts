@@ -26,6 +26,7 @@ export interface ValidateIdTokenParams {
   allowedIdTokenSigningAlgorithms?: string[];
   acrValuesSupported?: string[];
   jwksEndpoint: string;
+  requestedAcrValues?: string[];
 }
 
 export interface ValidateUserInfoTokenParams {
@@ -68,6 +69,7 @@ export const validateIdToken = async ({
   allowedIdTokenSigningAlgorithms,
   acrValuesSupported,
   jwksEndpoint,
+  requestedAcrValues,
 }: ValidateIdTokenParams) => {
   if (!idToken) {
     throw new Error("No ID token supplied");
@@ -244,6 +246,18 @@ export const validateIdToken = async ({
     } catch (error) {
       throw new Error(
         `ID token signature verification failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  if (requestedAcrValues && requestedAcrValues.length > 0) {
+    if (!acrClaim) {
+      throw new Error("Authentication Context Class Reference (acr) claim is missing from ID token");
+    }
+
+    if (typeof acrClaim !== "string" || !requestedAcrValues.includes(acrClaim)) {
+      throw new Error(
+        `Authentication Context Class Reference (acr) claim ${acrClaim} in the ID token is not one of the requested values ${requestedAcrValues}`,
       );
     }
   }
