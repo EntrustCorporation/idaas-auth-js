@@ -95,7 +95,7 @@
     "knip": "6.16.1",
     "oidc-provider": "9.8.4",
     "onfido-sdk-ui": "14.75.0",
-    "prettier": "3.8.3",
+    "prettier": "3.8.4",
     "rsbuild-plugin-publint": "1.0.0",
     "typedoc": "0.28.19",
     "typedoc-plugin-markdown": "4.12.0",
