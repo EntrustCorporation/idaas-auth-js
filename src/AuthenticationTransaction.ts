@@ -23,6 +23,7 @@ import type {
   UserAuthenticateQueryResponse,
   UserChallengeParameters,
 } from "./models/openapi-ts";
+import { type DPoPAlg, type DPoPKeyMaterial, generateDpopKeyMaterial, generateDpopProofJwt } from "./utils/dpop";
 import { calculateEpochExpiry } from "./utils/format";
 import { buildFidoResponse, buildPubKeyRequestOptions } from "./utils/passkey";
 import { generateAuthorizationUrl } from "./utils/url";
@@ -39,6 +40,7 @@ interface AuthenticationDetails {
   audience?: string;
   maxAge?: number;
   acr?: string;
+  dpopBound?: boolean;
 }
 
 interface RequiredDetails {
@@ -64,6 +66,8 @@ export class AuthenticationTransaction {
   #requiredDetails?: RequiredDetails;
   #token?: string;
   #abortController?: AbortController;
+  #dpopKeyMaterial?: DPoPKeyMaterial;
+  #dpopKeyAlg?: DPoPAlg;
 
   constructor({ oidcConfig, tokenOptions, clientId, authenticationRequestParams }: AuthenticationTransactionOptions) {
     const { issuer } = oidcConfig;
@@ -83,10 +87,12 @@ export class AuthenticationTransaction {
    */
   public async requestAuthChallenge(): Promise<AuthenticationResponse> {
     // 1. Generate /authorizejwt URL and fetch OIDC details
+    const dpopJkt = await this.#getDpopJkt();
     const { url, codeVerifier, nonce } = await generateAuthorizationUrl(this.#oidcConfig, {
       clientId: this.#clientId,
       tokenOptions: this.#tokenOptions,
       type: "jwt",
+      dpopJkt,
     });
 
     this.#authenticationDetails.nonce = nonce;
@@ -323,10 +329,13 @@ export class AuthenticationTransaction {
       jwt: this.#token,
     };
 
-    const { id_token, access_token, expires_in, refresh_token } = await requestToken(
-      this.#oidcConfig.token_endpoint,
-      requestBody,
-    );
+    const dpopJwt = await this.#createDpopProof({
+      method: "POST",
+      uri: this.#oidcConfig.token_endpoint,
+    });
+
+    const tokenResponse = await requestToken(this.#oidcConfig.token_endpoint, requestBody, dpopJwt);
+    const { id_token, access_token, expires_in, refresh_token } = tokenResponse;
 
     // If includeOpenidScope is false, do not require id_token
     const requireIdToken = this.#tokenOptions.includeOpenidScope !== false;
@@ -347,6 +356,7 @@ export class AuthenticationTransaction {
       audience: this.#tokenOptions.audience,
       maxAge: this.#tokenOptions.maxAge,
       acr: this.#tokenOptions.acrValues,
+      dpopBound: tokenResponse.token_type.toLowerCase() === "dpop",
     };
   };
 
@@ -467,6 +477,54 @@ export class AuthenticationTransaction {
   public requiresIdToken = (): boolean => {
     return this.#tokenOptions.includeOpenidScope !== false;
   };
+
+  async #getDpopJkt(): Promise<string | undefined> {
+    const dpop = this.#tokenOptions.dpop;
+    if (!(dpop && typeof dpop === "object" && dpop.includeJkt)) {
+      return undefined;
+    }
+
+    const keyMaterial = await this.#getDpopKeyMaterial();
+    return keyMaterial.jkt;
+  }
+
+  async #createDpopProof({
+    method,
+    uri,
+    accessToken,
+  }: {
+    method: string;
+    uri: string;
+    accessToken?: string;
+  }): Promise<string | undefined> {
+    const dpop = this.#tokenOptions.dpop;
+    if (!dpop) {
+      return undefined;
+    }
+
+    const keyMaterial = await this.#getDpopKeyMaterial();
+    return await generateDpopProofJwt({
+      alg: typeof dpop === "object" ? (dpop.alg ?? "ES256") : "ES256",
+      privateKey: keyMaterial.privateKey,
+      publicJwk: keyMaterial.publicJwk,
+      htm: method,
+      htu: uri,
+      accessToken,
+    });
+  }
+
+  async #getDpopKeyMaterial(): Promise<DPoPKeyMaterial> {
+    const dpop = this.#tokenOptions.dpop;
+    const alg = dpop && typeof dpop === "object" ? (dpop.alg ?? "ES256") : "ES256";
+
+    if (this.#dpopKeyMaterial && this.#dpopKeyAlg === alg) {
+      return this.#dpopKeyMaterial;
+    }
+
+    this.#dpopKeyMaterial = await generateDpopKeyMaterial(alg);
+    this.#dpopKeyAlg = alg;
+    return this.#dpopKeyMaterial;
+  }
 
   #constructUserChallengeParams = (): UserChallengeParameters => {
     const { method, secondFactor } = this.#authenticationDetails;

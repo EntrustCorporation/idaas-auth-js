@@ -52,6 +52,12 @@ export class IdaasClient {
       maxAge: tokenOptions.maxAge,
       acrValues: tokenOptions.acrValues ?? "",
       includeOpenidScope: tokenOptions.includeOpenidScope ?? true,
+      dpop: tokenOptions.dpop
+        ? {
+            alg: tokenOptions.dpop.alg,
+            includeJkt: tokenOptions.dpop.includeJkt ?? false,
+          }
+        : undefined,
     };
 
     this.#context = new IdaasContext({
@@ -185,6 +191,7 @@ export class IdaasClient {
     audience = this.#context.tokenOptions.audience,
     scope = this.#context.tokenOptions.scope,
     acrValues = "",
+    dpop,
   }: TokenOptions = {}): Promise<string | null> {
     // 1. Remove tokens that are no longer valid
     this.#storageManager.removeExpiredTokens();
@@ -236,11 +243,19 @@ export class IdaasClient {
           throw new Error("Token that is not valid was not removed");
         }
 
+        if (requestedToken.dpopBound && !(dpop ?? this.#context.tokenOptions.dpop)) {
+          throw new Error(
+            "DPoP-bound token refresh requires tokenOptions.dpop (alg) or global token DPoP configuration.",
+          );
+        }
+
         const {
           refresh_token: newRefreshToken,
           access_token: newEncodedAccessToken,
           expires_in,
-        } = await this.#requestTokenUsingRefreshToken(refreshToken);
+        } = await this.#requestTokenUsingRefreshToken(refreshToken, {
+          dpop: requestedToken.dpopBound ? (dpop ?? this.#context.tokenOptions.dpop) : dpop,
+        });
 
         const authTime = readAccessToken(newEncodedAccessToken)?.auth_time;
         const newExpiration = calculateEpochExpiry(expires_in, authTime);
@@ -253,6 +268,7 @@ export class IdaasClient {
           audience,
           scope,
           acr,
+          dpopBound: requestedToken.dpopBound,
         };
 
         this.#storageManager.removeAccessToken(requestedToken);
@@ -275,7 +291,7 @@ export class IdaasClient {
    * audience will be used if available.
    * @returns User claims from the OpenID Provider, or `null` if unavailable
    */
-  public async getUserInfo(accessToken?: string): Promise<UserClaims | null> {
+  public async getUserInfo(accessToken?: string, tokenOptions: TokenOptions = {}): Promise<UserClaims | null> {
     const { userinfo_endpoint, issuer, jwks_uri } = await this.#context.getConfig();
 
     const userInfoAccessToken = accessToken ?? (await this.getAccessToken({}));
@@ -284,7 +300,26 @@ export class IdaasClient {
       throw new Error("Client is not authorized to access the UserInfo endpoint");
     }
 
-    const userInfo = await getUserInfo(userinfo_endpoint, userInfoAccessToken);
+    const matchedStoredToken = this.#storageManager
+      .getAccessTokens()
+      .find((storedToken) => storedToken.accessToken === userInfoAccessToken);
+    const shouldUseDpop = matchedStoredToken?.dpopBound || !!tokenOptions.dpop;
+    const effectiveDpopOptions = tokenOptions.dpop ?? this.#context.tokenOptions.dpop;
+
+    if (matchedStoredToken?.dpopBound && !effectiveDpopOptions) {
+      throw new Error("DPoP-bound token requires tokenOptions.dpop (alg) or global token DPoP configuration.");
+    }
+
+    const dpopJwt = shouldUseDpop
+      ? await this.#context.createDpopProof({
+          method: "GET",
+          uri: userinfo_endpoint,
+          accessToken: userInfoAccessToken,
+          dpopOptions: effectiveDpopOptions,
+        })
+      : undefined;
+
+    const userInfo = await getUserInfo(userinfo_endpoint, userInfoAccessToken, dpopJwt);
 
     let claims: UserClaims | null;
 
@@ -336,7 +371,7 @@ export class IdaasClient {
   }
 
   // Service methods for OidcClient and RbaClient
-  async #requestTokenUsingRefreshToken(refreshToken: string): Promise<TokenResponse> {
+  async #requestTokenUsingRefreshToken(refreshToken: string, tokenOptions: TokenOptions = {}): Promise<TokenResponse> {
     const { token_endpoint } = await this.#context.getConfig();
 
     const tokenRequest: RefreshTokenRequest = {
@@ -345,6 +380,12 @@ export class IdaasClient {
       refresh_token: refreshToken,
     };
 
-    return await requestToken(token_endpoint, tokenRequest);
+    const dpopJwt = await this.#context.createDpopProof({
+      method: "POST",
+      uri: token_endpoint,
+      dpopOptions: tokenOptions.dpop,
+    });
+
+    return await requestToken(token_endpoint, tokenRequest, dpopJwt);
   }
 }

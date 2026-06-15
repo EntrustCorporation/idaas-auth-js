@@ -148,6 +148,22 @@ describe("IdaasClient.getAccessToken", () => {
     expect(token).toStrictEqual(TEST_ACCESS_TOKEN);
   });
 
+  test("sends DPoP proof header on refresh-token exchange when DPoP is enabled", async () => {
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, scope: "1" });
+
+    await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+      scope: "1",
+      audience: TEST_AUDIENCE,
+      dpop: { alg: "ES256" },
+    });
+
+    const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
+    expect(tokenEndpointCall).toBeDefined();
+    const headers = tokenEndpointCall?.[1]?.headers as Record<string, string>;
+    expect(typeof headers.DPoP).toBe("string");
+    expect((headers.DPoP ?? "").length).toBeGreaterThan(10);
+  });
+
   describe("refresh token validity", () => {
     test("refreshing a token does not change the number of tokens stored", async () => {
       storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0 });

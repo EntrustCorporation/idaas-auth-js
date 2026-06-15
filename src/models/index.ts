@@ -101,6 +101,31 @@ export interface TokenOptions {
    * @default true
    */
   includeOpenidScope?: boolean;
+
+  /**
+   * DPoP (Demonstration of Proof-of-Possession) configuration.
+   *
+   * Omit this field to disable DPoP.
+   * Provide an object to enable DPoP.
+   */
+  dpop?: DPoPOptions;
+}
+
+/**
+ * DPoP (Demonstration of Proof-of-Possession) options.
+ */
+export interface DPoPOptions {
+  /**
+   * Signing algorithm used for DPoP proof JWTs.
+   */
+  alg: "ES256" | "ES384" | "ES512" | "PS256" | "PS384" | "PS512" | "RS256" | "RS384" | "RS512";
+
+  /**
+   * When `true`, includes `dpop_jkt` in authorization requests.
+   *
+   * @default false
+   */
+  includeJkt?: boolean;
 }
 
 /**

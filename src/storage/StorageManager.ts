@@ -1,4 +1,6 @@
 import type { JWTPayload } from "jose";
+import type { DPoPOptions } from "../models";
+import type { SerializedDPoPKeyMaterial } from "../utils/dpop";
 import { LocalStorageStore } from "./LocalStorageStore";
 import { InMemoryStore } from "./MemoryStore";
 import type { IStore } from "./shared";
@@ -27,6 +29,11 @@ export interface TokenParams {
   scope: string;
   requireIdToken?: boolean;
   acrValues?: string;
+  dpop?: {
+    alg: NonNullable<DPoPOptions["alg"]>;
+    includeJkt: boolean;
+  };
+  dpopKeyMaterial?: SerializedDPoPKeyMaterial;
 
   // RFC 9470
   maxAge?: number;
@@ -59,6 +66,7 @@ export interface AccessToken {
   scope: string;
   maxAgeExpiry?: number;
   acr?: string;
+  dpopBound?: boolean;
 }
 
 export class StorageManager {

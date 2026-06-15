@@ -11,6 +11,7 @@ export interface GenerateAuthorizationUrlOptions {
   // OIDC flow params
   responseMode?: "query" | "web_message";
   redirectUri?: string;
+  dpopJkt?: string;
 
   // Control parameters
   type: "standard" | "jwt";
@@ -85,6 +86,10 @@ export const generateAuthorizationUrl = async (
   // Add ACR values if provided
   if (options.tokenOptions.acrValues && options.tokenOptions.acrValues.trim().length > 0) {
     url.searchParams.append("acr_values", options.tokenOptions.acrValues);
+  }
+
+  if (options.dpopJkt) {
+    url.searchParams.append("dpop_jkt", options.dpopJkt);
   }
 
   url.searchParams.append("response_type", "code");

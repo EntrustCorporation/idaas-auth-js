@@ -220,6 +220,7 @@ export class RbaClient {
         useRefreshToken: tokenOptions?.useRefreshToken ?? this.#context.tokenOptions.useRefreshToken,
         maxAge: tokenOptions?.maxAge ?? this.#context.tokenOptions.maxAge,
         includeOpenidScope: effectiveincludeOpenidScope,
+        dpop: tokenOptions?.dpop ?? this.#context.tokenOptions.dpop,
       },
       clientId: this.#context.clientId,
     });
@@ -230,7 +231,7 @@ export class RbaClient {
       throw new Error("No authentication transaction in progress!");
     }
 
-    const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience, acr, nonce } =
+    const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience, acr, nonce, dpopBound } =
       this.#authenticationTransaction.getAuthenticationDetails();
 
     // Only require accessToken for OAuth-only flows
@@ -248,6 +249,7 @@ export class RbaClient {
       audience,
       maxAgeExpiry: maxAge ? calculateEpochExpiry(maxAge.toString()) : undefined,
       acr,
+      dpopBound,
     });
 
     // Save ID token only if present

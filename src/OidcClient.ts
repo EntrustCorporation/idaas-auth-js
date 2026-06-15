@@ -123,6 +123,10 @@ export class OidcClient {
       throw new Error("No token params stored, unable to parse");
     }
 
+    if (tokenParams.dpopKeyMaterial) {
+      await this.#context.restoreDpopKeyMaterial(tokenParams.dpopKeyMaterial);
+    }
+
     const authorizeCode = this.#validateAuthorizeResponse(authorizeResponse, state);
 
     const validatedTokenResponse = await this.#requestAndValidateTokens(
@@ -132,6 +136,7 @@ export class OidcClient {
       nonce,
       tokenParams.requireIdToken ?? true,
       tokenParams.acrValues?.split(" ").filter(Boolean),
+      tokenParams.dpop,
     );
     this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
     return null;
@@ -212,6 +217,7 @@ export class OidcClient {
     nonce: string,
     requireIdToken: boolean,
     requestedAcrValues?: string[],
+    dpopOptions?: TokenOptions["dpop"],
   ) {
     const { token_endpoint, id_token_signing_alg_values_supported, acr_values_supported, jwks_uri } =
       await this.#context.getConfig();
@@ -224,7 +230,13 @@ export class OidcClient {
       redirect_uri: redirectUri,
     };
 
-    const tokenResponse = await requestToken(token_endpoint, tokenRequest);
+    const dpopJwt = await this.#context.createDpopProof({
+      method: "POST",
+      uri: token_endpoint,
+      dpopOptions,
+    });
+
+    const tokenResponse = await requestToken(token_endpoint, tokenRequest, dpopJwt);
 
     if (!tokenResponse.id_token && !requireIdToken) {
       return { tokenResponse };
@@ -286,6 +298,7 @@ export class OidcClient {
       scope,
       maxAgeExpiry,
       acr,
+      dpopBound: tokenResponse.token_type.toLowerCase() === "dpop",
     };
 
     if (encodedIdToken && decodedIdToken) {
@@ -303,6 +316,7 @@ export class OidcClient {
    */
   async #loginWithPopup({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<string | null> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
+    const dpopJkt = await this.#context.getDpopJkt(tokenOptions.dpop);
 
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
       await this.#context.getConfig(),
@@ -311,6 +325,7 @@ export class OidcClient {
         clientId: this.#context.clientId,
         responseMode: "web_message",
         redirectUri: finalRedirectUri,
+        dpopJkt,
         tokenOptions: {
           ...this.#context.tokenOptions,
           ...tokenOptions,
@@ -323,6 +338,7 @@ export class OidcClient {
       scope: usedScope,
       requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
       acrValues: tokenOptions.acrValues ?? this.#context.tokenOptions.acrValues,
+      dpop: this.#context.getEffectiveDpopOptions(tokenOptions.dpop),
     };
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
@@ -341,6 +357,7 @@ export class OidcClient {
       nonce,
       tokenParams.requireIdToken ?? true,
       tokenParams.acrValues?.split(" ").filter(Boolean),
+      tokenParams.dpop,
     );
 
     this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
@@ -359,6 +376,13 @@ export class OidcClient {
    */
   async #loginWithRedirect({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<void> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
+    const effectiveDpop = this.#context.getEffectiveDpopOptions(tokenOptions.dpop);
+    const dpopJkt = await this.#context.getDpopJkt(tokenOptions.dpop);
+
+    const dpopKeyMaterial = effectiveDpop?.includeJkt
+      ? await this.#context.exportDpopKeyMaterialForAlg(effectiveDpop.alg)
+      : undefined;
+
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
       await this.#context.getConfig(),
       {
@@ -366,6 +390,7 @@ export class OidcClient {
         clientId: this.#context.clientId,
         responseMode: "query",
         redirectUri: finalRedirectUri,
+        dpopJkt,
         tokenOptions: {
           ...this.#context.tokenOptions,
           ...tokenOptions,
@@ -378,6 +403,8 @@ export class OidcClient {
       scope: usedScope,
       requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
       acrValues: tokenOptions.acrValues ?? this.#context.tokenOptions.acrValues,
+      dpop: this.#context.getEffectiveDpopOptions(tokenOptions.dpop),
+      dpopKeyMaterial,
     };
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {

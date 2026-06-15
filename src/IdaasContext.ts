@@ -1,12 +1,28 @@
 import { fetchOpenidConfiguration, type OidcConfig } from "./api";
 import type { TokenOptions } from "./models";
+import {
+  type DPoPAlg,
+  type DPoPKeyMaterial,
+  generateDpopKeyMaterial,
+  generateDpopProofJwt,
+  importDpopKeyMaterial,
+  type SerializedDPoPKeyMaterial,
+  serializeDpopKeyMaterial,
+} from "./utils/dpop";
+
+export interface NormalizedDpopOptions {
+  alg: DPoPAlg;
+  includeJkt: boolean;
+}
 
 /**
  * Normalized token options with defaults applied.
  * All properties except audience & maxAge are required.
  */
-export type NormalizedTokenOptions = Required<Omit<TokenOptions, "audience" | "maxAge">> &
-  Pick<TokenOptions, "audience" | "maxAge">;
+export type NormalizedTokenOptions = Required<Omit<TokenOptions, "audience" | "maxAge" | "dpop">> &
+  Pick<TokenOptions, "audience" | "maxAge" | "dpop"> & {
+    dpop?: NormalizedDpopOptions;
+  };
 
 /**
  * Services class to provide shared functionality to OIDC and RBA clients
@@ -19,6 +35,8 @@ export class IdaasContext {
   readonly #allowedIdTokenSigningAlgorithms?: string[];
 
   #config?: OidcConfig;
+  #dpopKeyMaterial?: DPoPKeyMaterial;
+  #dpopKeyAlg?: DPoPAlg;
 
   constructor({
     issuerUrl,
@@ -51,6 +69,86 @@ export class IdaasContext {
 
   get allowedIdTokenSigningAlgorithms() {
     return this.#allowedIdTokenSigningAlgorithms;
+  }
+
+  public getEffectiveDpopOptions(dpopOptions?: TokenOptions["dpop"]): NormalizedDpopOptions | undefined {
+    if (!dpopOptions) {
+      return this.#tokenOptions.dpop;
+    }
+
+    return {
+      alg: dpopOptions.alg,
+      includeJkt: dpopOptions.includeJkt ?? this.#tokenOptions.dpop?.includeJkt ?? false,
+    };
+  }
+
+  public async getDpopJkt(dpopOptions?: TokenOptions["dpop"]): Promise<string | undefined> {
+    const effectiveDpop = this.getEffectiveDpopOptions(dpopOptions);
+
+    if (!effectiveDpop?.includeJkt) {
+      return undefined;
+    }
+
+    const keyMaterial = await this.#getDpopKeyMaterial(effectiveDpop.alg);
+    return keyMaterial.jkt;
+  }
+
+  public async createDpopProof({
+    method,
+    uri,
+    dpopOptions,
+    accessToken,
+  }: {
+    method: string;
+    uri: string;
+    dpopOptions?: TokenOptions["dpop"];
+    accessToken?: string;
+  }): Promise<string | undefined> {
+    const effectiveDpop = this.getEffectiveDpopOptions(dpopOptions);
+
+    if (!effectiveDpop) {
+      return undefined;
+    }
+
+    const keyMaterial = await this.#getDpopKeyMaterial(effectiveDpop.alg);
+
+    return await generateDpopProofJwt({
+      alg: effectiveDpop.alg,
+      privateKey: keyMaterial.privateKey,
+      publicJwk: keyMaterial.publicJwk,
+      htm: method,
+      htu: uri,
+      accessToken,
+    });
+  }
+
+  public async exportDpopKeyMaterialForAlg(alg: DPoPAlg): Promise<SerializedDPoPKeyMaterial> {
+    const keyMaterial = await this.#getDpopKeyMaterial(alg);
+
+    return await serializeDpopKeyMaterial({
+      alg,
+      privateKey: keyMaterial.privateKey,
+      publicJwk: keyMaterial.publicJwk,
+      jkt: keyMaterial.jkt,
+    });
+  }
+
+  public async restoreDpopKeyMaterial(serialized: SerializedDPoPKeyMaterial): Promise<void> {
+    const keyMaterial = await importDpopKeyMaterial(serialized);
+    this.#dpopKeyMaterial = keyMaterial;
+    this.#dpopKeyAlg = serialized.alg;
+  }
+
+  async #getDpopKeyMaterial(alg: DPoPAlg): Promise<DPoPKeyMaterial> {
+    if (this.#dpopKeyMaterial && this.#dpopKeyAlg === alg) {
+      return this.#dpopKeyMaterial;
+    }
+
+    const keyMaterial = await generateDpopKeyMaterial(alg);
+    this.#dpopKeyMaterial = keyMaterial;
+    this.#dpopKeyAlg = alg;
+
+    return keyMaterial;
   }
 
   /**
