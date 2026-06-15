@@ -1,31 +1,23 @@
 import { describe, expect, it } from "bun:test";
-import { LocalStorageStore } from "../../../src/storage/LocalStorageStore";
-import { InMemoryStore } from "../../../src/storage/MemoryStore";
-import type { IStore } from "../../../src/storage/shared";
+import { StorageManager } from "../../../src/storage/StorageManager";
 
-describe("Store Tests", () => {
-  const tests: [string, IStore][] = [
-    ["InMemoryStore", new InMemoryStore()],
-    ["LocalStorageStore", new LocalStorageStore()],
-  ];
+describe("StorageManager store implementations", () => {
+  const storageTypes: Array<"memory" | "localstorage"> = ["memory", "localstorage"];
 
-  it.each(tests)("%s should perform basic CRUD operations", (_, store) => {
-    const key1 = "foo";
-    const key2 = "bar";
+  it.each(storageTypes)("%s: performs basic CRUD via StorageManager", (storageType) => {
+    const sm = new StorageManager("test-client", storageType);
 
-    const value1 = Bun.randomUUIDv7();
-    const value2 = Bun.randomUUIDv7();
+    const key1 = Bun.randomUUIDv7();
+    const key2 = Bun.randomUUIDv7();
 
-    store.save(key1, value1);
-    store.save(key2, value2);
+    sm.saveClientParams({ nonce: key1, codeVerifier: key2, redirectUri: "https://x.com", state: "s" });
+    expect(sm.getClientParams()?.nonce).toBe(key1);
+    expect(sm.getClientParams()?.codeVerifier).toBe(key2);
 
-    expect(store.get(key1)).toBe(value1);
-    expect(store.get(key2)).toBe(value2);
+    sm.saveIdaasSessionToken(key1);
+    expect(sm.getIdaasSessionToken()).toBe(key1);
 
-    store.delete(key1);
-    store.delete(key2);
-
-    expect(store.get(key1)).toBeNull();
-    expect(store.get(key2)).toBeNull();
+    sm.remove();
+    expect(sm.getClientParams()).toBeUndefined();
   });
 });

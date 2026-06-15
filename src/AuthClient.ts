@@ -185,7 +185,7 @@ export class AuthClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/auth.md Convenience Auth Guide}
    */
   public async passkey(userId?: string): Promise<AuthenticationResponse | undefined> {
-    const browserSupported = await browserSupportsPasskey();
+    const browserSupported = browserSupportsPasskey();
     if (!browserSupported) {
       throw new Error("This browser does not support passkey");
     }

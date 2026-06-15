@@ -105,7 +105,7 @@ export class RbaClient {
     }
 
     const authenticationResponse = await this.#authenticationTransaction.submitAuthChallenge({ ...options });
-    this.#storageManager.saveIdaasSessionToken({ token: authenticationResponse.token || "" });
+    this.#storageManager.saveIdaasSessionToken(authenticationResponse.token || "");
 
     if (authenticationResponse.authenticationCompleted) {
       await this.#handleAuthenticationTransactionSuccess();
@@ -131,7 +131,7 @@ export class RbaClient {
    */
   public async logout(): Promise<void> {
     const baseUrl = new URL(this.#context.issuerUrl).origin;
-    const token = this.#storageManager.getIdaasSessionToken()?.token;
+    const token = this.#storageManager.getIdaasSessionToken();
 
     if (token) {
       await logoutSilently(token, baseUrl);

@@ -73,9 +73,8 @@ describe("IdaasClient.rba.requestChallenge", () => {
 
     expect(spyOnGenerateAuthorizationUrl).toHaveBeenCalledTimes(1);
     expect(spyOnGenerateAuthorizationUrl).toHaveBeenCalledWith(
-      TEST_OIDC_CONFIG,
       expect.objectContaining({
-        type: "jwt",
+        baseUrl: `${TEST_ISSUER_URI}/authorizejwt`,
         clientId: TEST_CLIENT_ID,
         tokenOptions: expect.objectContaining({
           scope: "profile email",
@@ -109,9 +108,8 @@ describe("IdaasClient.rba.requestChallenge", () => {
     );
 
     expect(spyOnGenerateAuthorizationUrl).toHaveBeenCalledWith(
-      TEST_OIDC_CONFIG,
       expect.objectContaining({
-        type: "jwt",
+        baseUrl: `${TEST_ISSUER_URI}/authorizejwt`,
         clientId: TEST_CLIENT_ID,
         tokenOptions: expect.objectContaining({
           scope: "openid profile email",

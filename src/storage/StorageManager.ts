@@ -1,7 +1,23 @@
 import type { JWTPayload } from "jose";
-import { LocalStorageStore } from "./LocalStorageStore";
-import { InMemoryStore } from "./MemoryStore";
-import type { IStore } from "./shared";
+
+interface Store {
+  save(key: string, data: string): void;
+  get(key: string): string | null;
+  delete(key: string): void;
+}
+
+class MemoryStore implements Store {
+  readonly #cache = new Map<string, string>();
+  save(key: string, data: string) { this.#cache.set(key, data); }
+  get(key: string) { return this.#cache.get(key) ?? null; }
+  delete(key: string) { this.#cache.delete(key); }
+}
+
+class LocalStore implements Store {
+  save(key: string, data: string) { localStorage.setItem(key, data); }
+  get(key: string) { return localStorage.getItem(key); }
+  delete(key: string) { localStorage.removeItem(key); }
+}
 
 /**
  * The parameters that are created during the creation of the authorization URL.
@@ -30,7 +46,6 @@ export interface TokenParams {
 
   // RFC 9470
   maxAge?: number;
-  acrValue?: string;
 }
 
 /**
@@ -39,13 +54,6 @@ export interface TokenParams {
 export interface IdToken {
   encoded: string;
   decoded: JWTPayload;
-}
-
-/**
- * Contains the IDaaS Session Token.
- */
-interface IdaasSessionToken {
-  token: string;
 }
 
 /**
@@ -73,7 +81,7 @@ export class StorageManager {
   readonly #idTokenStorageKey: string;
   readonly #tokenParamsStorageKey: string;
   readonly #idaasSessionTokenStorageKey: string;
-  readonly #storage: IStore;
+  readonly #storage: Store;
 
   constructor(clientId: string, storageType: "memory" | "localstorage") {
     this.#clientParamsStorageKey = `entrust.${clientId}.clientParams`;
@@ -81,15 +89,7 @@ export class StorageManager {
     this.#idTokenStorageKey = `entrust.${clientId}.idToken`;
     this.#idaasSessionTokenStorageKey = `entrust.${clientId}.idaasSessionToken`;
     this.#tokenParamsStorageKey = `entrust.${clientId}.tokenParams`;
-    this.#storage = storageType === "memory" ? new InMemoryStore() : new LocalStorageStore();
-  }
-  /**
-   * Saves values in local storage that are required for the OIDC auth flow.
-   * @param data The data to be stored in local storage.
-   * @param storageKey The key used to store the data.
-   */
-  #save(storageKey: string, data: string) {
-    this.#storage.save(storageKey, data);
+    this.#storage = storageType === "memory" ? new MemoryStore() : new LocalStore();
   }
 
   /**
@@ -97,17 +97,15 @@ export class StorageManager {
    * @param data The ClientParams that were generated during the generate the Authorization URL.
    */
   public saveClientParams(data: ClientParams) {
-    const stringifiedData = JSON.stringify(data);
-    this.#storage.save(this.#clientParamsStorageKey, stringifiedData);
+    this.#storage.save(this.#clientParamsStorageKey, JSON.stringify(data));
   }
 
   /**
    * Save the IDaaS session token in storage.
-   * @param data The IDaaS session token.
+   * @param token The IDaaS session token string.
    */
-  public saveIdaasSessionToken(data: IdaasSessionToken) {
-    const stringifiedData = JSON.stringify(data);
-    this.#storage.save(this.#idaasSessionTokenStorageKey, stringifiedData);
+  public saveIdaasSessionToken(token: string) {
+    this.#storage.save(this.#idaasSessionTokenStorageKey, token);
   }
 
   /**
@@ -115,8 +113,7 @@ export class StorageManager {
    * @param data The encoded and decoded id token.
    */
   public saveIdToken(data: IdToken) {
-    const stringifiedData = JSON.stringify(data);
-    this.#storage.save(this.#idTokenStorageKey, stringifiedData);
+    this.#storage.save(this.#idTokenStorageKey, JSON.stringify(data));
   }
 
   /**
@@ -124,8 +121,7 @@ export class StorageManager {
    * @param data the token params to be saved.
    */
   public saveTokenParams(data: TokenParams) {
-    const stringifiedDate = JSON.stringify(data);
-    this.#save(this.#tokenParamsStorageKey, stringifiedDate);
+    this.#storage.save(this.#tokenParamsStorageKey, JSON.stringify(data));
   }
 
   /**
@@ -134,16 +130,8 @@ export class StorageManager {
    */
   public saveAccessToken(data: AccessToken) {
     const accessTokens = this.getAccessTokens();
-
-    if (!accessTokens) {
-      const stringifiedData = JSON.stringify([data]);
-      this.#save(this.#accessTokenStorageKey, stringifiedData);
-      return;
-    }
-
     accessTokens.push(data);
-    const stringifiedData = JSON.stringify(accessTokens);
-    this.#save(this.#accessTokenStorageKey, stringifiedData);
+    this.#storage.save(this.#accessTokenStorageKey, JSON.stringify(accessTokens));
   }
 
   /**
@@ -152,7 +140,7 @@ export class StorageManager {
    */
   public removeAccessToken(removedToken: AccessToken) {
     const accessTokens = this.getAccessTokens();
-    if (!accessTokens || accessTokens.length === 0) {
+    if (accessTokens.length === 0) {
       return;
     }
 
@@ -163,8 +151,7 @@ export class StorageManager {
     }
 
     accessTokens.splice(index, 1);
-    const stringifiedData = JSON.stringify(accessTokens);
-    this.#save(this.#accessTokenStorageKey, stringifiedData);
+    this.#storage.save(this.#accessTokenStorageKey, JSON.stringify(accessTokens));
   }
 
   /**
@@ -248,11 +235,11 @@ export class StorageManager {
   }
 
   /**
-   * Retrieves the information about the IDaaS session token stored in storage.
-   * @returns IDaaS session token object if stored, otherwise undefined.
+   * Retrieves the IDaaS session token stored in storage.
+   * @returns The session token string if stored, otherwise undefined.
    */
-  public getIdaasSessionToken(): IdaasSessionToken | undefined {
-    return this.#get(this.#idaasSessionTokenStorageKey);
+  public getIdaasSessionToken(): string | undefined {
+    return this.#storage.get(this.#idaasSessionTokenStorageKey) ?? undefined;
   }
 
   /**

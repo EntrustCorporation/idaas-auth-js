@@ -305,9 +305,8 @@ export class OidcClient {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
 
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
-      await this.#context.getConfig(),
       {
-        type: "standard",
+        baseUrl: (await this.#context.getConfig()).authorization_endpoint,
         clientId: this.#context.clientId,
         responseMode: "web_message",
         redirectUri: finalRedirectUri,
@@ -360,9 +359,8 @@ export class OidcClient {
   async #loginWithRedirect({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<void> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
-      await this.#context.getConfig(),
       {
-        type: "standard",
+        baseUrl: (await this.#context.getConfig()).authorization_endpoint,
         clientId: this.#context.clientId,
         responseMode: "query",
         redirectUri: finalRedirectUri,

@@ -83,10 +83,10 @@ export class AuthenticationTransaction {
    */
   public async requestAuthChallenge(): Promise<AuthenticationResponse> {
     // 1. Generate /authorizejwt URL and fetch OIDC details
-    const { url, codeVerifier, nonce } = await generateAuthorizationUrl(this.#oidcConfig, {
+    const { url, codeVerifier, nonce } = await generateAuthorizationUrl({
+      baseUrl: `${this.#oidcConfig.issuer}/authorizejwt`,
       clientId: this.#clientId,
       tokenOptions: this.#tokenOptions,
-      type: "jwt",
     });
 
     this.#authenticationDetails.nonce = nonce;
