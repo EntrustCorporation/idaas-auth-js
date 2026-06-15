@@ -7,6 +7,7 @@ import {
   requestToken,
   submitAuthChallenge,
 } from "./api";
+import type { IdaasContext } from "./IdaasContext";
 import type {
   AuthenticationRequestParams,
   AuthenticationResponse,
@@ -39,6 +40,8 @@ interface AuthenticationDetails {
   audience?: string;
   maxAge?: number;
   acr?: string;
+  dpopBound?: boolean;
+  dpopKeyRef?: string;
 }
 
 interface RequiredDetails {
@@ -50,6 +53,7 @@ interface RequiredDetails {
 export class AuthenticationTransaction {
   readonly #authenticationRequestParams?: AuthenticationRequestParams;
   readonly #clientId: string;
+  readonly #context: IdaasContext;
   readonly #issuerOrigin: string;
   readonly #oidcConfig: OidcConfig;
   readonly #tokenOptions: TokenOptions;
@@ -65,9 +69,16 @@ export class AuthenticationTransaction {
   #token?: string;
   #abortController?: AbortController;
 
-  constructor({ oidcConfig, tokenOptions, clientId, authenticationRequestParams }: AuthenticationTransactionOptions) {
+  constructor({
+    context,
+    oidcConfig,
+    tokenOptions,
+    clientId,
+    authenticationRequestParams,
+  }: AuthenticationTransactionOptions) {
     const { issuer } = oidcConfig;
 
+    this.#context = context;
     this.#authenticationDetails = {
       scope: tokenOptions.scope,
     };
@@ -83,10 +94,12 @@ export class AuthenticationTransaction {
    */
   public async requestAuthChallenge(): Promise<AuthenticationResponse> {
     // 1. Generate /authorizejwt URL and fetch OIDC details
+    const dpopJkt = await this.#context.getDpopJkt(this.#tokenOptions.dpop);
     const { url, codeVerifier, nonce } = await generateAuthorizationUrl(this.#oidcConfig, {
       clientId: this.#clientId,
       tokenOptions: this.#tokenOptions,
       type: "jwt",
+      dpopJkt,
     });
 
     this.#authenticationDetails.nonce = nonce;
@@ -323,10 +336,14 @@ export class AuthenticationTransaction {
       jwt: this.#token,
     };
 
-    const { id_token, access_token, expires_in, refresh_token } = await requestToken(
-      this.#oidcConfig.token_endpoint,
-      requestBody,
-    );
+    const dpopJwt = await this.#context.createDpopProof({
+      method: "POST",
+      uri: this.#oidcConfig.token_endpoint,
+      dpopOptions: this.#tokenOptions.dpop,
+    });
+
+    const tokenResponse = await requestToken(this.#oidcConfig.token_endpoint, requestBody, dpopJwt);
+    const { id_token, access_token, expires_in, refresh_token } = tokenResponse;
 
     // If includeOpenidScope is false, do not require id_token
     const requireIdToken = this.#tokenOptions.includeOpenidScope !== false;
@@ -338,6 +355,17 @@ export class AuthenticationTransaction {
       throw new Error("failed to fetch refresh token from IDaaS");
     }
 
+    const dpopBound = tokenResponse.token_type.toLowerCase() === "dpop";
+    let dpopKeyRef: string | undefined;
+    if (dpopBound) {
+      const effectiveDpop = this.#context.getEffectiveDpopOptions(this.#tokenOptions.dpop);
+      if (!effectiveDpop) {
+        throw new Error("DPoP-bound token response received without DPoP key material");
+      }
+
+      dpopKeyRef = await this.#context.persistCurrentDpopKeyMaterialForAlg(effectiveDpop.alg);
+    }
+
     this.#authenticationDetails = {
       ...this.#authenticationDetails,
       idToken: id_token as string | undefined,
@@ -347,6 +375,8 @@ export class AuthenticationTransaction {
       audience: this.#tokenOptions.audience,
       maxAge: this.#tokenOptions.maxAge,
       acr: this.#tokenOptions.acrValues,
+      dpopBound,
+      dpopKeyRef,
     };
   };
 

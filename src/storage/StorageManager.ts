@@ -1,4 +1,5 @@
 import type { JWTPayload } from "jose";
+import type { DPoPOptions } from "../models";
 import { LocalStorageStore } from "./LocalStorageStore";
 import { InMemoryStore } from "./MemoryStore";
 import type { IStore } from "./shared";
@@ -27,6 +28,11 @@ export interface TokenParams {
   scope: string;
   requireIdToken?: boolean;
   acrValues?: string;
+  dpop?: {
+    alg: NonNullable<DPoPOptions["alg"]>;
+    includeJkt: boolean;
+  };
+  dpopKeyRef?: string;
 
   // RFC 9470
   maxAge?: number;
@@ -59,6 +65,8 @@ export interface AccessToken {
   scope: string;
   maxAgeExpiry?: number;
   acr?: string;
+  dpopBound?: boolean;
+  dpopKeyRef?: string;
 }
 
 export class StorageManager {
@@ -134,13 +142,6 @@ export class StorageManager {
    */
   public saveAccessToken(data: AccessToken) {
     const accessTokens = this.getAccessTokens();
-
-    if (!accessTokens) {
-      const stringifiedData = JSON.stringify([data]);
-      this.#save(this.#accessTokenStorageKey, stringifiedData);
-      return;
-    }
-
     accessTokens.push(data);
     const stringifiedData = JSON.stringify(accessTokens);
     this.#save(this.#accessTokenStorageKey, stringifiedData);
@@ -149,11 +150,12 @@ export class StorageManager {
   /**
    * Remove an access token from storage.
    * @param removedToken the token to be removed.
+   * @returns The dpopKeyRef that was in the removed token, if it is no longer referenced by any other token.
    */
-  public removeAccessToken(removedToken: AccessToken) {
+  public removeAccessToken(removedToken: AccessToken): string | undefined {
     const accessTokens = this.getAccessTokens();
-    if (!accessTokens || accessTokens.length === 0) {
-      return;
+    if (accessTokens.length === 0) {
+      return undefined;
     }
 
     const index = accessTokens.findIndex((token) => token.accessToken === removedToken.accessToken);
@@ -162,36 +164,54 @@ export class StorageManager {
       throw new Error("error removing access token, token not found");
     }
 
+    const removedDpopKeyRef = accessTokens[index]?.dpopKeyRef;
+
     accessTokens.splice(index, 1);
     const stringifiedData = JSON.stringify(accessTokens);
     this.#save(this.#accessTokenStorageKey, stringifiedData);
+
+    // Check if the removed token's dpopKeyRef is still referenced by any other token
+    if (removedDpopKeyRef && !accessTokens.some((token) => token.dpopKeyRef === removedDpopKeyRef)) {
+      return removedDpopKeyRef;
+    }
+
+    return undefined;
   }
 
   /**
-   * Removes expired token from storage.
+   * Removes expired tokens from storage.
+   * @returns Array of dpopKeyRefs that are no longer referenced by any token and should be cleaned up.
    */
-  public removeExpiredTokens(): void {
+  public removeExpiredTokens(): string[] {
     const tokens = this.getAccessTokens();
-    if (!tokens) {
-      return;
-    }
     const now = Math.floor(Date.now() / 1000);
     // buffer (in seconds) to refresh/delete early, ensures an expired token is not returned
     const buffer = 15;
 
-    for (const token of tokens) {
+    const orphanedDpopKeyRefs: string[] = [];
+
+    for (const token of [...tokens]) {
       if (token.maxAgeExpiry) {
         if (now > token.maxAgeExpiry - buffer) {
-          this.removeAccessToken(token);
+          const orphaned = this.removeAccessToken(token);
+          if (orphaned) {
+            orphanedDpopKeyRefs.push(orphaned);
+          }
+          continue;
         }
       }
 
       if (now > token.expiresAt - buffer) {
         if (!token.refreshToken) {
-          this.removeAccessToken(token);
+          const orphaned = this.removeAccessToken(token);
+          if (orphaned) {
+            orphanedDpopKeyRefs.push(orphaned);
+          }
         }
       }
     }
+
+    return orphanedDpopKeyRefs;
   }
 
   /**
@@ -262,6 +282,7 @@ export class StorageManager {
     this.#storage.delete(this.#clientParamsStorageKey);
     this.#storage.delete(this.#accessTokenStorageKey);
     this.#storage.delete(this.#idTokenStorageKey);
+    this.#storage.delete(this.#idaasSessionTokenStorageKey);
     this.#storage.delete(this.#tokenParamsStorageKey);
   }
 }

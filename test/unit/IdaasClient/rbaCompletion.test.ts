@@ -3,7 +3,7 @@ import * as api from "../../../src/api";
 import { IdaasClient } from "../../../src/IdaasClient";
 import * as jwt from "../../../src/utils/jwt";
 import * as urlUtils from "../../../src/utils/url";
-import { TEST_CLIENT_ID, TEST_ISSUER_URI, TEST_OIDC_CONFIG } from "../constants";
+import { TEST_ACCESS_TOKEN_KEY, TEST_CLIENT_ID, TEST_ISSUER_URI, TEST_OIDC_CONFIG } from "../constants";
 
 describe("IdaasClient.rba completion", () => {
   // @ts-expect-error non full type
@@ -129,5 +129,73 @@ describe("IdaasClient.rba completion", () => {
 
     expect(spyOnRequestToken).toHaveBeenCalledTimes(1);
     expect(spyOnValidateIdToken).not.toHaveBeenCalled();
+  });
+
+  test("persists dpopKeyRef for DPoP-bound RBA tokens", async () => {
+    const client = new IdaasClient({
+      issuerUrl: TEST_ISSUER_URI,
+      clientId: TEST_CLIENT_ID,
+      storageType: "localstorage",
+    });
+
+    spyOnRequestToken.mockResolvedValueOnce({
+      access_token: "dpop-access-token",
+      id_token: "id-token",
+      token_type: "DPoP",
+      expires_in: "300",
+    });
+
+    await client.rba.requestChallenge(
+      {
+        userId: "user@example.com",
+        strict: true,
+        preferredAuthenticationMethod: "PASSWORD",
+      },
+      {
+        dpop: { alg: "ES256", includeJkt: true },
+      },
+    );
+
+    await client.rba.submitChallenge({ response: "password" });
+
+    const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_TOKEN_KEY) ?? "[]") as Array<{
+      accessToken: string;
+      dpopBound?: boolean;
+      dpopKeyRef?: string;
+    }>;
+
+    expect(storedTokens).toHaveLength(1);
+    expect(storedTokens[0]).toMatchObject({
+      accessToken: "dpop-access-token",
+      dpopBound: true,
+    });
+    expect(storedTokens[0]?.dpopKeyRef).toBeTruthy();
+  });
+
+  test("fails fast when RBA receives a DPoP-bound token without DPoP configuration", async () => {
+    const client = new IdaasClient({
+      issuerUrl: TEST_ISSUER_URI,
+      clientId: TEST_CLIENT_ID,
+      storageType: "localstorage",
+    });
+
+    spyOnRequestToken.mockResolvedValueOnce({
+      access_token: "dpop-access-token",
+      id_token: "id-token",
+      token_type: "DPoP",
+      expires_in: "300",
+    });
+
+    await client.rba.requestChallenge({
+      userId: "user@example.com",
+      strict: true,
+      preferredAuthenticationMethod: "PASSWORD",
+    });
+
+    await expect(client.rba.submitChallenge({ response: "password" })).rejects.toThrow(
+      "DPoP-bound token response received without DPoP key material",
+    );
+
+    expect(localStorage.getItem(TEST_ACCESS_TOKEN_KEY)).toBeNull();
   });
 });

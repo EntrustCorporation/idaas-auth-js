@@ -1,5 +1,9 @@
 import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import { decodeProtectedHeader } from "jose";
+import { IdaasClient } from "../../../src";
 import type { AccessToken } from "../../../src/storage/StorageManager";
+import { generateDpopKeyMaterial } from "../../../src/utils/dpop";
+import { persistDpopKeyMaterial, retrievePersistedDpopKeyMaterial } from "../../../src/utils/dpopKeyStore";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
   SET_DEFAULTS_IDAAS_CLIENT,
@@ -8,12 +12,15 @@ import {
   TEST_ACCESS_TOKEN_OBJECT,
   TEST_AUDIENCE,
   TEST_BASE_URI,
+  TEST_CLIENT_ID,
   TEST_DIFFERENT_ACCESS_TOKEN,
   TEST_DIFFERENT_AUDIENCE,
   TEST_DIFFERENT_SCOPE,
+  TEST_ISSUER_URI,
   TEST_SCOPE,
+  TEST_TOKEN_RESPONSE,
 } from "../constants";
-import { mockFetch } from "../helpers";
+import { blockIndexedDb, mockFetch } from "../helpers";
 
 describe("IdaasClient.getAccessToken", () => {
   afterAll(() => {
@@ -23,6 +30,8 @@ describe("IdaasClient.getAccessToken", () => {
   afterEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    // @ts-expect-error not full type
+    spyOnFetch.mockImplementation(mockFetch);
   });
 
   // @ts-expect-error not full type
@@ -129,6 +138,27 @@ describe("IdaasClient.getAccessToken", () => {
     expect(token).toStrictEqual(TEST_ACCESS_TOKEN);
   });
 
+  test("returns a valid token when cleanup for an expired DPoP token fails", async () => {
+    storeToken({
+      ...TEST_ACCESS_TOKEN_OBJECT,
+      expiresAt: 0,
+      accessToken: "expiredToken",
+      refreshToken: undefined,
+      dpopKeyRef: "expired-dpop-key-ref",
+    });
+    storeToken(TEST_ACCESS_TOKEN_OBJECT);
+
+    const restoreIndexedDb = blockIndexedDb();
+
+    try {
+      const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE });
+
+      expect(token).toStrictEqual(TEST_ACCESS_TOKEN);
+    } finally {
+      restoreIndexedDb();
+    }
+  });
+
   test("refreshes a token with the requested scopes and audience that is expired and refreshable", async () => {
     storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, scope: "1" });
     storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, accessToken: "notRefreshed", scope: "1 2" });
@@ -146,6 +176,110 @@ describe("IdaasClient.getAccessToken", () => {
     const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_PAIR.key) as string);
     expect(storedTokens.length).toBe(2);
     expect(token).toStrictEqual(TEST_ACCESS_TOKEN);
+  });
+
+  test("ignores Bearer tokens when DPoP is enabled", async () => {
+    storeToken(TEST_ACCESS_TOKEN_OBJECT);
+
+    await expect(
+      NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+        audience: TEST_AUDIENCE,
+        dpop: { alg: "ES256" },
+      }),
+    ).rejects.toThrow("Requested token not found");
+  });
+
+  test("ignores DPoP-bound tokens when DPoP is not enabled", async () => {
+    const keyMaterial = await generateDpopKeyMaterial("ES256");
+    const dpopKeyRef = await persistDpopKeyMaterial({ alg: "ES256", ...keyMaterial });
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, dpopBound: true, dpopKeyRef });
+
+    await expect(NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE })).rejects.toThrow(
+      "Requested token not found",
+    );
+  });
+
+  test("returns a DPoP-bound token when DPoP is enabled", async () => {
+    const keyMaterial = await generateDpopKeyMaterial("ES256");
+    const dpopKeyRef = await persistDpopKeyMaterial({ alg: "ES256", ...keyMaterial });
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, accessToken: "bearer-token" });
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, accessToken: "dpop-token", dpopBound: true, dpopKeyRef });
+
+    const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+      audience: TEST_AUDIENCE,
+      dpop: { alg: "ES256" },
+    });
+
+    expect(token).toBe("dpop-token");
+  });
+
+  test("sends DPoP proof header on refresh-token exchange for DPoP-bound tokens", async () => {
+    const keyMaterial = await generateDpopKeyMaterial("ES256");
+    const dpopKeyRef = await persistDpopKeyMaterial({ alg: "ES256", ...keyMaterial });
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, scope: "1", dpopBound: true, dpopKeyRef });
+
+    await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+      scope: "1",
+      audience: TEST_AUDIENCE,
+      dpop: { alg: "ES256" },
+    });
+
+    const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
+    expect(tokenEndpointCall).toBeDefined();
+    const headers = tokenEndpointCall?.[1]?.headers as Record<string, string>;
+    expect(typeof headers.DPoP).toBe("string");
+    expect((headers.DPoP ?? "").length).toBeGreaterThan(10);
+  });
+
+  test("uses global DPoP config when selecting DPoP-bound tokens", async () => {
+    const keyMaterial = await generateDpopKeyMaterial("ES256");
+    const dpopKeyRef = await persistDpopKeyMaterial({ alg: "ES256", ...keyMaterial });
+    const globalDpopClient = new IdaasClient(
+      {
+        issuerUrl: TEST_ISSUER_URI,
+        clientId: TEST_CLIENT_ID,
+        storageType: "localstorage",
+      },
+      { dpop: { alg: "ES256" } },
+    );
+
+    // @ts-expect-error private method call
+    globalDpopClient.storageManager.saveAccessToken({ ...TEST_ACCESS_TOKEN_OBJECT, accessToken: "bearer-token" });
+    // @ts-expect-error private method call
+    globalDpopClient.storageManager.saveAccessToken({
+      ...TEST_ACCESS_TOKEN_OBJECT,
+      accessToken: "dpop-token",
+      dpopBound: true,
+      dpopKeyRef,
+    });
+
+    const token = await globalDpopClient.getAccessToken({ audience: TEST_AUDIENCE });
+
+    expect(token).toBe("dpop-token");
+  });
+
+  test("uses persisted DPoP key algorithm for DPoP-bound refresh even when configured alg differs", async () => {
+    const keyMaterial = await generateDpopKeyMaterial("PS256");
+    const dpopKeyRef = await persistDpopKeyMaterial({ alg: "PS256", ...keyMaterial });
+    storeToken({
+      ...TEST_ACCESS_TOKEN_OBJECT,
+      expiresAt: 0,
+      scope: "1",
+      dpopBound: true,
+      dpopKeyRef,
+    });
+
+    await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+      scope: "1",
+      audience: TEST_AUDIENCE,
+      dpop: { alg: "ES256" },
+    });
+
+    const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
+    const headers = tokenEndpointCall?.[1]?.headers as Record<string, string>;
+
+    expect(headers.DPoP).toBeDefined();
+    expect(decodeProtectedHeader(headers.DPoP as string).alg).toBe("PS256");
   });
 
   describe("refresh token validity", () => {
@@ -211,6 +345,69 @@ describe("IdaasClient.getAccessToken", () => {
       // Verify access token was updated (comes from TEST_TOKEN_RESPONSE mock)
       expect(refreshedToken.accessToken).toBeTruthy();
       expect(refreshedToken.accessToken).toStrictEqual(TEST_ACCESS_TOKEN);
+    });
+
+    test("the refreshed token derives dpopBound from token_type in refresh response", async () => {
+      const keyMaterial = await generateDpopKeyMaterial("ES256");
+      const dpopKeyRef = await persistDpopKeyMaterial({ alg: "ES256", ...keyMaterial });
+      storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, dpopBound: true, dpopKeyRef });
+
+      await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE, dpop: { alg: "ES256" } });
+
+      const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_PAIR.key) as string);
+      const refreshedToken = storedTokens[0] as AccessToken;
+
+      expect(refreshedToken.dpopBound).toBeFalse();
+      expect(refreshedToken.dpopKeyRef).toBeUndefined();
+      expect(await retrievePersistedDpopKeyMaterial(dpopKeyRef)).toBeUndefined();
+    });
+
+    test("stores and returns refreshed token when stale DPoP key cleanup fails", async () => {
+      const keyMaterial = await generateDpopKeyMaterial("ES256");
+      const dpopKeyRef = await persistDpopKeyMaterial({ alg: "ES256", ...keyMaterial });
+      storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, dpopBound: true, dpopKeyRef });
+
+      let restoreIndexedDb: (() => void) | undefined;
+
+      // @ts-expect-error not full type
+      spyOnFetch.mockImplementation(async (url: string) => {
+        if (url === `${TEST_BASE_URI}/token`) {
+          return Promise.resolve({
+            json: () => {
+              restoreIndexedDb = blockIndexedDb();
+              return Promise.resolve({ ...TEST_TOKEN_RESPONSE, token_type: "Bearer" });
+            },
+            headers: {
+              get: () => null,
+            },
+          } as unknown as Response);
+        }
+
+        return mockFetch(url);
+      });
+
+      try {
+        const token = await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE, dpop: { alg: "ES256" } });
+        const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_PAIR.key) as string);
+        const refreshedToken = storedTokens[0] as AccessToken;
+
+        expect(token).toStrictEqual(TEST_ACCESS_TOKEN);
+        expect(refreshedToken.accessToken).toStrictEqual(TEST_ACCESS_TOKEN);
+        expect(refreshedToken.dpopBound).toBeFalse();
+        expect(refreshedToken.dpopKeyRef).toBeUndefined();
+      } finally {
+        restoreIndexedDb?.();
+      }
+    });
+
+    test("does not refresh a Bearer token when DPoP is enabled", async () => {
+      storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, dpopBound: false, dpopKeyRef: undefined });
+
+      await expect(
+        NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE, dpop: { alg: "ES256" } }),
+      ).rejects.toThrow("Requested token not found");
+
+      expect(spyOnFetch.mock.calls.some((call) => call[0] === `${TEST_BASE_URI}/token`)).toBeFalse();
     });
   });
 

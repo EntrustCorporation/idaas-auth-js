@@ -1,6 +1,12 @@
 import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
-import { NO_DEFAULT_IDAAS_CLIENT, TEST_BASE_URI, TEST_CLIENT_ID } from "../constants";
-import { getUrlParams, mockFetch, storeData } from "../helpers";
+import {
+  NO_DEFAULT_IDAAS_CLIENT,
+  TEST_ACCESS_PAIR,
+  TEST_BASE_URI,
+  TEST_CLIENT_ID,
+  TEST_TOKEN_PAIR,
+} from "../constants";
+import { blockIndexedDb, getUrlParams, mockFetch, storeData } from "../helpers";
 
 describe("IdaasClient.oidc.logout", () => {
   // @ts-expect-error not full type
@@ -54,5 +60,50 @@ describe("IdaasClient.oidc.logout", () => {
     const { client_id, post_logout_redirect_uri } = getUrlParams(window.location.href);
     expect(client_id).toStrictEqual(TEST_CLIENT_ID);
     expect(post_logout_redirect_uri).toStrictEqual(TEST_BASE_URI);
+  });
+
+  test("clears stored data and redirects when DPoP cleanup fails", async () => {
+    storeData({ idToken: true, tokenParams: true, clientParams: true, accessToken: true });
+    localStorage.setItem(
+      TEST_ACCESS_PAIR.key,
+      JSON.stringify([{ ...TEST_ACCESS_PAIR.data[0], dpopKeyRef: "shared-dpop-key-ref" }]),
+    );
+    localStorage.setItem(
+      TEST_TOKEN_PAIR.key,
+      JSON.stringify({ ...TEST_TOKEN_PAIR.data, dpopKeyRef: "shared-dpop-key-ref" }),
+    );
+
+    const restoreIndexedDb = blockIndexedDb();
+
+    try {
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.logout();
+
+      expect(localStorage.length).toBe(0);
+      expect(window.location.href).toContain("/endsession");
+    } finally {
+      restoreIndexedDb();
+    }
+  });
+
+  test("RBA logout clears stored data when DPoP cleanup fails", async () => {
+    storeData({ idToken: true, tokenParams: true, clientParams: true, accessToken: true });
+    localStorage.setItem(
+      TEST_ACCESS_PAIR.key,
+      JSON.stringify([{ ...TEST_ACCESS_PAIR.data[0], dpopKeyRef: "shared-dpop-key-ref" }]),
+    );
+    localStorage.setItem(
+      TEST_TOKEN_PAIR.key,
+      JSON.stringify({ ...TEST_TOKEN_PAIR.data, dpopKeyRef: "shared-dpop-key-ref" }),
+    );
+
+    const restoreIndexedDb = blockIndexedDb();
+
+    try {
+      await NO_DEFAULT_IDAAS_CLIENT.rba.logout();
+
+      expect(localStorage.length).toBe(0);
+    } finally {
+      restoreIndexedDb();
+    }
   });
 });
