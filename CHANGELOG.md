@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.0](https://github.com/EntrustCorporation/idaas-auth-js/compare/v2.1.0...v2.2.0) (2026-06-15)
+
+
+### Features
+
+* add JWT signature validation and update related tests ([1fdccb8](https://github.com/EntrustCorporation/idaas-auth-js/commit/1fdccb8ae1c65b031442366cc75d62328fd64323))
+* add support for requested ACR values in ID token validation and related authentication flows ([7870c9a](https://github.com/EntrustCorporation/idaas-auth-js/commit/7870c9a1b1d076c8080c765886d8653b4f15d117))
+* make openid scope optional ([aca66be](https://github.com/EntrustCorporation/idaas-auth-js/commit/aca66bec6a183ad49aa32f208de2fc1dc4030488))
+
 ## [2.1.0](https://github.com/EntrustCorporation/idaas-auth-js/compare/v2.0.0...v2.1.0) (2026-05-26)
 
 
