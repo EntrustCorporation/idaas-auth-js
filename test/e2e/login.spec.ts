@@ -1,7 +1,4 @@
 import { expect, type Page, test } from "@playwright/test";
-import { config } from "dotenv";
-
-config();
 
 const { CLIENT_ID = "", DEV_SERVER = "", ISSUER = "", PASSWORD = "", USERNAME = "" } = process.env;
 

@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { config } from "dotenv";
-
-config();
 
 const { DEV_SERVER = "", ISSUER = "" } = process.env;
+
+if (!DEV_SERVER || !ISSUER) {
+  throw new Error("Missing required environment variables for E2E tests. Required: DEV_SERVER, ISSUER");
+}
 
 /**
  * If these tests fail, it is an issue with server initialization, not the SDK
