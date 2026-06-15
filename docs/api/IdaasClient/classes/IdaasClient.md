@@ -184,7 +184,7 @@ Decoded ID token claims, or `null` if no ID token exists
 
 ### getUserInfo()
 
-> **getUserInfo**(`accessToken?`): `Promise`\<[`UserClaims`](../../index/interfaces/UserClaims.md) \| `null`\>
+> **getUserInfo**(`accessToken?`, `tokenOptions?`): `Promise`\<[`UserClaims`](../../index/interfaces/UserClaims.md) \| `null`\>
 
 Retrieves user claims from the OpenID Provider using the userinfo endpoint.
 
@@ -200,6 +200,10 @@ This method fetches fresh user information from the identity provider, as oppose
 Optional access token to use. When provided, its scopes determine the claims
 returned from the userinfo endpoint. If not provided, the access token with default scopes and
 audience will be used if available.
+
+##### tokenOptions?
+
+[`TokenOptions`](../../index/interfaces/TokenOptions.md) = `{}`
 
 #### Returns
 

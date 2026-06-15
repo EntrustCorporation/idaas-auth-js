@@ -28,6 +28,17 @@ Per OIDC spec, this parameter is optional and will be omitted from the authoriza
 
 ---
 
+### dpop?
+
+> `optional` **dpop?**: `DPoPOptions`
+
+DPoP (Demonstration of Proof-of-Possession) configuration.
+
+Omit this field to disable DPoP.
+Provide an object to enable DPoP.
+
+---
+
 ### includeOpenidScope?
 
 > `optional` **includeOpenidScope?**: `boolean`
