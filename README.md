@@ -7,6 +7,7 @@ IDaaS Auth JS is the official JavaScript/TypeScript SDK for Entrust Identity-as-
 ### Key features
 
 - Standards-based OIDC authorization-code + PKCE with popup or redirect flows.
+- DPoP-bound token support and `getDpopHeaders()` for DPoP protected resource requests.
 - RFC 9470 and RFC 6750 step-up challenge handling via `parseResponse(response)` for protected API responses.
 - Risk-Based Authentication transaction management with challenge/submit/poll/cancel lifecycle.
 - Convenience authentication methods for passkeys (WebAuthn), password, OTP, soft token, magic link, face, smart credential, grid, KBA, and temporary access codes.
@@ -77,6 +78,32 @@ When `allowedIdTokenSigningAlgorithms` is provided, OIDC login/token exchange va
 
 See the [Quickstart guide](docs/quickstart.md) for configuration options, redirect flows, error handling, and self-hosted examples.
 
+### DPoP protected resource requests
+
+If your API validates DPoP proofs, request a DPoP-bound access token and use `getDpopHeaders()` when calling the protected resource.
+
+```typescript
+const accessToken = await idaas.getAccessToken({
+  audience: "https://api.example.com",
+  scope: "accounts:read",
+  dpop: { alg: "ES256" }
+});
+
+if (!accessToken) {
+  throw new Error("No access token available");
+}
+
+const headers = await idaas.getDpopHeaders({
+  method: "GET",
+  uri: "https://api.example.com/accounts",
+  accessToken
+});
+
+await fetch("https://api.example.com/accounts", { headers });
+```
+
+The protected resource must verify the access token and DPoP proof, including the token `cnf.jkt` binding. See the [DPoP guide](docs/guides/dpop.md) for details.
+
 ---
 
 ## Documentation
@@ -90,6 +117,7 @@ See the [Quickstart guide](docs/quickstart.md) for configuration options, redire
 - [RBA Guide](docs/guides/rba.md)
 - [Convenience Auth Guide](docs/guides/auth.md)
 - [Step-Up Authentication Guide](docs/guides/step-up.md)
+- [DPoP Protected Resource Requests](docs/guides/dpop.md)
 - [AWS API Gateway Integration](docs/guides/aws-api-gateway.md)
 - [JWT IDaaS Grant Type](docs/guides/jwt-idaas-grant.md)
 - [Self-Hosted UI Examples](docs/self-hosted.md)

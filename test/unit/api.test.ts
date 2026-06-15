@@ -1,5 +1,5 @@
 import { describe, expect, it, spyOn } from "bun:test";
-import { fetchOpenidConfiguration } from "../../src/api";
+import { fetchOpenidConfiguration, getUserInfo, requestToken } from "../../src/api";
 
 describe("api.ts", () => {
   describe("fetchOpenidConfiguration", () => {
@@ -38,6 +38,46 @@ describe("api.ts", () => {
 
       // Clean up
       mockFetch.mockRestore();
+    });
+  });
+
+  describe("requestToken", () => {
+    it("includes DPoP header when dpop proof is provided", async () => {
+      const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        json: async () => ({ access_token: "a", token_type: "DPoP", expires_in: "300" }),
+        headers: {
+          get: () => null,
+        },
+      } as unknown as Response);
+
+      await requestToken(
+        "https://example.com/token",
+        {
+          grant_type: "refresh_token",
+          client_id: "client",
+          refresh_token: "refresh",
+        },
+        "signed-dpop-proof",
+      );
+
+      const headers = fetchSpy.mock.calls[0]?.[1]?.headers as Record<string, string>;
+      expect(headers.DPoP).toBe("signed-dpop-proof");
+      fetchSpy.mockRestore();
+    });
+  });
+
+  describe("getUserInfo", () => {
+    it("uses DPoP auth scheme and header when proof is provided", async () => {
+      const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        text: async () => "{}",
+      } as unknown as Response);
+
+      await getUserInfo("https://example.com/userinfo", "access-token", "dpop-proof");
+
+      const headers = fetchSpy.mock.calls[0]?.[1]?.headers as Record<string, string>;
+      expect(headers.Authorization).toBe("DPoP access-token");
+      expect(headers.DPoP).toBe("dpop-proof");
+      fetchSpy.mockRestore();
     });
   });
 });

@@ -60,6 +60,9 @@ export const mockFetch = async (url: string) => {
     case `${TEST_BASE_URI}/token`: {
       return Promise.resolve({
         json: () => Promise.resolve(TEST_TOKEN_RESPONSE),
+        headers: {
+          get: () => null,
+        },
       });
     }
     case `${TEST_BASE_URI}/issuer/.well-known/openid-configuration`: {
@@ -108,4 +111,29 @@ export const getUrlParams = (href: string) => {
   });
 
   return paramData;
+};
+
+export const blockIndexedDb = (): (() => void) => {
+  const originalIndexedDb = globalThis.indexedDB;
+
+  Object.defineProperty(globalThis, "indexedDB", {
+    configurable: true,
+    value: {
+      open: () => {
+        throw new Error("IndexedDB blocked");
+      },
+    },
+  });
+
+  return () => {
+    if (originalIndexedDb) {
+      Object.defineProperty(globalThis, "indexedDB", {
+        configurable: true,
+        value: originalIndexedDb,
+      });
+      return;
+    }
+
+    Reflect.deleteProperty(globalThis, "indexedDB");
+  };
 };

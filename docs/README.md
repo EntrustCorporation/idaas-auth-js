@@ -32,7 +32,12 @@ Use `oidc` when you want Entrust to host the whole login: it handles PKCE, redir
 - Access/refresh/ID tokens persist through `StorageManager`.
 - `useRefreshToken` enables refresh token requests by default.
 - `getAccessToken()` refreshes expired access tokens automatically when a refresh token exists.
+- `getDpopHeaders()` creates DPoP request headers for stored DPoP-bound access tokens.
 - Call `logout()` to wipe cached credentials.
+
+## DPoP API surface
+
+Use `TokenOptions.dpop` to request DPoP-bound tokens during OIDC, RBA, token refresh, and SDK-managed UserInfo calls. Use `getDpopHeaders()` when your application needs to call its own DPoP protected resource. See [DPoP Protected Resource Requests](guides/dpop.md) for the API details and resource server verification requirements.
 
 ## Next steps
 
@@ -44,6 +49,7 @@ Use `oidc` when you want Entrust to host the whole login: it handles PKCE, redir
   - [RBA Guide](guides/rba.md)
   - [Convenience Auth Guide](guides/auth.md)
   - [Step-Up Authentication Guide](guides/step-up.md)
+  - [DPoP Protected Resource Requests](guides/dpop.md)
   - [JWT IDaaS Grant Type (`jwt_idaas`)](guides/jwt-idaas-grant.md)
   - [AWS API Gateway Integration](guides/aws-api-gateway.md) - Complete guide for protecting AWS APIs with IDaaS authentication
 - Reference generated types in the [API Reference](api/README.md).
