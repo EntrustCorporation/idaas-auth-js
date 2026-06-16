@@ -96,7 +96,7 @@ export const persistDpopKeyMaterial = async ({
   return id;
 };
 
-export const consumePersistedDpopKeyMaterial = async (
+export const retrievePersistedDpopKeyMaterial = async (
   id: string,
 ): Promise<(DPoPKeyMaterial & { alg: DPoPAlg }) | undefined> => {
   if (!hasIndexedDb()) {
@@ -105,7 +105,6 @@ export const consumePersistedDpopKeyMaterial = async (
       return undefined;
     }
 
-    memoryFallbackStore.delete(id);
     return {
       alg: record.alg,
       privateKey: record.privateKey,
@@ -114,14 +113,12 @@ export const consumePersistedDpopKeyMaterial = async (
     };
   }
 
-  return await withStore("readwrite", async (store) => {
+  return await withStore("readonly", async (store) => {
     const record = await requestToPromise(store.get(id) as IDBRequest<PersistedDpopKeyMaterial | undefined>);
 
     if (!record) {
       return undefined;
     }
-
-    await requestToPromise(store.delete(id));
 
     return {
       alg: record.alg,
@@ -129,5 +126,17 @@ export const consumePersistedDpopKeyMaterial = async (
       publicJwk: record.publicJwk,
       jkt: record.jkt,
     };
+  });
+};
+
+export const cleanupPersistedDpopKeyMaterial = async (id: string): Promise<void> => {
+  if (!hasIndexedDb()) {
+    memoryFallbackStore.delete(id);
+    return;
+  }
+
+  await withStore("readwrite", async (store) => {
+    await requestToPromise(store.delete(id));
+    return undefined;
   });
 };

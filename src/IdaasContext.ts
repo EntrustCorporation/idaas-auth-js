@@ -1,7 +1,11 @@
 import { fetchOpenidConfiguration, type OidcConfig } from "./api";
 import type { TokenOptions } from "./models";
 import { type DPoPAlg, type DPoPKeyMaterial, generateDpopKeyMaterial, generateDpopProofJwt } from "./utils/dpop";
-import { consumePersistedDpopKeyMaterial, persistDpopKeyMaterial } from "./utils/dpopKeyStore";
+import {
+  cleanupPersistedDpopKeyMaterial,
+  persistDpopKeyMaterial,
+  retrievePersistedDpopKeyMaterial,
+} from "./utils/dpopKeyStore";
 
 export interface NormalizedDpopOptions {
   alg: DPoPAlg;
@@ -127,7 +131,7 @@ export class IdaasContext {
   }
 
   public async restoreDpopKeyMaterialByRef(dpopKeyRef: string): Promise<void> {
-    const restored = await consumePersistedDpopKeyMaterial(dpopKeyRef);
+    const restored = await retrievePersistedDpopKeyMaterial(dpopKeyRef);
     if (!restored) {
       throw new Error("Unable to restore DPoP key material for redirect flow");
     }
@@ -138,6 +142,14 @@ export class IdaasContext {
       jkt: restored.jkt,
     };
     this.#dpopKeyAlg = restored.alg;
+  }
+
+  public async clearDpopKeyMaterial(dpopKeyRef?: string): Promise<void> {
+    this.#dpopKeyMaterial = undefined;
+    this.#dpopKeyAlg = undefined;
+    if (dpopKeyRef) {
+      await cleanupPersistedDpopKeyMaterial(dpopKeyRef);
+    }
   }
 
   public setDpopKeyMaterial(alg: DPoPAlg, keyMaterial: DPoPKeyMaterial): void {

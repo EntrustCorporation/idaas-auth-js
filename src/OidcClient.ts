@@ -80,6 +80,12 @@ export class OidcClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/oidc.md OIDC Guide}
    */
   public async logout({ redirectUri }: OidcLogoutOptions = {}): Promise<void> {
+    // Clean up any persisted DPoP key material before clearing storage
+    const tokenParams = this.#storageManager.getTokenParams();
+    if (tokenParams?.dpopKeyRef) {
+      await this.#context.clearDpopKeyMaterial(tokenParams.dpopKeyRef);
+    }
+
     this.#storageManager.remove();
 
     window.location.href = await this.#generateLogoutUrl(redirectUri);

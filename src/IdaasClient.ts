@@ -304,10 +304,15 @@ export class IdaasClient {
     const matchedStoredToken = this.#storageManager
       .getAccessTokens()
       .find((storedToken) => storedToken.accessToken === userInfoAccessToken);
-    const shouldUseDpop = matchedStoredToken?.dpopBound || !!tokenOptions.dpop;
     const effectiveDpopOptions = tokenOptions.dpop ?? this.#context.tokenOptions.dpop;
 
-    if (matchedStoredToken?.dpopBound && !effectiveDpopOptions) {
+    // Only use DPoP if the token is actually DPoP-bound. Do not use DPoP for Bearer tokens
+    // even if tokenOptions.dpop is provided, as that would incorrectly set Authorization: DPoP
+    // for a token that was never bound to a proof-of-possession key.
+    const isDpopBound = matchedStoredToken?.dpopBound === true;
+    const shouldUseDpop = isDpopBound && !!effectiveDpopOptions;
+
+    if (isDpopBound && !effectiveDpopOptions) {
       throw new Error("DPoP-bound token requires tokenOptions.dpop (alg) or global token DPoP configuration.");
     }
 

@@ -130,6 +130,12 @@ export class RbaClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async logout(): Promise<void> {
+    // Clean up any persisted DPoP key material before clearing storage
+    const tokenParams = this.#storageManager.getTokenParams();
+    if (tokenParams?.dpopKeyRef) {
+      await this.#context.clearDpopKeyMaterial(tokenParams.dpopKeyRef);
+    }
+
     const baseUrl = new URL(this.#context.issuerUrl).origin;
     const token = this.#storageManager.getIdaasSessionToken()?.token;
 
