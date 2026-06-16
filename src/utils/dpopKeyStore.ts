@@ -49,10 +49,7 @@ const openStore = async (): Promise<IDBDatabase> => {
   });
 };
 
-const withStore = async <T>(
-  mode: IDBTransactionMode,
-  callback: (store: IDBObjectStore) => Promise<T>,
-): Promise<T> => {
+const withStore = async <T>(mode: IDBTransactionMode, callback: (store: IDBObjectStore) => Promise<T>): Promise<T> => {
   const db = await openStore();
 
   try {
@@ -91,7 +88,7 @@ export const persistDpopKeyMaterial = async ({
     return id;
   }
 
-  await withStore("readwrite", async store => {
+  await withStore("readwrite", async (store) => {
     await requestToPromise(store.put(record));
     return undefined;
   });
@@ -117,7 +114,7 @@ export const consumePersistedDpopKeyMaterial = async (
     };
   }
 
-  return await withStore("readwrite", async store => {
+  return await withStore("readwrite", async (store) => {
     const record = await requestToPromise(store.get(id) as IDBRequest<PersistedDpopKeyMaterial | undefined>);
 
     if (!record) {

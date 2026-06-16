@@ -1,11 +1,6 @@
 import { fetchOpenidConfiguration, type OidcConfig } from "./api";
 import type { TokenOptions } from "./models";
-import {
-  type DPoPAlg,
-  type DPoPKeyMaterial,
-  generateDpopKeyMaterial,
-  generateDpopProofJwt,
-} from "./utils/dpop";
+import { type DPoPAlg, type DPoPKeyMaterial, generateDpopKeyMaterial, generateDpopProofJwt } from "./utils/dpop";
 import { consumePersistedDpopKeyMaterial, persistDpopKeyMaterial } from "./utils/dpopKeyStore";
 
 export interface NormalizedDpopOptions {
