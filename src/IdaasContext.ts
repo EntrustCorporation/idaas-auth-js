@@ -5,10 +5,8 @@ import {
   type DPoPKeyMaterial,
   generateDpopKeyMaterial,
   generateDpopProofJwt,
-  importDpopKeyMaterial,
-  type SerializedDPoPKeyMaterial,
-  serializeDpopKeyMaterial,
 } from "./utils/dpop";
+import { consumePersistedDpopKeyMaterial, persistDpopKeyMaterial } from "./utils/dpopKeyStore";
 
 export interface NormalizedDpopOptions {
   alg: DPoPAlg;
@@ -122,10 +120,10 @@ export class IdaasContext {
     });
   }
 
-  public async exportDpopKeyMaterialForAlg(alg: DPoPAlg): Promise<SerializedDPoPKeyMaterial> {
+  public async persistDpopKeyMaterialForAlg(alg: DPoPAlg): Promise<string> {
     const keyMaterial = await this.#getDpopKeyMaterial(alg);
 
-    return await serializeDpopKeyMaterial({
+    return await persistDpopKeyMaterial({
       alg,
       privateKey: keyMaterial.privateKey,
       publicJwk: keyMaterial.publicJwk,
@@ -133,10 +131,23 @@ export class IdaasContext {
     });
   }
 
-  public async restoreDpopKeyMaterial(serialized: SerializedDPoPKeyMaterial): Promise<void> {
-    const keyMaterial = await importDpopKeyMaterial(serialized);
+  public async restoreDpopKeyMaterialByRef(dpopKeyRef: string): Promise<void> {
+    const restored = await consumePersistedDpopKeyMaterial(dpopKeyRef);
+    if (!restored) {
+      throw new Error("Unable to restore DPoP key material for redirect flow");
+    }
+
+    this.#dpopKeyMaterial = {
+      privateKey: restored.privateKey,
+      publicJwk: restored.publicJwk,
+      jkt: restored.jkt,
+    };
+    this.#dpopKeyAlg = restored.alg;
+  }
+
+  public setDpopKeyMaterial(alg: DPoPAlg, keyMaterial: DPoPKeyMaterial): void {
     this.#dpopKeyMaterial = keyMaterial;
-    this.#dpopKeyAlg = serialized.alg;
+    this.#dpopKeyAlg = alg;
   }
 
   async #getDpopKeyMaterial(alg: DPoPAlg): Promise<DPoPKeyMaterial> {

@@ -123,22 +123,27 @@ export class OidcClient {
       throw new Error("No token params stored, unable to parse");
     }
 
-    if (tokenParams.dpopKeyMaterial) {
-      await this.#context.restoreDpopKeyMaterial(tokenParams.dpopKeyMaterial);
+    try {
+      if (tokenParams.dpopKeyRef) {
+        await this.#context.restoreDpopKeyMaterialByRef(tokenParams.dpopKeyRef);
+      }
+
+      const authorizeCode = this.#validateAuthorizeResponse(authorizeResponse, state);
+
+      const validatedTokenResponse = await this.#requestAndValidateTokens(
+        authorizeCode,
+        codeVerifier,
+        redirectUri,
+        nonce,
+        tokenParams.requireIdToken ?? true,
+        tokenParams.acrValues?.split(" ").filter(Boolean),
+        tokenParams.dpop,
+      );
+      this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
+    } finally {
+      this.#storageManager.removeTokenParams();
     }
 
-    const authorizeCode = this.#validateAuthorizeResponse(authorizeResponse, state);
-
-    const validatedTokenResponse = await this.#requestAndValidateTokens(
-      authorizeCode,
-      codeVerifier,
-      redirectUri,
-      nonce,
-      tokenParams.requireIdToken ?? true,
-      tokenParams.acrValues?.split(" ").filter(Boolean),
-      tokenParams.dpop,
-    );
-    this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
     return null;
   }
 
@@ -379,8 +384,8 @@ export class OidcClient {
     const effectiveDpop = this.#context.getEffectiveDpopOptions(tokenOptions.dpop);
     const dpopJkt = await this.#context.getDpopJkt(tokenOptions.dpop);
 
-    const dpopKeyMaterial = effectiveDpop?.includeJkt
-      ? await this.#context.exportDpopKeyMaterialForAlg(effectiveDpop.alg)
+    const dpopKeyRef = effectiveDpop?.includeJkt
+      ? await this.#context.persistDpopKeyMaterialForAlg(effectiveDpop.alg)
       : undefined;
 
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
@@ -404,7 +409,7 @@ export class OidcClient {
       requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
       acrValues: tokenOptions.acrValues ?? this.#context.tokenOptions.acrValues,
       dpop: this.#context.getEffectiveDpopOptions(tokenOptions.dpop),
-      dpopKeyMaterial,
+      dpopKeyRef,
     };
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {

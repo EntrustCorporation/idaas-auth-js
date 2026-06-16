@@ -478,6 +478,14 @@ export class AuthenticationTransaction {
     return this.#tokenOptions.includeOpenidScope !== false;
   };
 
+  public getDpopKeyMaterial = (): DPoPKeyMaterial | undefined => {
+    return this.#dpopKeyMaterial;
+  };
+
+  public getDpopKeyAlg = (): DPoPAlg | undefined => {
+    return this.#dpopKeyAlg;
+  };
+
   async #getDpopJkt(): Promise<string | undefined> {
     const dpop = this.#tokenOptions.dpop;
     if (!(dpop && typeof dpop === "object" && dpop.includeJkt)) {

@@ -117,7 +117,16 @@ describe("IdaasClient.handleRedirect", () => {
 
       await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
 
-      expect(localStorage.getItem(`entrust.tokenParams.${TEST_CLIENT_ID}`)).toBeNull();
+      expect(localStorage.getItem(TEST_TOKEN_PAIR.key)).toBeNull();
+    });
+
+    test("removes tokenParams from storage when redirect handling fails", async () => {
+      storeData({ clientParams: true, tokenParams: true });
+      window.location.href = `${TEST_BASE_URI}?code=${TEST_CODE}&state=different_state`;
+
+      await expect(NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect()).rejects.toThrowError();
+
+      expect(localStorage.getItem(TEST_TOKEN_PAIR.key)).toBeNull();
     });
 
     test("stores the ID token", async () => {

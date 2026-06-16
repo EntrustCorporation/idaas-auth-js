@@ -234,6 +234,13 @@ export class RbaClient {
     const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience, acr, nonce, dpopBound } =
       this.#authenticationTransaction.getAuthenticationDetails();
 
+    // Preserve DPoP key material used for token exchange so subsequent calls (e.g., UserInfo) use the same key
+    const dpopKeyMaterial = this.#authenticationTransaction.getDpopKeyMaterial();
+    const dpopKeyAlg = this.#authenticationTransaction.getDpopKeyAlg();
+    if (dpopKeyMaterial && dpopKeyAlg) {
+      this.#context.setDpopKeyMaterial(dpopKeyAlg, dpopKeyMaterial);
+    }
+
     // Only require accessToken for OAuth-only flows
     const requireIdToken = this.#authenticationTransaction.requiresIdToken();
     if (!accessToken || !expiresAt || !scope || (requireIdToken && !idToken)) {

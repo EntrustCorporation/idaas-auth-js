@@ -1,16 +1,9 @@
-import { calculateJwkThumbprint, exportJWK, importJWK, type JWK, SignJWT } from "jose";
+import { calculateJwkThumbprint, exportJWK, type JWK, SignJWT } from "jose";
 
 export type DPoPAlg = "ES256" | "ES384" | "ES512" | "PS256" | "PS384" | "PS512" | "RS256" | "RS384" | "RS512";
 
 export interface DPoPKeyMaterial {
   privateKey: CryptoKey;
-  publicJwk: JWK;
-  jkt: string;
-}
-
-export interface SerializedDPoPKeyMaterial {
-  alg: DPoPAlg;
-  privateJwk: JWK;
   publicJwk: JWK;
   jkt: string;
 }
@@ -65,37 +58,6 @@ export const generateDpopProofJwt = async ({
       jwk: publicJwk,
     })
     .sign(privateKey);
-};
-
-export const serializeDpopKeyMaterial = async ({
-  alg,
-  privateKey,
-  publicJwk,
-  jkt,
-}: DPoPKeyMaterial & { alg: DPoPAlg }): Promise<SerializedDPoPKeyMaterial> => {
-  const privateJwk = await exportJWK(privateKey);
-
-  return {
-    alg,
-    privateJwk,
-    publicJwk,
-    jkt,
-  };
-};
-
-export const importDpopKeyMaterial = async ({
-  alg,
-  privateJwk,
-  publicJwk,
-  jkt,
-}: SerializedDPoPKeyMaterial): Promise<DPoPKeyMaterial> => {
-  const importedPrivateKey = (await importJWK(privateJwk, alg)) as CryptoKey;
-
-  return {
-    privateKey: importedPrivateKey,
-    publicJwk,
-    jkt,
-  };
 };
 
 const generateKeyPair = async (alg: DPoPAlg): Promise<CryptoKeyPair> => {

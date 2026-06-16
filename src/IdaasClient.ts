@@ -253,6 +253,7 @@ export class IdaasClient {
           refresh_token: newRefreshToken,
           access_token: newEncodedAccessToken,
           expires_in,
+          token_type,
         } = await this.#requestTokenUsingRefreshToken(refreshToken, {
           dpop: requestedToken.dpopBound ? (dpop ?? this.#context.tokenOptions.dpop) : dpop,
         });
@@ -268,7 +269,7 @@ export class IdaasClient {
           audience,
           scope,
           acr,
-          dpopBound: requestedToken.dpopBound,
+          dpopBound: token_type.toLowerCase() === "dpop",
         };
 
         this.#storageManager.removeAccessToken(requestedToken);

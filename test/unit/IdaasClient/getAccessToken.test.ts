@@ -228,6 +228,17 @@ describe("IdaasClient.getAccessToken", () => {
       expect(refreshedToken.accessToken).toBeTruthy();
       expect(refreshedToken.accessToken).toStrictEqual(TEST_ACCESS_TOKEN);
     });
+
+    test("the refreshed token derives dpopBound from token_type in refresh response", async () => {
+      storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, dpopBound: true });
+
+      await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE, dpop: { alg: "ES256" } });
+
+      const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_PAIR.key) as string);
+      const refreshedToken = storedTokens[0] as AccessToken;
+
+      expect(refreshedToken.dpopBound).toBeFalse();
+    });
   });
 
   test("uses IdaasClient's defaultAudience if audience not provided in params", async () => {
