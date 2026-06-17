@@ -130,11 +130,23 @@ export class RbaClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async logout(): Promise<void> {
-    // Clean up any persisted DPoP key material before clearing storage
+    // Clean up all persisted and in-memory DPoP key material
+    // First, check for dpopKeyRef in stored access tokens (primary source after token parsing)
+    const accessTokens = this.#storageManager.getAccessTokens();
+    for (const token of accessTokens) {
+      if (token.dpopKeyRef) {
+        await this.#context.clearDpopKeyMaterial(token.dpopKeyRef);
+      }
+    }
+
+    // Also check tokenParams in case logout is called during an in-progress flow
     const tokenParams = this.#storageManager.getTokenParams();
     if (tokenParams?.dpopKeyRef) {
       await this.#context.clearDpopKeyMaterial(tokenParams.dpopKeyRef);
     }
+
+    // Unconditionally clear any in-memory DPoP key material (clears even without a ref)
+    await this.#context.clearDpopKeyMaterial();
 
     const baseUrl = new URL(this.#context.issuerUrl).origin;
     const token = this.#storageManager.getIdaasSessionToken()?.token;

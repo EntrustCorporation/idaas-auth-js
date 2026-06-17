@@ -66,6 +66,7 @@ export interface AccessToken {
   maxAgeExpiry?: number;
   acr?: string;
   dpopBound?: boolean;
+  dpopKeyRef?: string;
 }
 
 export class StorageManager {

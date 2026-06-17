@@ -80,11 +80,23 @@ export class OidcClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/oidc.md OIDC Guide}
    */
   public async logout({ redirectUri }: OidcLogoutOptions = {}): Promise<void> {
-    // Clean up any persisted DPoP key material before clearing storage
+    // Clean up all persisted and in-memory DPoP key material
+    // First, check for dpopKeyRef in stored access tokens (primary source after token parsing)
+    const accessTokens = this.#storageManager.getAccessTokens();
+    for (const token of accessTokens) {
+      if (token.dpopKeyRef) {
+        await this.#context.clearDpopKeyMaterial(token.dpopKeyRef);
+      }
+    }
+
+    // Also check tokenParams in case logout is called during an in-progress flow
     const tokenParams = this.#storageManager.getTokenParams();
     if (tokenParams?.dpopKeyRef) {
       await this.#context.clearDpopKeyMaterial(tokenParams.dpopKeyRef);
     }
+
+    // Unconditionally clear any in-memory DPoP key material (clears even without a ref)
+    await this.#context.clearDpopKeyMaterial();
 
     this.#storageManager.remove();
 
@@ -145,7 +157,13 @@ export class OidcClient {
         tokenParams.acrValues?.split(" ").filter(Boolean),
         tokenParams.dpop,
       );
-      this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
+      await this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
+    } catch (error) {
+      // On error, clean up any restored DPoP key material to prevent orphaned keys in IndexedDB
+      if (tokenParams.dpopKeyRef) {
+        await this.#context.clearDpopKeyMaterial(tokenParams.dpopKeyRef);
+      }
+      throw error;
     } finally {
       this.#storageManager.removeTokenParams();
     }
@@ -285,21 +303,33 @@ export class OidcClient {
   /**
    * Parses the token response from the OIDC provider and saves tokens to storage.
    * Extracts access token, ID token, and refresh token (if available).
+   * Preserves the DPoP key reference from tokenParams to enable recovery on page reload and cleanup on logout.
    * @param validatedTokenResponse The validated response from the token endpoint
    */
-  #parseAndSaveTokenResponse(validatedTokenResponse: ValidatedTokenResponse, tokenParams: TokenParams): void {
+  async #parseAndSaveTokenResponse(
+    validatedTokenResponse: ValidatedTokenResponse,
+    tokenParams: TokenParams,
+  ): Promise<void> {
     const { tokenResponse, decodedIdToken, encodedIdToken } = validatedTokenResponse;
     const { refresh_token, access_token, expires_in } = tokenResponse;
     const authTime = readAccessToken(access_token)?.auth_time;
     const expiresAt = calculateEpochExpiry(expires_in, authTime);
 
-    const { audience, scope, maxAge } = tokenParams;
+    const { audience, scope, maxAge, dpop } = tokenParams;
     const maxAgeExpiry = maxAge ? calculateEpochExpiry(maxAge.toString(), authTime) : undefined;
 
     this.#storageManager.removeTokenParams();
 
     const token = readAccessToken(access_token);
     const acr = token?.acr ?? undefined;
+    const isDpopBound = tokenResponse.token_type.toLowerCase() === "dpop";
+
+    // For DPoP-bound tokens, ensure key material is persisted for recovery on page reload
+    let dpopKeyRef = tokenParams.dpopKeyRef;
+    if (isDpopBound && !dpopKeyRef && dpop?.alg) {
+      // Popup flow: key material was generated in-memory, now persist it for localstorage recovery
+      dpopKeyRef = await this.#context.persistDpopKeyMaterialForAlg(dpop.alg);
+    }
 
     const newAccessToken: AccessToken = {
       refreshToken: refresh_token,
@@ -309,7 +339,8 @@ export class OidcClient {
       scope,
       maxAgeExpiry,
       acr,
-      dpopBound: tokenResponse.token_type.toLowerCase() === "dpop",
+      dpopBound: isDpopBound,
+      dpopKeyRef,
     };
 
     if (encodedIdToken && decodedIdToken) {
@@ -371,7 +402,7 @@ export class OidcClient {
       tokenParams.dpop,
     );
 
-    this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
+    await this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
 
     // redirect only if the redirectUri is not the current uri
     if (formatUrl(window.location.href) !== formatUrl(finalRedirectUri)) {

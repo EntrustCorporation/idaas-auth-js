@@ -249,6 +249,17 @@ export class IdaasClient {
           );
         }
 
+        // For DPoP-bound tokens, restore key material before refresh if not already in memory
+        if (requestedToken.dpopBound && requestedToken.dpopKeyRef) {
+          try {
+            await this.#context.restoreDpopKeyMaterialByRef(requestedToken.dpopKeyRef);
+          } catch (error) {
+            throw new Error(
+              `Failed to restore DPoP key material for token refresh: ${error instanceof Error ? error.message : String(error)}`,
+            );
+          }
+        }
+
         const {
           refresh_token: newRefreshToken,
           access_token: newEncodedAccessToken,
@@ -261,7 +272,7 @@ export class IdaasClient {
         const authTime = readAccessToken(newEncodedAccessToken)?.auth_time;
         const newExpiration = calculateEpochExpiry(expires_in, authTime);
 
-        // the refreshed access token to be stored, maintaining expired token's scope and audience
+        // the refreshed access token to be stored, maintaining expired token's scope, audience, and DPoP binding
         const newAccessToken: AccessToken = {
           accessToken: newEncodedAccessToken,
           refreshToken: newRefreshToken,
@@ -270,6 +281,7 @@ export class IdaasClient {
           scope,
           acr,
           dpopBound: token_type.toLowerCase() === "dpop",
+          dpopKeyRef: requestedToken.dpopKeyRef,
         };
 
         this.#storageManager.removeAccessToken(requestedToken);
@@ -306,14 +318,27 @@ export class IdaasClient {
       .find((storedToken) => storedToken.accessToken === userInfoAccessToken);
     const effectiveDpopOptions = tokenOptions.dpop ?? this.#context.tokenOptions.dpop;
 
-    // Only use DPoP if the token is actually DPoP-bound. Do not use DPoP for Bearer tokens
-    // even if tokenOptions.dpop is provided, as that would incorrectly set Authorization: DPoP
-    // for a token that was never bound to a proof-of-possession key.
+    // Determine if DPoP should be used:
+    // 1. If token is in storage and is DPoP-bound, use DPoP if configured
+    // 2. If token is external (not in storage) and tokenOptions.dpop is explicitly provided, treat as opt-in to DPoP
     const isDpopBound = matchedStoredToken?.dpopBound === true;
-    const shouldUseDpop = isDpopBound && !!effectiveDpopOptions;
+    const isExternalTokenWithExplicitDpop = !matchedStoredToken && !!tokenOptions.dpop;
+    const shouldUseDpop = (isDpopBound || isExternalTokenWithExplicitDpop) && !!effectiveDpopOptions;
 
     if (isDpopBound && !effectiveDpopOptions) {
       throw new Error("DPoP-bound token requires tokenOptions.dpop (alg) or global token DPoP configuration.");
+    }
+
+    // For DPoP-bound tokens, restore key material from storage if not already in memory
+    // This is necessary after page reload when using localstorage
+    if (isDpopBound && matchedStoredToken?.dpopKeyRef) {
+      try {
+        await this.#context.restoreDpopKeyMaterialByRef(matchedStoredToken.dpopKeyRef);
+      } catch (error) {
+        throw new Error(
+          `Failed to restore DPoP key material for UserInfo request: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     }
 
     const dpopJwt = shouldUseDpop
