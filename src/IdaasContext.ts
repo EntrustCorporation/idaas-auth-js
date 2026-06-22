@@ -143,10 +143,10 @@ export class IdaasContext {
     });
   }
 
-  public async restoreDpopKeyMaterialByRef(dpopKeyRef: string): Promise<void> {
+  public async restoreDpopKeyMaterialByRef(dpopKeyRef: string): Promise<DPoPAlg> {
     const restored = await retrievePersistedDpopKeyMaterial(dpopKeyRef);
     if (!restored) {
-      throw new Error("Unable to restore DPoP key material for redirect flow");
+      throw new Error("Unable to restore DPoP key material");
     }
 
     this.#dpopKeyMaterial = {
@@ -155,6 +155,8 @@ export class IdaasContext {
       jkt: restored.jkt,
     };
     this.#dpopKeyAlg = restored.alg;
+
+    return restored.alg;
   }
 
   public async clearDpopKeyMaterial(dpopKeyRef?: string): Promise<void> {

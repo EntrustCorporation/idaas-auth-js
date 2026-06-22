@@ -41,7 +41,7 @@ describe("DPoP Key Material and Proof Generation", () => {
           expect(jkt.length).toBeGreaterThan(0);
         });
 
-        it("generates consistent jkt for the same key material", async () => {
+        it("generates a different jkt for newly generated key material", async () => {
           // Note: We can't directly test consistency since we can't re-import the same CryptoKey,
           // but we can verify the jkt is valid
           const jkt2 = await generateDpopKeyMaterial(alg);

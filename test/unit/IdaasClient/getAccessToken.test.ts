@@ -1,5 +1,8 @@
 import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import { decodeProtectedHeader } from "jose";
 import type { AccessToken } from "../../../src/storage/StorageManager";
+import { generateDpopKeyMaterial } from "../../../src/utils/dpop";
+import { persistDpopKeyMaterial } from "../../../src/utils/dpopKeyStore";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
   SET_DEFAULTS_IDAAS_CLIENT,
@@ -164,6 +167,30 @@ describe("IdaasClient.getAccessToken", () => {
     expect((headers.DPoP ?? "").length).toBeGreaterThan(10);
   });
 
+  test("uses persisted DPoP key algorithm for DPoP-bound refresh even when configured alg differs", async () => {
+    const keyMaterial = await generateDpopKeyMaterial("PS256");
+    const dpopKeyRef = await persistDpopKeyMaterial({ alg: "PS256", ...keyMaterial });
+    storeToken({
+      ...TEST_ACCESS_TOKEN_OBJECT,
+      expiresAt: 0,
+      scope: "1",
+      dpopBound: true,
+      dpopKeyRef,
+    });
+
+    await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+      scope: "1",
+      audience: TEST_AUDIENCE,
+      dpop: { alg: "ES256" },
+    });
+
+    const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
+    const headers = tokenEndpointCall?.[1]?.headers as Record<string, string>;
+
+    expect(headers.DPoP).toBeDefined();
+    expect(decodeProtectedHeader(headers.DPoP as string).alg).toBe("PS256");
+  });
+
   describe("refresh token validity", () => {
     test("refreshing a token does not change the number of tokens stored", async () => {
       storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0 });
@@ -230,7 +257,9 @@ describe("IdaasClient.getAccessToken", () => {
     });
 
     test("the refreshed token derives dpopBound from token_type in refresh response", async () => {
-      storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, dpopBound: true });
+      const keyMaterial = await generateDpopKeyMaterial("ES256");
+      const dpopKeyRef = await persistDpopKeyMaterial({ alg: "ES256", ...keyMaterial });
+      storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, dpopBound: true, dpopKeyRef });
 
       await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE, dpop: { alg: "ES256" } });
 

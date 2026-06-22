@@ -19,6 +19,12 @@ const hasIndexedDb = (): boolean => {
   return typeof indexedDB !== "undefined";
 };
 
+const allowsTestMemoryStore = (): boolean => {
+  return (
+    typeof process !== "undefined" && process.env.IDAAS_AUTH_JS_ALLOW_MEMORY_DPOP_KEY_STORE?.toLowerCase() === "true"
+  );
+};
+
 const createRandomId = (): string => {
   if (typeof window.crypto.randomUUID === "function") {
     return window.crypto.randomUUID();
@@ -94,10 +100,12 @@ export const persistDpopKeyMaterial = async ({
   };
 
   if (!hasIndexedDb()) {
-    // Fallback to memory store for testing/development environments without IndexedDB.
-    // WARNING: Keys persisted to memory will be lost on page reload/redirect, breaking
-    // token refresh and UserInfo calls for DPoP-bound tokens. This is only acceptable
-    // in test environments. For production, IndexedDB support is required.
+    if (!allowsTestMemoryStore()) {
+      throw new Error(
+        "DPoP requires IndexedDB support to persist key material. Disable DPoP or use a browser with IndexedDB.",
+      );
+    }
+
     memoryFallbackStore.set(id, record);
     return id;
   }

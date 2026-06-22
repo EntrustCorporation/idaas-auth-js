@@ -248,16 +248,25 @@ export class IdaasClient {
           throw new Error("Token that is not valid was not removed");
         }
 
-        if (requestedToken.dpopBound && !(dpop ?? this.#context.tokenOptions.dpop)) {
+        const configuredDpopOptions = dpop ?? this.#context.tokenOptions.dpop;
+        if (requestedToken.dpopBound && !configuredDpopOptions) {
           throw new Error(
             "DPoP-bound token refresh requires tokenOptions.dpop (alg) or global token DPoP configuration.",
           );
         }
 
-        // For DPoP-bound tokens, restore key material before refresh if not already in memory
-        if (requestedToken.dpopBound && requestedToken.dpopKeyRef) {
+        let refreshDpopOptions = dpop;
+        if (requestedToken.dpopBound) {
+          if (!requestedToken.dpopKeyRef) {
+            throw new Error("DPoP-bound token refresh requires stored DPoP key material reference.");
+          }
+
           try {
-            await this.#context.restoreDpopKeyMaterialByRef(requestedToken.dpopKeyRef);
+            const persistedAlg = await this.#context.restoreDpopKeyMaterialByRef(requestedToken.dpopKeyRef);
+            refreshDpopOptions = {
+              ...configuredDpopOptions,
+              alg: persistedAlg,
+            };
           } catch (error) {
             throw new Error(
               `Failed to restore DPoP key material for token refresh: ${error instanceof Error ? error.message : String(error)}`,
@@ -271,7 +280,7 @@ export class IdaasClient {
           expires_in,
           token_type,
         } = await this.#requestTokenUsingRefreshToken(refreshToken, {
-          dpop: requestedToken.dpopBound ? (dpop ?? this.#context.tokenOptions.dpop) : dpop,
+          dpop: requestedToken.dpopBound ? refreshDpopOptions : dpop,
         });
 
         const authTime = readAccessToken(newEncodedAccessToken)?.auth_time;
@@ -338,11 +347,18 @@ export class IdaasClient {
       throw new Error("DPoP-bound token requires tokenOptions.dpop (alg) or global token DPoP configuration.");
     }
 
-    // For DPoP-bound tokens, restore key material from storage if not already in memory
-    // This is necessary after page reload when using localstorage
-    if (isDpopBound && matchedStoredToken?.dpopKeyRef) {
+    let userInfoDpopOptions = effectiveDpopOptions;
+    if (isDpopBound) {
+      if (!matchedStoredToken?.dpopKeyRef) {
+        throw new Error("DPoP-bound UserInfo request requires stored DPoP key material reference.");
+      }
+
       try {
-        await this.#context.restoreDpopKeyMaterialByRef(matchedStoredToken.dpopKeyRef);
+        const persistedAlg = await this.#context.restoreDpopKeyMaterialByRef(matchedStoredToken.dpopKeyRef);
+        userInfoDpopOptions = {
+          ...effectiveDpopOptions,
+          alg: persistedAlg,
+        };
       } catch (error) {
         throw new Error(
           `Failed to restore DPoP key material for UserInfo request: ${error instanceof Error ? error.message : String(error)}`,
@@ -355,7 +371,7 @@ export class IdaasClient {
           method: "GET",
           uri: userinfo_endpoint,
           accessToken: userInfoAccessToken,
-          dpopOptions: effectiveDpopOptions,
+          dpopOptions: userInfoDpopOptions,
         })
       : undefined;
 
