@@ -6,6 +6,7 @@ import type { IdaasClientOptions, TokenOptions, UserClaims } from "./models";
 import { OidcClient } from "./OidcClient";
 import { RbaClient } from "./RbaClient";
 import { type AccessToken, StorageManager } from "./storage/StorageManager";
+import { cleanupPersistedDpopKeyMaterial } from "./utils/dpopKeyStore";
 import { calculateEpochExpiry } from "./utils/format";
 import { readAccessToken, validateUserInfoToken } from "./utils/jwt";
 import { parseStepUpChallenge } from "./utils/wwwAuthenticate";
@@ -193,8 +194,12 @@ export class IdaasClient {
     acrValues = "",
     dpop,
   }: TokenOptions = {}): Promise<string | null> {
-    // 1. Remove tokens that are no longer valid
-    this.#storageManager.removeExpiredTokens();
+    // 1. Remove tokens that are no longer valid and clean up orphaned DPoP keys
+    const orphanedDpopKeyRefs = this.#storageManager.removeExpiredTokens();
+    for (const dpopKeyRef of orphanedDpopKeyRefs) {
+      await cleanupPersistedDpopKeyMaterial(dpopKeyRef);
+    }
+
     let accessTokens = this.#storageManager.getAccessTokens();
     const requestedScopes = scope.split(" ");
     const now = Date.now();
@@ -284,7 +289,11 @@ export class IdaasClient {
           dpopKeyRef: requestedToken.dpopKeyRef,
         };
 
-        this.#storageManager.removeAccessToken(requestedToken);
+        const orphanedDpopKeyRef = this.#storageManager.removeAccessToken(requestedToken);
+        if (orphanedDpopKeyRef) {
+          await cleanupPersistedDpopKeyMaterial(orphanedDpopKeyRef);
+        }
+
         this.#storageManager.saveAccessToken(newAccessToken);
         return newEncodedAccessToken;
       }

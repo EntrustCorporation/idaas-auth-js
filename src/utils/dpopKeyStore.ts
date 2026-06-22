@@ -84,6 +84,10 @@ export const persistDpopKeyMaterial = async ({
   };
 
   if (!hasIndexedDb()) {
+    // Fallback to memory store for testing/development environments without IndexedDB.
+    // WARNING: Keys persisted to memory will be lost on page reload/redirect, breaking
+    // token refresh and UserInfo calls for DPoP-bound tokens. This is only acceptable
+    // in test environments. For production, IndexedDB support is required.
     memoryFallbackStore.set(id, record);
     return id;
   }
