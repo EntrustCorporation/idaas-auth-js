@@ -234,8 +234,8 @@ describe("DPoP Key Material and Proof Generation", () => {
       expect(claims1.jti).not.toBe(claims2.jti);
     });
 
-    it("preserves the exact htu value (no normalization)", async () => {
-      const htu = "https://example.com:8080/api/v1/token?param=value";
+    it("normalizes htu by removing query and fragment", async () => {
+      const htu = "https://example.com:8080/api/v1/token?param=value#fragment";
 
       const proof = await generateDpopProofJwt({
         alg: "ES256",
@@ -246,7 +246,7 @@ describe("DPoP Key Material and Proof Generation", () => {
       });
 
       const claims = decodeJwt(proof);
-      expect(claims.htu).toBe(htu);
+      expect(claims.htu).toBe("https://example.com:8080/api/v1/token");
     });
 
     it("works with different algorithms", async () => {

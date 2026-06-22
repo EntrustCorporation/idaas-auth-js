@@ -41,7 +41,7 @@ export const generateDpopProofJwt = async ({
 
   const claims: Record<string, string | number> = {
     htm: htm.toUpperCase(),
-    htu,
+    htu: normalizeHtu(htu),
     iat: now,
     exp: now + DPOP_PROOF_LIFETIME_SECONDS,
     jti: getJti(),
@@ -101,6 +101,13 @@ const generateKeyPair = async (alg: DPoPAlg): Promise<CryptoKeyPair> => {
     false,
     ["sign", "verify"],
   );
+};
+
+const normalizeHtu = (htu: string): string => {
+  const url = new URL(htu);
+  url.search = "";
+  url.hash = "";
+  return url.href;
 };
 
 const getJti = (): string => {

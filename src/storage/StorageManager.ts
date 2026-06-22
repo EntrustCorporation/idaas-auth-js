@@ -142,13 +142,6 @@ export class StorageManager {
    */
   public saveAccessToken(data: AccessToken) {
     const accessTokens = this.getAccessTokens();
-
-    if (!accessTokens) {
-      const stringifiedData = JSON.stringify([data]);
-      this.#save(this.#accessTokenStorageKey, stringifiedData);
-      return;
-    }
-
     accessTokens.push(data);
     const stringifiedData = JSON.stringify(accessTokens);
     this.#save(this.#accessTokenStorageKey, stringifiedData);
@@ -161,7 +154,7 @@ export class StorageManager {
    */
   public removeAccessToken(removedToken: AccessToken): string | undefined {
     const accessTokens = this.getAccessTokens();
-    if (!accessTokens || accessTokens.length === 0) {
+    if (accessTokens.length === 0) {
       return undefined;
     }
 
