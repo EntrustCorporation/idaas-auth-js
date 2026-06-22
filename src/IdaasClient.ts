@@ -280,7 +280,7 @@ export class IdaasClient {
           expires_in,
           token_type,
         } = await this.#requestTokenUsingRefreshToken(refreshToken, {
-          dpop: requestedToken.dpopBound ? refreshDpopOptions : dpop,
+          dpop: requestedToken.dpopBound ? refreshDpopOptions : configuredDpopOptions,
         });
 
         const newDpopBound = token_type.toLowerCase() === "dpop";

@@ -1,5 +1,6 @@
 import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
 import { decodeProtectedHeader } from "jose";
+import { IdaasClient } from "../../../src";
 import type { AccessToken } from "../../../src/storage/StorageManager";
 import { generateDpopKeyMaterial } from "../../../src/utils/dpop";
 import { persistDpopKeyMaterial, retrievePersistedDpopKeyMaterial } from "../../../src/utils/dpopKeyStore";
@@ -11,9 +12,11 @@ import {
   TEST_ACCESS_TOKEN_OBJECT,
   TEST_AUDIENCE,
   TEST_BASE_URI,
+  TEST_CLIENT_ID,
   TEST_DIFFERENT_ACCESS_TOKEN,
   TEST_DIFFERENT_AUDIENCE,
   TEST_DIFFERENT_SCOPE,
+  TEST_ISSUER_URI,
   TEST_SCOPE,
   TEST_TOKEN_RESPONSE,
 } from "../constants";
@@ -162,6 +165,28 @@ describe("IdaasClient.getAccessToken", () => {
       audience: TEST_AUDIENCE,
       dpop: { alg: "ES256" },
     });
+
+    const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
+    expect(tokenEndpointCall).toBeDefined();
+    const headers = tokenEndpointCall?.[1]?.headers as Record<string, string>;
+    expect(typeof headers.DPoP).toBe("string");
+    expect((headers.DPoP ?? "").length).toBeGreaterThan(10);
+  });
+
+  test("uses global DPoP config on refresh-token exchange when no per-call DPoP is provided", async () => {
+    const globalDpopClient = new IdaasClient(
+      {
+        issuerUrl: TEST_ISSUER_URI,
+        clientId: TEST_CLIENT_ID,
+        storageType: "localstorage",
+      },
+      { dpop: { alg: "ES256" } },
+    );
+
+    // @ts-expect-error private method call
+    globalDpopClient.storageManager.saveAccessToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, scope: "1" });
+
+    await globalDpopClient.getAccessToken({ scope: "1", audience: TEST_AUDIENCE });
 
     const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
     expect(tokenEndpointCall).toBeDefined();
