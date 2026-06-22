@@ -148,6 +148,7 @@ describe("StorageManager", () => {
     storageManager.saveAccessToken(getAccessToken());
     storageManager.saveClientParams(getClientParams());
     storageManager.saveIdToken(getIdToken());
+    storageManager.saveIdaasSessionToken({ token: "testing-session-token" });
     storageManager.saveTokenParams(getTokenParams());
 
     storageManager.remove();
@@ -155,6 +156,7 @@ describe("StorageManager", () => {
     expect(storageManager.getAccessTokens().length).toBe(0);
     expect(storageManager.getClientParams()).toBeUndefined();
     expect(storageManager.getIdToken()).toBeUndefined();
+    expect(storageManager.getIdaasSessionToken()).toBeUndefined();
     expect(storageManager.getTokenParams()).toBeUndefined();
 
     expect(localStorage.length).toBe(0);

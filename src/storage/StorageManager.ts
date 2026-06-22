@@ -282,6 +282,7 @@ export class StorageManager {
     this.#storage.delete(this.#clientParamsStorageKey);
     this.#storage.delete(this.#accessTokenStorageKey);
     this.#storage.delete(this.#idTokenStorageKey);
+    this.#storage.delete(this.#idaasSessionTokenStorageKey);
     this.#storage.delete(this.#tokenParamsStorageKey);
   }
 }
