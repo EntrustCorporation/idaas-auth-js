@@ -1,0 +1,24 @@
+name: Sync to GitHub.com
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+jobs:
+  sync:
+    if: github.server_url != 'https://github.com'
+    runs-on: dk-ubcommon2604
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Push to github.com
+        env:
+          GH_COM_PAT: ${{ secrets.GH_COM_PAT }}
+        run: |
+          git -c credential.helper='!f() { echo "password=$GH_COM_PAT"; }; f' \
+            push https://x-access-token@github.com/EntrustCorporation/idaas-auth-js.git ${{ github.ref }}
