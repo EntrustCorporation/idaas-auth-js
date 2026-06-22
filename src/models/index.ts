@@ -1,4 +1,5 @@
 import type { OidcConfig } from "../api";
+import type { IdaasContext } from "../IdaasContext";
 import type {
   FaceChallenge,
   GridChallenge,
@@ -193,6 +194,11 @@ export interface UserClaims {
 }
 
 export interface AuthenticationTransactionOptions {
+  /**
+   * Shared IDaaS client context.
+   */
+  context: IdaasContext;
+
   /**
    * The OIDC config of the IDaaSClient.
    */

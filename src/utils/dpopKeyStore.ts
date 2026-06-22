@@ -55,10 +55,20 @@ const withStore = async <T>(mode: IDBTransactionMode, callback: (store: IDBObjec
   try {
     const transaction = db.transaction(STORE_NAME, mode);
     const store = transaction.objectStore(STORE_NAME);
-    return await callback(store);
+    const result = await callback(store);
+    await transactionToPromise(transaction);
+    return result;
   } finally {
     db.close();
   }
+};
+
+const transactionToPromise = async (transaction: IDBTransaction): Promise<void> => {
+  return await new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error ?? new Error("IndexedDB transaction failed"));
+    transaction.onabort = () => reject(transaction.error ?? new Error("IndexedDB transaction aborted"));
+  });
 };
 
 const requestToPromise = async <T>(request: IDBRequest<T>): Promise<T> => {

@@ -11,6 +11,7 @@
 - [AuthenticationRequestParams](interfaces/AuthenticationRequestParams.md)
 - [AuthenticationResponse](interfaces/AuthenticationResponse.md)
 - [AuthenticationSubmissionParams](interfaces/AuthenticationSubmissionParams.md)
+- [DPoPOptions](interfaces/DPoPOptions.md)
 - [FaceBiometricOptions](interfaces/FaceBiometricOptions.md)
 - [IdaasClientOptions](interfaces/IdaasClientOptions.md)
 - [OidcLoginOptions](interfaces/OidcLoginOptions.md)

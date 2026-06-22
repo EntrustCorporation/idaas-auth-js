@@ -7,6 +7,7 @@ import {
   requestToken,
   submitAuthChallenge,
 } from "./api";
+import type { IdaasContext } from "./IdaasContext";
 import type {
   AuthenticationRequestParams,
   AuthenticationResponse,
@@ -23,7 +24,6 @@ import type {
   UserAuthenticateQueryResponse,
   UserChallengeParameters,
 } from "./models/openapi-ts";
-import { type DPoPAlg, type DPoPKeyMaterial, generateDpopKeyMaterial, generateDpopProofJwt } from "./utils/dpop";
 import { calculateEpochExpiry } from "./utils/format";
 import { buildFidoResponse, buildPubKeyRequestOptions } from "./utils/passkey";
 import { generateAuthorizationUrl } from "./utils/url";
@@ -41,6 +41,7 @@ interface AuthenticationDetails {
   maxAge?: number;
   acr?: string;
   dpopBound?: boolean;
+  dpopKeyRef?: string;
 }
 
 interface RequiredDetails {
@@ -52,6 +53,7 @@ interface RequiredDetails {
 export class AuthenticationTransaction {
   readonly #authenticationRequestParams?: AuthenticationRequestParams;
   readonly #clientId: string;
+  readonly #context: IdaasContext;
   readonly #issuerOrigin: string;
   readonly #oidcConfig: OidcConfig;
   readonly #tokenOptions: TokenOptions;
@@ -66,12 +68,17 @@ export class AuthenticationTransaction {
   #requiredDetails?: RequiredDetails;
   #token?: string;
   #abortController?: AbortController;
-  #dpopKeyMaterial?: DPoPKeyMaterial;
-  #dpopKeyAlg?: DPoPAlg;
 
-  constructor({ oidcConfig, tokenOptions, clientId, authenticationRequestParams }: AuthenticationTransactionOptions) {
+  constructor({
+    context,
+    oidcConfig,
+    tokenOptions,
+    clientId,
+    authenticationRequestParams,
+  }: AuthenticationTransactionOptions) {
     const { issuer } = oidcConfig;
 
+    this.#context = context;
     this.#authenticationDetails = {
       scope: tokenOptions.scope,
     };
@@ -87,7 +94,7 @@ export class AuthenticationTransaction {
    */
   public async requestAuthChallenge(): Promise<AuthenticationResponse> {
     // 1. Generate /authorizejwt URL and fetch OIDC details
-    const dpopJkt = await this.#getDpopJkt();
+    const dpopJkt = await this.#context.getDpopJkt(this.#tokenOptions.dpop);
     const { url, codeVerifier, nonce } = await generateAuthorizationUrl(this.#oidcConfig, {
       clientId: this.#clientId,
       tokenOptions: this.#tokenOptions,
@@ -329,9 +336,10 @@ export class AuthenticationTransaction {
       jwt: this.#token,
     };
 
-    const dpopJwt = await this.#createDpopProof({
+    const dpopJwt = await this.#context.createDpopProof({
       method: "POST",
       uri: this.#oidcConfig.token_endpoint,
+      dpopOptions: this.#tokenOptions.dpop,
     });
 
     const tokenResponse = await requestToken(this.#oidcConfig.token_endpoint, requestBody, dpopJwt);
@@ -347,6 +355,17 @@ export class AuthenticationTransaction {
       throw new Error("failed to fetch refresh token from IDaaS");
     }
 
+    const dpopBound = tokenResponse.token_type.toLowerCase() === "dpop";
+    let dpopKeyRef: string | undefined;
+    if (dpopBound) {
+      const effectiveDpop = this.#context.getEffectiveDpopOptions(this.#tokenOptions.dpop);
+      if (!effectiveDpop) {
+        throw new Error("DPoP-bound token response received without DPoP key material");
+      }
+
+      dpopKeyRef = await this.#context.persistCurrentDpopKeyMaterialForAlg(effectiveDpop.alg);
+    }
+
     this.#authenticationDetails = {
       ...this.#authenticationDetails,
       idToken: id_token as string | undefined,
@@ -356,7 +375,8 @@ export class AuthenticationTransaction {
       audience: this.#tokenOptions.audience,
       maxAge: this.#tokenOptions.maxAge,
       acr: this.#tokenOptions.acrValues,
-      dpopBound: tokenResponse.token_type.toLowerCase() === "dpop",
+      dpopBound,
+      dpopKeyRef,
     };
   };
 
@@ -477,62 +497,6 @@ export class AuthenticationTransaction {
   public requiresIdToken = (): boolean => {
     return this.#tokenOptions.includeOpenidScope !== false;
   };
-
-  public getDpopKeyMaterial = (): DPoPKeyMaterial | undefined => {
-    return this.#dpopKeyMaterial;
-  };
-
-  public getDpopKeyAlg = (): DPoPAlg | undefined => {
-    return this.#dpopKeyAlg;
-  };
-
-  async #getDpopJkt(): Promise<string | undefined> {
-    const dpop = this.#tokenOptions.dpop;
-    if (!(dpop && typeof dpop === "object" && dpop.includeJkt)) {
-      return undefined;
-    }
-
-    const keyMaterial = await this.#getDpopKeyMaterial();
-    return keyMaterial.jkt;
-  }
-
-  async #createDpopProof({
-    method,
-    uri,
-    accessToken,
-  }: {
-    method: string;
-    uri: string;
-    accessToken?: string;
-  }): Promise<string | undefined> {
-    const dpop = this.#tokenOptions.dpop;
-    if (!dpop) {
-      return undefined;
-    }
-
-    const keyMaterial = await this.#getDpopKeyMaterial();
-    return await generateDpopProofJwt({
-      alg: typeof dpop === "object" ? (dpop.alg ?? "ES256") : "ES256",
-      privateKey: keyMaterial.privateKey,
-      publicJwk: keyMaterial.publicJwk,
-      htm: method,
-      htu: uri,
-      accessToken,
-    });
-  }
-
-  async #getDpopKeyMaterial(): Promise<DPoPKeyMaterial> {
-    const dpop = this.#tokenOptions.dpop;
-    const alg = dpop && typeof dpop === "object" ? (dpop.alg ?? "ES256") : "ES256";
-
-    if (this.#dpopKeyMaterial && this.#dpopKeyAlg === alg) {
-      return this.#dpopKeyMaterial;
-    }
-
-    this.#dpopKeyMaterial = await generateDpopKeyMaterial(alg);
-    this.#dpopKeyAlg = alg;
-    return this.#dpopKeyMaterial;
-  }
 
   #constructUserChallengeParams = (): UserChallengeParameters => {
     const { method, secondFactor } = this.#authenticationDetails;

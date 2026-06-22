@@ -30,7 +30,7 @@ Per OIDC spec, this parameter is optional and will be omitted from the authoriza
 
 ### dpop?
 
-> `optional` **dpop?**: `DPoPOptions`
+> `optional` **dpop?**: [`DPoPOptions`](DPoPOptions.md)
 
 DPoP (Demonstration of Proof-of-Possession) configuration.
 

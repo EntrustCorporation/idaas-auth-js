@@ -130,6 +130,19 @@ export class IdaasContext {
     });
   }
 
+  public async persistCurrentDpopKeyMaterialForAlg(alg: DPoPAlg): Promise<string> {
+    if (!this.#dpopKeyMaterial || this.#dpopKeyAlg !== alg) {
+      throw new Error("DPoP-bound token response received before DPoP key material was created");
+    }
+
+    return await persistDpopKeyMaterial({
+      alg,
+      privateKey: this.#dpopKeyMaterial.privateKey,
+      publicJwk: this.#dpopKeyMaterial.publicJwk,
+      jkt: this.#dpopKeyMaterial.jkt,
+    });
+  }
+
   public async restoreDpopKeyMaterialByRef(dpopKeyRef: string): Promise<void> {
     const restored = await retrievePersistedDpopKeyMaterial(dpopKeyRef);
     if (!restored) {

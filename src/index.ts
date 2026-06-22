@@ -4,6 +4,7 @@ export type {
   AuthenticationRequestParams,
   AuthenticationResponse,
   AuthenticationSubmissionParams,
+  DPoPOptions,
   FaceBiometricOptions,
   IdaasAuthenticationMethod,
   IdaasClientOptions,

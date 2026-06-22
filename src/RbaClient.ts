@@ -229,6 +229,7 @@ export class RbaClient {
     }
 
     this.#authenticationTransaction = new AuthenticationTransaction({
+      context: this.#context,
       oidcConfig,
       authenticationRequestParams,
       tokenOptions: {
@@ -249,15 +250,19 @@ export class RbaClient {
       throw new Error("No authentication transaction in progress!");
     }
 
-    const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience, acr, nonce, dpopBound } =
-      this.#authenticationTransaction.getAuthenticationDetails();
-
-    // Preserve DPoP key material used for token exchange so subsequent calls (e.g., UserInfo) use the same key
-    const dpopKeyMaterial = this.#authenticationTransaction.getDpopKeyMaterial();
-    const dpopKeyAlg = this.#authenticationTransaction.getDpopKeyAlg();
-    if (dpopKeyMaterial && dpopKeyAlg) {
-      this.#context.setDpopKeyMaterial(dpopKeyAlg, dpopKeyMaterial);
-    }
+    const {
+      idToken,
+      accessToken,
+      refreshToken,
+      scope,
+      expiresAt,
+      maxAge,
+      audience,
+      acr,
+      nonce,
+      dpopBound,
+      dpopKeyRef,
+    } = this.#authenticationTransaction.getAuthenticationDetails();
 
     // Only require accessToken for OAuth-only flows
     const requireIdToken = this.#authenticationTransaction.requiresIdToken();
@@ -275,6 +280,7 @@ export class RbaClient {
       maxAgeExpiry: maxAge ? calculateEpochExpiry(maxAge.toString()) : undefined,
       acr,
       dpopBound,
+      dpopKeyRef,
     });
 
     // Save ID token only if present
