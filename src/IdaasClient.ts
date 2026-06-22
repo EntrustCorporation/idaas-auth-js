@@ -340,7 +340,7 @@ export class IdaasClient {
   public async getUserInfo(accessToken?: string, tokenOptions: TokenOptions = {}): Promise<UserClaims | null> {
     const { userinfo_endpoint, issuer, jwks_uri } = await this.#context.getConfig();
 
-    const userInfoAccessToken = accessToken ?? (await this.getAccessToken({}));
+    const userInfoAccessToken = accessToken ?? (await this.getAccessToken(tokenOptions));
 
     if (!userInfoAccessToken) {
       throw new Error("Client is not authorized to access the UserInfo endpoint");

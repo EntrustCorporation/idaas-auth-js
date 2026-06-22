@@ -24,7 +24,7 @@ describe("DPoP Key Material and Proof Generation", () => {
         it("returns a CryptoKey for privateKey", () => {
           expect(keyMaterial.privateKey).toBeInstanceOf(CryptoKey);
           expect(keyMaterial.privateKey.type).toBe("private");
-          expect(keyMaterial.privateKey.extractable).toBe(true);
+          expect(keyMaterial.privateKey.extractable).toBe(false);
         });
 
         it("returns a valid JWK for publicJwk", () => {

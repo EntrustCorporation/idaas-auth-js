@@ -171,7 +171,7 @@ export class StorageManager {
       throw new Error("error removing access token, token not found");
     }
 
-    const removedDpopKeyRef = removedToken.dpopKeyRef;
+    const removedDpopKeyRef = accessTokens[index]?.dpopKeyRef;
 
     accessTokens.splice(index, 1);
     const stringifiedData = JSON.stringify(accessTokens);
@@ -191,9 +191,6 @@ export class StorageManager {
    */
   public removeExpiredTokens(): string[] {
     const tokens = this.getAccessTokens();
-    if (!tokens) {
-      return [];
-    }
     const now = Math.floor(Date.now() / 1000);
     // buffer (in seconds) to refresh/delete early, ensures an expired token is not returned
     const buffer = 15;

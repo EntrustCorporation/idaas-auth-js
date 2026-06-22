@@ -7,6 +7,8 @@ import {
   TEST_ACCESS_TOKEN,
   TEST_ACCESS_TOKEN_OBJECT,
   TEST_BASE_URI,
+  TEST_DIFFERENT_ACCESS_TOKEN,
+  TEST_DIFFERENT_SCOPE,
   TEST_ID_PAIR,
   TEST_SUB_CLAIM,
 } from "../constants";
@@ -80,5 +82,35 @@ describe("IdaasClient.getUserInfo", () => {
 
     expect(headers.DPoP).toBeDefined();
     expect(decodeProtectedHeader(headers.DPoP as string).alg).toBe("PS256");
+  });
+
+  test("passes tokenOptions through when acquiring a UserInfo access token", async () => {
+    const keyMaterial = await generateDpopKeyMaterial("ES256");
+    const dpopKeyRef = await persistDpopKeyMaterial({ alg: "ES256", ...keyMaterial });
+
+    localStorage.setItem(TEST_ID_PAIR.key, JSON.stringify(TEST_ID_PAIR.data));
+    // @ts-expect-error private method call
+    NO_DEFAULT_IDAAS_CLIENT.storageManager.saveAccessToken({
+      ...TEST_ACCESS_TOKEN_OBJECT,
+      accessToken: TEST_ACCESS_TOKEN,
+      audience: undefined,
+    });
+    // @ts-expect-error private method call
+    NO_DEFAULT_IDAAS_CLIENT.storageManager.saveAccessToken({
+      ...TEST_ACCESS_TOKEN_OBJECT,
+      accessToken: TEST_DIFFERENT_ACCESS_TOKEN,
+      audience: undefined,
+      scope: TEST_DIFFERENT_SCOPE,
+      dpopBound: true,
+      dpopKeyRef,
+    });
+
+    await NO_DEFAULT_IDAAS_CLIENT.getUserInfo(undefined, { scope: TEST_DIFFERENT_SCOPE, dpop: { alg: "ES256" } });
+
+    const userInfoRequest = spyOnFetch.mock.calls.find((request) => request[0] === `${TEST_BASE_URI}/userinfo`);
+    const headers = userInfoRequest?.[1]?.headers as Record<string, string>;
+
+    expect(headers.Authorization).toBe(`DPoP ${TEST_DIFFERENT_ACCESS_TOKEN}`);
+    expect(headers.DPoP).toBeDefined();
   });
 });

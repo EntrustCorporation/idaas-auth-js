@@ -69,7 +69,7 @@ const generateKeyPair = async (alg: DPoPAlg): Promise<CryptoKeyPair> => {
         name: "ECDSA",
         namedCurve,
       },
-      true,
+      false,
       ["sign", "verify"],
     );
   }
@@ -84,7 +84,7 @@ const generateKeyPair = async (alg: DPoPAlg): Promise<CryptoKeyPair> => {
         publicExponent: new Uint8Array([1, 0, 1]),
         hash,
       },
-      true,
+      false,
       ["sign", "verify"],
     );
   }
@@ -98,7 +98,7 @@ const generateKeyPair = async (alg: DPoPAlg): Promise<CryptoKeyPair> => {
       publicExponent: new Uint8Array([1, 0, 1]),
       hash,
     },
-    true,
+    false,
     ["sign", "verify"],
   );
 };

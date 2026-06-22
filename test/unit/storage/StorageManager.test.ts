@@ -59,6 +59,16 @@ describe("StorageManager", () => {
       expect(tokens).toEqual([token1]);
     });
 
+    test("returns orphaned dpopKeyRef from the stored token when removing by access token", () => {
+      const token = { ...getAccessToken(), dpopKeyRef: "stored-dpop-key-ref" };
+
+      storageManager.saveAccessToken(token);
+
+      const orphanedDpopKeyRef = storageManager.removeAccessToken({ ...token, dpopKeyRef: undefined });
+
+      expect(orphanedDpopKeyRef).toBe("stored-dpop-key-ref");
+    });
+
     test("stores multiple tokens with different scopes, same audience", () => {
       const token1 = getAccessToken({ scope: "1" });
       const token2 = getAccessToken({ scope: "2" });
