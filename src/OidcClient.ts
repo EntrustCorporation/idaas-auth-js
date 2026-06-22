@@ -324,11 +324,18 @@ export class OidcClient {
     const acr = token?.acr ?? undefined;
     const isDpopBound = tokenResponse.token_type.toLowerCase() === "dpop";
 
-    // For DPoP-bound tokens, ensure key material is persisted for recovery on page reload
     let dpopKeyRef = tokenParams.dpopKeyRef;
-    if (isDpopBound && !dpopKeyRef && dpop?.alg) {
-      // Popup flow: key material was generated in-memory, now persist it for localstorage recovery
-      dpopKeyRef = await this.#context.persistDpopKeyMaterialForAlg(dpop.alg);
+    if (isDpopBound) {
+      if (!dpop?.alg) {
+        throw new Error("DPoP-bound token response received without DPoP key material");
+      }
+
+      if (!dpopKeyRef) {
+        dpopKeyRef = await this.#context.persistCurrentDpopKeyMaterialForAlg(dpop.alg);
+      }
+    } else if (dpopKeyRef) {
+      await this.#context.clearDpopKeyMaterial(dpopKeyRef);
+      dpopKeyRef = undefined;
     }
 
     const newAccessToken: AccessToken = {

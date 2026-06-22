@@ -283,6 +283,21 @@ export class IdaasClient {
           dpop: requestedToken.dpopBound ? refreshDpopOptions : dpop,
         });
 
+        const newDpopBound = token_type.toLowerCase() === "dpop";
+        let newDpopKeyRef: string | undefined;
+        if (newDpopBound) {
+          newDpopKeyRef = requestedToken.dpopKeyRef;
+
+          if (!newDpopKeyRef) {
+            const effectiveDpopOptions = this.#context.getEffectiveDpopOptions(dpop);
+            if (!effectiveDpopOptions) {
+              throw new Error("DPoP-bound token response received without DPoP key material");
+            }
+
+            newDpopKeyRef = await this.#context.persistCurrentDpopKeyMaterialForAlg(effectiveDpopOptions.alg);
+          }
+        }
+
         const authTime = readAccessToken(newEncodedAccessToken)?.auth_time;
         const newExpiration = calculateEpochExpiry(expires_in, authTime);
 
@@ -294,12 +309,12 @@ export class IdaasClient {
           audience,
           scope,
           acr,
-          dpopBound: token_type.toLowerCase() === "dpop",
-          dpopKeyRef: requestedToken.dpopKeyRef,
+          dpopBound: newDpopBound,
+          dpopKeyRef: newDpopKeyRef,
         };
 
         const orphanedDpopKeyRef = this.#storageManager.removeAccessToken(requestedToken);
-        if (orphanedDpopKeyRef) {
+        if (orphanedDpopKeyRef && orphanedDpopKeyRef !== newDpopKeyRef) {
           await cleanupPersistedDpopKeyMaterial(orphanedDpopKeyRef);
         }
 

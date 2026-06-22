@@ -2,7 +2,7 @@ import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:te
 import { decodeProtectedHeader } from "jose";
 import type { AccessToken } from "../../../src/storage/StorageManager";
 import { generateDpopKeyMaterial } from "../../../src/utils/dpop";
-import { persistDpopKeyMaterial } from "../../../src/utils/dpopKeyStore";
+import { persistDpopKeyMaterial, retrievePersistedDpopKeyMaterial } from "../../../src/utils/dpopKeyStore";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
   SET_DEFAULTS_IDAAS_CLIENT,
@@ -15,6 +15,7 @@ import {
   TEST_DIFFERENT_AUDIENCE,
   TEST_DIFFERENT_SCOPE,
   TEST_SCOPE,
+  TEST_TOKEN_RESPONSE,
 } from "../constants";
 import { mockFetch } from "../helpers";
 
@@ -26,6 +27,8 @@ describe("IdaasClient.getAccessToken", () => {
   afterEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    // @ts-expect-error not full type
+    spyOnFetch.mockImplementation(mockFetch);
   });
 
   // @ts-expect-error not full type
@@ -267,6 +270,35 @@ describe("IdaasClient.getAccessToken", () => {
       const refreshedToken = storedTokens[0] as AccessToken;
 
       expect(refreshedToken.dpopBound).toBeFalse();
+      expect(refreshedToken.dpopKeyRef).toBeUndefined();
+      expect(await retrievePersistedDpopKeyMaterial(dpopKeyRef)).toBeUndefined();
+    });
+
+    test("the refreshed token persists a dpopKeyRef when token_type changes to DPoP", async () => {
+      storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, dpopBound: false, dpopKeyRef: undefined });
+
+      // @ts-expect-error not full type
+      spyOnFetch.mockImplementation(async (url: string) => {
+        if (url === `${TEST_BASE_URI}/token`) {
+          return Promise.resolve({
+            json: () => Promise.resolve({ ...TEST_TOKEN_RESPONSE, token_type: "DPoP" }),
+            headers: {
+              get: () => null,
+            },
+          } as unknown as Response);
+        }
+
+        return mockFetch(url);
+      });
+
+      await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE, dpop: { alg: "ES256" } });
+
+      const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_PAIR.key) as string);
+      const refreshedToken = storedTokens[0] as AccessToken;
+
+      expect(refreshedToken.dpopBound).toBeTrue();
+      expect(refreshedToken.dpopKeyRef).toBeTruthy();
+      expect(await retrievePersistedDpopKeyMaterial(refreshedToken.dpopKeyRef as string)).toBeDefined();
     });
   });
 
