@@ -12,7 +12,7 @@
         "@biomejs/biome": "2.5.0",
         "@commitlint/cli": "21.0.2",
         "@commitlint/config-conventional": "21.0.2",
-        "@happy-dom/global-registrator": "20.10.4",
+        "@happy-dom/global-registrator": "20.10.6",
         "@hey-api/openapi-ts": "0.98.2",
         "@microsoft/api-extractor": "7.58.9",
         "@playwright/test": "1.61.0",
@@ -135,7 +135,7 @@
 
     "@gerrit0/mini-shiki": ["@gerrit0/mini-shiki@3.23.0", "", { "dependencies": { "@shikijs/engine-oniguruma": "^3.23.0", "@shikijs/langs": "^3.23.0", "@shikijs/themes": "^3.23.0", "@shikijs/types": "^3.23.0", "@shikijs/vscode-textmate": "^10.0.2" } }, "sha512-bEMORlG0cqdjVyCEuU0cDQbORWX+kYCeo0kV1lbxF5bt4r7SID2l9bqsxJEM0zndaxpOUT7riCyIVEuqq/Ynxg=="],
 
-    "@happy-dom/global-registrator": ["@happy-dom/global-registrator@20.10.4", "", { "dependencies": { "@types/node": ">=20.0.0", "happy-dom": "^20.10.4" } }, "sha512-d1iWnYgb20MuHYyXVcjkEdFkUy5+myq8RyLAFK9Sy4PVNy/cU5xrM5JM/MMMR3KDZQ6YNVj9puy96lcfEaKh8Q=="],
+    "@happy-dom/global-registrator": ["@happy-dom/global-registrator@20.10.6", "", { "dependencies": { "@types/node": ">=20.0.0", "happy-dom": "^20.10.6" } }, "sha512-Nu/IjRkkNxmeG2ywWsyJSO4d1BrWTqVzxCPL+gXj0b97klhmjd6wLzt6Bx/laNpkZ3WLW7zNCqmtMIbIlahqug=="],
 
     "@hey-api/codegen-core": ["@hey-api/codegen-core@0.9.0", "", { "dependencies": { "@hey-api/types": "0.1.4", "ansi-colors": "4.1.3", "c12": "3.3.4", "color-support": "1.1.3" } }, "sha512-OK9/R8WuujwgvnrDIPnEiIf6WnfUOi3GaEr6kIngqoI5FUQwYbeDKHE/frTVUl2A76ZQPCrMknHtPx6Gqtwf8Q=="],
 
