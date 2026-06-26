@@ -77,8 +77,8 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.4",
     "@biomejs/biome": "2.5.1",
-    "@commitlint/cli": "21.0.2",
-    "@commitlint/config-conventional": "21.0.2",
+    "@commitlint/cli": "21.1.0",
+    "@commitlint/config-conventional": "21.1.0",
     "@happy-dom/global-registrator": "20.10.6",
     "@hey-api/openapi-ts": "0.99.0",
     "@microsoft/api-extractor": "7.58.9",
