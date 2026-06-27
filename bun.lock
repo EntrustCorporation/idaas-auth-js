@@ -23,7 +23,7 @@
         "@types/web": "0.0.350",
         "knip": "6.20.0",
         "oidc-provider": "9.8.5",
-        "onfido-sdk-ui": "14.76.0",
+        "onfido-sdk-ui": "14.77.0",
         "prettier": "3.8.4",
         "rsbuild-plugin-publint": "1.0.0",
         "typedoc": "0.28.19",
@@ -649,7 +649,7 @@
 
     "on-finished": ["on-finished@2.4.1", "", { "dependencies": { "ee-first": "1.1.1" } }, "sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg=="],
 
-    "onfido-sdk-ui": ["onfido-sdk-ui@14.76.0", "", {}, "sha512-d/VPNYuIa54TdrrGdOJqiqLCbkVbk5LsJ71Vf/NxlcODSAcZINfWdpzssLUv7thKU2A4nolJCfnuJjfYj9ptcA=="],
+    "onfido-sdk-ui": ["onfido-sdk-ui@14.77.0", "", {}, "sha512-ANy8rI4/bo7T0Hls127xuTJMamYWz6DMJT/69UOmF13hbp4P5mJkvyA5+rAwPBQnKB0ComorrPPyKnlT2l0vQw=="],
 
     "open": ["open@11.0.0", "", { "dependencies": { "default-browser": "^5.4.0", "define-lazy-prop": "^3.0.0", "is-in-ssh": "^1.0.0", "is-inside-container": "^1.0.0", "powershell-utils": "^0.1.0", "wsl-utils": "^0.3.0" } }, "sha512-smsWv2LzFjP03xmvFoJ331ss6h+jixfA4UUV/Bsiyuu4YJPfN+FIQGOIiv4w9/+MoHkfkJ22UIaQWRVFRfH6Vw=="],
 
