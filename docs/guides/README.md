@@ -41,6 +41,11 @@ This section contains comprehensive guides for implementing authentication with 
   - Re-run authentication with required token constraints
   - Retry protected API operations with upgraded tokens
 
+- **[DPoP Protected Resource Requests](./dpop.md)** - Call APIs that enforce RFC 9449 proof-of-possession access tokens
+  - Request DPoP-bound access tokens
+  - Create DPoP request headers with `getDpopHeaders()`
+  - Understand protected resource verification requirements
+
 ## Security
 
 - **[Security Best Practices](./security-best-practices.md)** - Comprehensive security guidance for production deployments

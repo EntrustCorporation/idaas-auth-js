@@ -2,7 +2,7 @@ import type { JWTPayload } from "jose";
 import { AuthClient } from "./AuthClient";
 import { getUserInfo, type RefreshTokenRequest, requestToken, type TokenResponse } from "./api";
 import { IdaasContext, type NormalizedTokenOptions } from "./IdaasContext";
-import type { IdaasClientOptions, TokenOptions, UserClaims } from "./models";
+import type { DpopHeadersOptions, IdaasClientOptions, TokenOptions, UserClaims } from "./models";
 import { OidcClient } from "./OidcClient";
 import { RbaClient } from "./RbaClient";
 import { type AccessToken, StorageManager } from "./storage/StorageManager";
@@ -414,6 +414,71 @@ export class IdaasClient {
     }
 
     return claims;
+  }
+
+  /**
+   * Creates DPoP Authorization headers for a protected resource request.
+   *
+   * This returns both `Authorization: DPoP ...` and a signed `DPoP` proof header using
+   * the key material associated with the selected DPoP-bound access token.
+   *
+   * @param options Protected resource request details and optional token lookup options
+   * @returns DPoP headers to include with the protected resource request
+   */
+  public async getDpopHeaders({
+    method,
+    uri,
+    accessToken,
+    tokenOptions = {},
+  }: DpopHeadersOptions): Promise<Record<string, string>> {
+    const protectedResourceUrl = new URL(uri);
+    if (protectedResourceUrl.protocol !== "http:" && protectedResourceUrl.protocol !== "https:") {
+      throw new Error("Protected resource URI must use http or https.");
+    }
+
+    const selectedAccessToken = accessToken ?? (await this.getAccessToken(tokenOptions));
+    if (!selectedAccessToken) {
+      throw new Error("Client is not authorized to access the protected resource");
+    }
+
+    const matchedStoredToken = this.#storageManager
+      .getAccessTokens()
+      .find((storedToken) => storedToken.accessToken === selectedAccessToken);
+
+    if (!matchedStoredToken?.dpopBound) {
+      throw new Error("Selected access token is not DPoP-bound.");
+    }
+
+    if (!matchedStoredToken.dpopKeyRef) {
+      throw new Error("DPoP-bound protected resource request requires stored DPoP key material reference.");
+    }
+
+    let persistedAlg: NonNullable<TokenOptions["dpop"]>["alg"];
+    try {
+      persistedAlg = await this.#context.restoreDpopKeyMaterialByRef(matchedStoredToken.dpopKeyRef);
+    } catch (error) {
+      throw new Error(
+        `Failed to restore DPoP key material for protected resource request: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
+    const dpopJwt = await this.#context.createDpopProof({
+      method,
+      uri: protectedResourceUrl.href,
+      accessToken: selectedAccessToken,
+      dpopOptions: {
+        alg: persistedAlg,
+      },
+    });
+
+    if (!dpopJwt) {
+      throw new Error("Failed to create DPoP proof for protected resource request.");
+    }
+
+    return {
+      Authorization: `DPoP ${selectedAccessToken}`,
+      DPoP: dpopJwt,
+    };
   }
 
   /**

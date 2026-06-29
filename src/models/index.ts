@@ -130,6 +130,31 @@ export interface DPoPOptions {
 }
 
 /**
+ * Options for creating DPoP Authorization headers for a protected resource request.
+ */
+export interface DpopHeadersOptions {
+  /**
+   * HTTP method that will be used for the protected resource request.
+   */
+  method: string;
+
+  /**
+   * Absolute HTTP or HTTPS URI that will be used for the protected resource request.
+   */
+  uri: string;
+
+  /**
+   * Optional access token to use. If omitted, the SDK retrieves one using `tokenOptions`.
+   */
+  accessToken?: string;
+
+  /**
+   * Token lookup options used when `accessToken` is omitted.
+   */
+  tokenOptions?: TokenOptions;
+}
+
+/**
  * The configurable options specific to the OIDC `login` method.
  */
 export interface OidcLoginOptions {

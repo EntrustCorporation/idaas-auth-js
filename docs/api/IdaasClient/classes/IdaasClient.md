@@ -165,6 +165,31 @@ Error if the refresh/token exchange fails
 
 ---
 
+### getDpopHeaders()
+
+> **getDpopHeaders**(`options`): `Promise`\<`Record`\<`string`, `string`\>\>
+
+Creates DPoP Authorization headers for a protected resource request.
+
+This returns both `Authorization: DPoP ...` and a signed `DPoP` proof header using
+the key material associated with the selected DPoP-bound access token.
+
+#### Parameters
+
+##### options
+
+[`DpopHeadersOptions`](../../index/interfaces/DpopHeadersOptions.md)
+
+Protected resource request details and optional token lookup options
+
+#### Returns
+
+`Promise`\<`Record`\<`string`, `string`\>\>
+
+DPoP headers to include with the protected resource request
+
+---
+
 ### getIdTokenClaims()
 
 > **getIdTokenClaims**(): [`UserClaims`](../../index/interfaces/UserClaims.md) \| `null`
