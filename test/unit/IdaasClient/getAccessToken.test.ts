@@ -1,5 +1,9 @@
 import { afterAll, afterEach, describe, expect, jest, spyOn, test } from "bun:test";
+import { decodeProtectedHeader } from "jose";
+import { IdaasClient } from "../../../src";
 import type { AccessToken } from "../../../src/storage/StorageManager";
+import { generateDpopKeyMaterial } from "../../../src/utils/dpop";
+import { persistDpopKeyMaterial, retrievePersistedDpopKeyMaterial } from "../../../src/utils/dpopKeyStore";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
   SET_DEFAULTS_IDAAS_CLIENT,
@@ -8,10 +12,13 @@ import {
   TEST_ACCESS_TOKEN_OBJECT,
   TEST_AUDIENCE,
   TEST_BASE_URI,
+  TEST_CLIENT_ID,
   TEST_DIFFERENT_ACCESS_TOKEN,
   TEST_DIFFERENT_AUDIENCE,
   TEST_DIFFERENT_SCOPE,
+  TEST_ISSUER_URI,
   TEST_SCOPE,
+  TEST_TOKEN_RESPONSE,
 } from "../constants";
 import { mockFetch } from "../helpers";
 
@@ -23,6 +30,8 @@ describe("IdaasClient.getAccessToken", () => {
   afterEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    // @ts-expect-error not full type
+    spyOnFetch.mockImplementation(mockFetch);
   });
 
   // @ts-expect-error not full type
@@ -148,6 +157,68 @@ describe("IdaasClient.getAccessToken", () => {
     expect(token).toStrictEqual(TEST_ACCESS_TOKEN);
   });
 
+  test("sends DPoP proof header on refresh-token exchange when DPoP is enabled", async () => {
+    storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, scope: "1" });
+
+    await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+      scope: "1",
+      audience: TEST_AUDIENCE,
+      dpop: { alg: "ES256" },
+    });
+
+    const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
+    expect(tokenEndpointCall).toBeDefined();
+    const headers = tokenEndpointCall?.[1]?.headers as Record<string, string>;
+    expect(typeof headers.DPoP).toBe("string");
+    expect((headers.DPoP ?? "").length).toBeGreaterThan(10);
+  });
+
+  test("uses global DPoP config on refresh-token exchange when no per-call DPoP is provided", async () => {
+    const globalDpopClient = new IdaasClient(
+      {
+        issuerUrl: TEST_ISSUER_URI,
+        clientId: TEST_CLIENT_ID,
+        storageType: "localstorage",
+      },
+      { dpop: { alg: "ES256" } },
+    );
+
+    // @ts-expect-error private method call
+    globalDpopClient.storageManager.saveAccessToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, scope: "1" });
+
+    await globalDpopClient.getAccessToken({ scope: "1", audience: TEST_AUDIENCE });
+
+    const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
+    expect(tokenEndpointCall).toBeDefined();
+    const headers = tokenEndpointCall?.[1]?.headers as Record<string, string>;
+    expect(typeof headers.DPoP).toBe("string");
+    expect((headers.DPoP ?? "").length).toBeGreaterThan(10);
+  });
+
+  test("uses persisted DPoP key algorithm for DPoP-bound refresh even when configured alg differs", async () => {
+    const keyMaterial = await generateDpopKeyMaterial("PS256");
+    const dpopKeyRef = await persistDpopKeyMaterial({ alg: "PS256", ...keyMaterial });
+    storeToken({
+      ...TEST_ACCESS_TOKEN_OBJECT,
+      expiresAt: 0,
+      scope: "1",
+      dpopBound: true,
+      dpopKeyRef,
+    });
+
+    await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({
+      scope: "1",
+      audience: TEST_AUDIENCE,
+      dpop: { alg: "ES256" },
+    });
+
+    const tokenEndpointCall = spyOnFetch.mock.calls.find((call) => call[0] === `${TEST_BASE_URI}/token`);
+    const headers = tokenEndpointCall?.[1]?.headers as Record<string, string>;
+
+    expect(headers.DPoP).toBeDefined();
+    expect(decodeProtectedHeader(headers.DPoP as string).alg).toBe("PS256");
+  });
+
   describe("refresh token validity", () => {
     test("refreshing a token does not change the number of tokens stored", async () => {
       storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0 });
@@ -211,6 +282,48 @@ describe("IdaasClient.getAccessToken", () => {
       // Verify access token was updated (comes from TEST_TOKEN_RESPONSE mock)
       expect(refreshedToken.accessToken).toBeTruthy();
       expect(refreshedToken.accessToken).toStrictEqual(TEST_ACCESS_TOKEN);
+    });
+
+    test("the refreshed token derives dpopBound from token_type in refresh response", async () => {
+      const keyMaterial = await generateDpopKeyMaterial("ES256");
+      const dpopKeyRef = await persistDpopKeyMaterial({ alg: "ES256", ...keyMaterial });
+      storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, dpopBound: true, dpopKeyRef });
+
+      await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE, dpop: { alg: "ES256" } });
+
+      const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_PAIR.key) as string);
+      const refreshedToken = storedTokens[0] as AccessToken;
+
+      expect(refreshedToken.dpopBound).toBeFalse();
+      expect(refreshedToken.dpopKeyRef).toBeUndefined();
+      expect(await retrievePersistedDpopKeyMaterial(dpopKeyRef)).toBeUndefined();
+    });
+
+    test("the refreshed token persists a dpopKeyRef when token_type changes to DPoP", async () => {
+      storeToken({ ...TEST_ACCESS_TOKEN_OBJECT, expiresAt: 0, dpopBound: false, dpopKeyRef: undefined });
+
+      // @ts-expect-error not full type
+      spyOnFetch.mockImplementation(async (url: string) => {
+        if (url === `${TEST_BASE_URI}/token`) {
+          return Promise.resolve({
+            json: () => Promise.resolve({ ...TEST_TOKEN_RESPONSE, token_type: "DPoP" }),
+            headers: {
+              get: () => null,
+            },
+          } as unknown as Response);
+        }
+
+        return mockFetch(url);
+      });
+
+      await NO_DEFAULT_IDAAS_CLIENT.getAccessToken({ audience: TEST_AUDIENCE, dpop: { alg: "ES256" } });
+
+      const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_PAIR.key) as string);
+      const refreshedToken = storedTokens[0] as AccessToken;
+
+      expect(refreshedToken.dpopBound).toBeTrue();
+      expect(refreshedToken.dpopKeyRef).toBeTruthy();
+      expect(await retrievePersistedDpopKeyMaterial(refreshedToken.dpopKeyRef as string)).toBeDefined();
     });
   });
 

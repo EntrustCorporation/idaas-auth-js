@@ -59,6 +59,16 @@ describe("StorageManager", () => {
       expect(tokens).toEqual([token1]);
     });
 
+    test("returns orphaned dpopKeyRef from the stored token when removing by access token", () => {
+      const token = { ...getAccessToken(), dpopKeyRef: "stored-dpop-key-ref" };
+
+      storageManager.saveAccessToken(token);
+
+      const orphanedDpopKeyRef = storageManager.removeAccessToken({ ...token, dpopKeyRef: undefined });
+
+      expect(orphanedDpopKeyRef).toBe("stored-dpop-key-ref");
+    });
+
     test("stores multiple tokens with different scopes, same audience", () => {
       const token1 = getAccessToken({ scope: "1" });
       const token2 = getAccessToken({ scope: "2" });
@@ -138,6 +148,7 @@ describe("StorageManager", () => {
     storageManager.saveAccessToken(getAccessToken());
     storageManager.saveClientParams(getClientParams());
     storageManager.saveIdToken(getIdToken());
+    storageManager.saveIdaasSessionToken({ token: "testing-session-token" });
     storageManager.saveTokenParams(getTokenParams());
 
     storageManager.remove();
@@ -145,6 +156,7 @@ describe("StorageManager", () => {
     expect(storageManager.getAccessTokens().length).toBe(0);
     expect(storageManager.getClientParams()).toBeUndefined();
     expect(storageManager.getIdToken()).toBeUndefined();
+    expect(storageManager.getIdaasSessionToken()).toBeUndefined();
     expect(storageManager.getTokenParams()).toBeUndefined();
 
     expect(localStorage.length).toBe(0);

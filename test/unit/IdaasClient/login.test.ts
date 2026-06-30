@@ -235,6 +235,44 @@ describe("IdaasClient.oidc.login", () => {
       expect(acrArr).toContain(thisTestDifferentAcr);
     });
 
+    test("auth url contains dpop_jkt when DPoP includeJkt is enabled", async () => {
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { dpop: { alg: "ES256", includeJkt: true } });
+
+      const { url: authUrl } = (await spyOnGenerateAuthorizationUrl.mock.results[0]?.value) as { url: string };
+      const { dpop_jkt: dpopJkt } = getUrlParams(authUrl);
+
+      expect(dpopJkt).toBeTruthy();
+    });
+
+    test("token params persist DPoP key reference when includeJkt is enabled", async () => {
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { dpop: { includeJkt: true, alg: "ES256" } });
+
+      const tokenParamsRaw = localStorage.getItem(TEST_TOKEN_PAIR.key);
+      expect(tokenParamsRaw).toBeTruthy();
+
+      const tokenParams = JSON.parse(tokenParamsRaw as string) as {
+        dpopKeyRef?: string;
+        dpopKeyMaterial?: unknown;
+      };
+
+      expect(tokenParams.dpopKeyRef).toBeTruthy();
+      expect(tokenParams.dpopKeyMaterial).toBeUndefined();
+      expect((tokenParamsRaw as string).includes("privateJwk")).toBeFalse();
+    });
+
+    test("token params do not persist DPoP key reference when includeJkt is disabled", async () => {
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.login({}, { dpop: { includeJkt: false, alg: "ES256" } });
+
+      const tokenParamsRaw = localStorage.getItem(TEST_TOKEN_PAIR.key);
+      expect(tokenParamsRaw).toBeTruthy();
+
+      const tokenParams = JSON.parse(tokenParamsRaw as string) as {
+        dpopKeyRef?: unknown;
+      };
+
+      expect(tokenParams.dpopKeyRef).toBeUndefined();
+    });
+
     test("auth url does not contain claims request if acrValues is not passed", async () => {
       await NO_DEFAULT_IDAAS_CLIENT.oidc.login();
 

@@ -112,16 +112,23 @@ export const fetchOpenidConfiguration = async (issuerUrl: string): Promise<OidcC
 export const requestToken = async (
   tokenEndpoint: string,
   tokenRequest: AccessTokenRequest | RefreshTokenRequest | JwtIdaasTokenRequest,
+  dpopJwt?: string,
 ): Promise<TokenResponse> => {
   const searchParams = new URLSearchParams({
     ...tokenRequest,
   });
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/x-www-form-urlencoded",
+  };
+
+  if (dpopJwt) {
+    headers.DPoP = dpopJwt;
+  }
+
   const response = await fetch(tokenEndpoint, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+    headers,
     body: searchParams,
   });
 
@@ -136,12 +143,19 @@ export const requestToken = async (
  * @return a string representing either a JSON object or a signed jwt containing the user claims, depending on the OIDC
  * application configuration
  */
-export const getUserInfo = async (userInfoEndpoint: string, accessToken: string) => {
+export const getUserInfo = async (userInfoEndpoint: string, accessToken: string, dpopJwt?: string) => {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+  };
+
+  if (dpopJwt) {
+    headers.Authorization = `DPoP ${accessToken}`;
+    headers.DPoP = dpopJwt;
+  }
+
   const response = await fetch(userInfoEndpoint, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers,
   });
 
   return await response.text();

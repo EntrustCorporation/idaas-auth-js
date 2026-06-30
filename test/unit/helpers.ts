@@ -60,6 +60,9 @@ export const mockFetch = async (url: string) => {
     case `${TEST_BASE_URI}/token`: {
       return Promise.resolve({
         json: () => Promise.resolve(TEST_TOKEN_RESPONSE),
+        headers: {
+          get: () => null,
+        },
       });
     }
     case `${TEST_BASE_URI}/issuer/.well-known/openid-configuration`: {

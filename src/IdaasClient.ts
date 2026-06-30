@@ -2,10 +2,11 @@ import type { JWTPayload } from "jose";
 import { AuthClient } from "./AuthClient";
 import { getUserInfo, type RefreshTokenRequest, requestToken, type TokenResponse } from "./api";
 import { IdaasContext, type NormalizedTokenOptions } from "./IdaasContext";
-import type { IdaasClientOptions, TokenOptions, UserClaims } from "./models";
+import type { DpopHeadersOptions, IdaasClientOptions, TokenOptions, UserClaims } from "./models";
 import { OidcClient } from "./OidcClient";
 import { RbaClient } from "./RbaClient";
 import { type AccessToken, StorageManager } from "./storage/StorageManager";
+import { cleanupPersistedDpopKeyMaterial } from "./utils/dpopKeyStore";
 import { calculateEpochExpiry } from "./utils/format";
 import { readAccessToken, validateUserInfoToken } from "./utils/jwt";
 import { parseStepUpChallenge } from "./utils/wwwAuthenticate";
@@ -52,6 +53,12 @@ export class IdaasClient {
       maxAge: tokenOptions.maxAge,
       acrValues: tokenOptions.acrValues ?? "",
       includeOpenidScope: tokenOptions.includeOpenidScope ?? true,
+      dpop: tokenOptions.dpop
+        ? {
+            alg: tokenOptions.dpop.alg,
+            includeJkt: tokenOptions.dpop.includeJkt ?? false,
+          }
+        : undefined,
     };
 
     this.#context = new IdaasContext({
@@ -185,9 +192,14 @@ export class IdaasClient {
     audience = this.#context.tokenOptions.audience,
     scope = this.#context.tokenOptions.scope,
     acrValues = "",
+    dpop,
   }: TokenOptions = {}): Promise<string | null> {
-    // 1. Remove tokens that are no longer valid
-    this.#storageManager.removeExpiredTokens();
+    // 1. Remove tokens that are no longer valid and clean up orphaned DPoP keys
+    const orphanedDpopKeyRefs = this.#storageManager.removeExpiredTokens();
+    for (const dpopKeyRef of orphanedDpopKeyRefs) {
+      await cleanupPersistedDpopKeyMaterial(dpopKeyRef);
+    }
+
     let accessTokens = this.#storageManager.getAccessTokens();
     const requestedScopes = scope.split(" ");
     const now = Date.now();
@@ -236,16 +248,60 @@ export class IdaasClient {
           throw new Error("Token that is not valid was not removed");
         }
 
+        const configuredDpopOptions = dpop ?? this.#context.tokenOptions.dpop;
+        if (requestedToken.dpopBound && !configuredDpopOptions) {
+          throw new Error(
+            "DPoP-bound token refresh requires tokenOptions.dpop (alg) or global token DPoP configuration.",
+          );
+        }
+
+        let refreshDpopOptions = dpop;
+        if (requestedToken.dpopBound) {
+          if (!requestedToken.dpopKeyRef) {
+            throw new Error("DPoP-bound token refresh requires stored DPoP key material reference.");
+          }
+
+          try {
+            const persistedAlg = await this.#context.restoreDpopKeyMaterialByRef(requestedToken.dpopKeyRef);
+            refreshDpopOptions = {
+              ...configuredDpopOptions,
+              alg: persistedAlg,
+            };
+          } catch (error) {
+            throw new Error(
+              `Failed to restore DPoP key material for token refresh: ${error instanceof Error ? error.message : String(error)}`,
+            );
+          }
+        }
+
         const {
           refresh_token: newRefreshToken,
           access_token: newEncodedAccessToken,
           expires_in,
-        } = await this.#requestTokenUsingRefreshToken(refreshToken);
+          token_type,
+        } = await this.#requestTokenUsingRefreshToken(refreshToken, {
+          dpop: requestedToken.dpopBound ? refreshDpopOptions : configuredDpopOptions,
+        });
+
+        const newDpopBound = token_type.toLowerCase() === "dpop";
+        let newDpopKeyRef: string | undefined;
+        if (newDpopBound) {
+          newDpopKeyRef = requestedToken.dpopKeyRef;
+
+          if (!newDpopKeyRef) {
+            const effectiveDpopOptions = this.#context.getEffectiveDpopOptions(dpop);
+            if (!effectiveDpopOptions) {
+              throw new Error("DPoP-bound token response received without DPoP key material");
+            }
+
+            newDpopKeyRef = await this.#context.persistCurrentDpopKeyMaterialForAlg(effectiveDpopOptions.alg);
+          }
+        }
 
         const authTime = readAccessToken(newEncodedAccessToken)?.auth_time;
         const newExpiration = calculateEpochExpiry(expires_in, authTime);
 
-        // the refreshed access token to be stored, maintaining expired token's scope and audience
+        // the refreshed access token to be stored, maintaining expired token's scope, audience, and DPoP binding
         const newAccessToken: AccessToken = {
           accessToken: newEncodedAccessToken,
           refreshToken: newRefreshToken,
@@ -253,9 +309,15 @@ export class IdaasClient {
           audience,
           scope,
           acr,
+          dpopBound: newDpopBound,
+          dpopKeyRef: newDpopKeyRef,
         };
 
-        this.#storageManager.removeAccessToken(requestedToken);
+        const orphanedDpopKeyRef = this.#storageManager.removeAccessToken(requestedToken);
+        if (orphanedDpopKeyRef && orphanedDpopKeyRef !== newDpopKeyRef) {
+          await cleanupPersistedDpopKeyMaterial(orphanedDpopKeyRef);
+        }
+
         this.#storageManager.saveAccessToken(newAccessToken);
         return newEncodedAccessToken;
       }
@@ -275,16 +337,60 @@ export class IdaasClient {
    * audience will be used if available.
    * @returns User claims from the OpenID Provider, or `null` if unavailable
    */
-  public async getUserInfo(accessToken?: string): Promise<UserClaims | null> {
+  public async getUserInfo(accessToken?: string, tokenOptions: TokenOptions = {}): Promise<UserClaims | null> {
     const { userinfo_endpoint, issuer, jwks_uri } = await this.#context.getConfig();
 
-    const userInfoAccessToken = accessToken ?? (await this.getAccessToken({}));
+    const userInfoAccessToken = accessToken ?? (await this.getAccessToken(tokenOptions));
 
     if (!userInfoAccessToken) {
       throw new Error("Client is not authorized to access the UserInfo endpoint");
     }
 
-    const userInfo = await getUserInfo(userinfo_endpoint, userInfoAccessToken);
+    const matchedStoredToken = this.#storageManager
+      .getAccessTokens()
+      .find((storedToken) => storedToken.accessToken === userInfoAccessToken);
+    const effectiveDpopOptions = tokenOptions.dpop ?? this.#context.tokenOptions.dpop;
+
+    // Determine if DPoP should be used:
+    // 1. If token is in storage and is DPoP-bound, use DPoP if configured
+    // 2. If token is external (not in storage) and tokenOptions.dpop is explicitly provided, treat as opt-in to DPoP
+    const isDpopBound = matchedStoredToken?.dpopBound === true;
+    const isExternalTokenWithExplicitDpop = !matchedStoredToken && !!tokenOptions.dpop;
+    const shouldUseDpop = (isDpopBound || isExternalTokenWithExplicitDpop) && !!effectiveDpopOptions;
+
+    if (isDpopBound && !effectiveDpopOptions) {
+      throw new Error("DPoP-bound token requires tokenOptions.dpop (alg) or global token DPoP configuration.");
+    }
+
+    let userInfoDpopOptions = effectiveDpopOptions;
+    if (isDpopBound) {
+      if (!matchedStoredToken?.dpopKeyRef) {
+        throw new Error("DPoP-bound UserInfo request requires stored DPoP key material reference.");
+      }
+
+      try {
+        const persistedAlg = await this.#context.restoreDpopKeyMaterialByRef(matchedStoredToken.dpopKeyRef);
+        userInfoDpopOptions = {
+          ...effectiveDpopOptions,
+          alg: persistedAlg,
+        };
+      } catch (error) {
+        throw new Error(
+          `Failed to restore DPoP key material for UserInfo request: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    const dpopJwt = shouldUseDpop
+      ? await this.#context.createDpopProof({
+          method: "GET",
+          uri: userinfo_endpoint,
+          accessToken: userInfoAccessToken,
+          dpopOptions: userInfoDpopOptions,
+        })
+      : undefined;
+
+    const userInfo = await getUserInfo(userinfo_endpoint, userInfoAccessToken, dpopJwt);
 
     let claims: UserClaims | null;
 
@@ -308,6 +414,71 @@ export class IdaasClient {
     }
 
     return claims;
+  }
+
+  /**
+   * Creates DPoP Authorization headers for a protected resource request.
+   *
+   * This returns both `Authorization: DPoP ...` and a signed `DPoP` proof header using
+   * the key material associated with the selected DPoP-bound access token.
+   *
+   * @param options Protected resource request details and optional token lookup options
+   * @returns DPoP headers to include with the protected resource request
+   */
+  public async getDpopHeaders({
+    method,
+    uri,
+    accessToken,
+    tokenOptions = {},
+  }: DpopHeadersOptions): Promise<Record<string, string>> {
+    const protectedResourceUrl = new URL(uri);
+    if (protectedResourceUrl.protocol !== "http:" && protectedResourceUrl.protocol !== "https:") {
+      throw new Error("Protected resource URI must use http or https.");
+    }
+
+    const selectedAccessToken = accessToken ?? (await this.getAccessToken(tokenOptions));
+    if (!selectedAccessToken) {
+      throw new Error("Client is not authorized to access the protected resource");
+    }
+
+    const matchedStoredToken = this.#storageManager
+      .getAccessTokens()
+      .find((storedToken) => storedToken.accessToken === selectedAccessToken);
+
+    if (!matchedStoredToken?.dpopBound) {
+      throw new Error("Selected access token is not DPoP-bound.");
+    }
+
+    if (!matchedStoredToken.dpopKeyRef) {
+      throw new Error("DPoP-bound protected resource request requires stored DPoP key material reference.");
+    }
+
+    let persistedAlg: NonNullable<TokenOptions["dpop"]>["alg"];
+    try {
+      persistedAlg = await this.#context.restoreDpopKeyMaterialByRef(matchedStoredToken.dpopKeyRef);
+    } catch (error) {
+      throw new Error(
+        `Failed to restore DPoP key material for protected resource request: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
+    const dpopJwt = await this.#context.createDpopProof({
+      method,
+      uri: protectedResourceUrl.href,
+      accessToken: selectedAccessToken,
+      dpopOptions: {
+        alg: persistedAlg,
+      },
+    });
+
+    if (!dpopJwt) {
+      throw new Error("Failed to create DPoP proof for protected resource request.");
+    }
+
+    return {
+      Authorization: `DPoP ${selectedAccessToken}`,
+      DPoP: dpopJwt,
+    };
   }
 
   /**
@@ -336,7 +507,7 @@ export class IdaasClient {
   }
 
   // Service methods for OidcClient and RbaClient
-  async #requestTokenUsingRefreshToken(refreshToken: string): Promise<TokenResponse> {
+  async #requestTokenUsingRefreshToken(refreshToken: string, tokenOptions: TokenOptions = {}): Promise<TokenResponse> {
     const { token_endpoint } = await this.#context.getConfig();
 
     const tokenRequest: RefreshTokenRequest = {
@@ -345,6 +516,12 @@ export class IdaasClient {
       refresh_token: refreshToken,
     };
 
-    return await requestToken(token_endpoint, tokenRequest);
+    const dpopJwt = await this.#context.createDpopProof({
+      method: "POST",
+      uri: token_endpoint,
+      dpopOptions: tokenOptions.dpop,
+    });
+
+    return await requestToken(token_endpoint, tokenRequest, dpopJwt);
   }
 }
