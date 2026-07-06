@@ -9,6 +9,7 @@ This guide covers security considerations specific to using the IDaaS Auth JavaS
 - [What the SDK Protects Against](#what-the-sdk-protects-against)
 - [Token Storage Security](#token-storage-security)
 - [SDK Configuration Security](#sdk-configuration-security)
+- [DPoP Protected Resources](#dpop-protected-resources)
 - [Secure Credential Handling](#secure-credential-handling)
 - [Authentication Method Security](#authentication-method-security)
 - [Security Checklist](#security-checklist)
@@ -141,6 +142,38 @@ const client = new IdaasClient({...}, {
 - Enable refresh token rotation (SDK handles automatically)
 - Implement logout that revokes tokens server-side
 - Consider shorter refresh token lifetime for high-security apps
+
+## DPoP Protected Resources
+
+DPoP binds an access token to browser-held key material. This reduces replay risk if an access token is copied out of the browser, because the token must be presented with a fresh signed proof from the matching private key.
+
+```typescript
+const accessToken = await client.getAccessToken({
+  audience: "https://api.yourapp.com",
+  scope: "accounts:read",
+  dpop: { alg: "ES256" }
+});
+
+if (!accessToken) {
+  throw new Error("No access token available");
+}
+
+const headers = await client.getDpopHeaders({
+  method: "GET",
+  uri: "https://api.yourapp.com/accounts",
+  accessToken
+});
+```
+
+Security considerations:
+
+- `getDpopHeaders()` creates client-side request headers only. Your protected resource must validate the access token and DPoP proof.
+- The resource server must compare the access token `cnf.jkt` claim to the thumbprint of the DPoP proof public key.
+- The SDK keeps private key material non-extractable and does not expose low-level DPoP signing primitives.
+- DPoP does not make XSS harmless. Attacker-controlled JavaScript may still call SDK methods while a session is active.
+- Use `https` for protected resource requests in production.
+
+See [DPoP Protected Resource Requests](./dpop.md) for the full usage and verification checklist.
 
 ## Authentication Method Security
 
@@ -339,6 +372,7 @@ await client.auth.password(userId, password);
 ### SDK Documentation
 
 - [JWT IDaaS Grant Type Security](./jwt-idaas-grant.md#security-considerations) - Detailed security for in-app auth
+- [DPoP Protected Resource Requests](./dpop.md) - DPoP usage and resource server verification requirements
 - [OIDC Guide](./oidc.md) - Hosted authentication flow
 - [RBA Guide](./rba.md) - Self-hosted authentication
 - [Troubleshooting](../troubleshooting.md)

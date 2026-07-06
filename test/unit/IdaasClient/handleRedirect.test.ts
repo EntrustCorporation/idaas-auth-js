@@ -1,4 +1,7 @@
 import { afterAll, afterEach, beforeEach, describe, expect, jest, spyOn, test } from "bun:test";
+import type { AccessToken } from "../../../src/storage/StorageManager";
+import { generateDpopKeyMaterial } from "../../../src/utils/dpop";
+import { persistDpopKeyMaterial, retrievePersistedDpopKeyMaterial } from "../../../src/utils/dpopKeyStore";
 import * as jwt from "../../../src/utils/jwt";
 import {
   NO_DEFAULT_IDAAS_CLIENT,
@@ -6,7 +9,6 @@ import {
   TEST_ACCESS_TOKEN_KEY,
   TEST_ACR_CLAIM,
   TEST_BASE_URI,
-  TEST_CLIENT_ID,
   TEST_CODE,
   TEST_ID_TOKEN_KEY,
   TEST_ID_TOKEN_OBJECT,
@@ -117,7 +119,16 @@ describe("IdaasClient.handleRedirect", () => {
 
       await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
 
-      expect(localStorage.getItem(`entrust.tokenParams.${TEST_CLIENT_ID}`)).toBeNull();
+      expect(localStorage.getItem(TEST_TOKEN_PAIR.key)).toBeNull();
+    });
+
+    test("removes tokenParams from storage when redirect handling fails", async () => {
+      storeData({ clientParams: true, tokenParams: true });
+      window.location.href = `${TEST_BASE_URI}?code=${TEST_CODE}&state=different_state`;
+
+      await expect(NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect()).rejects.toThrowError();
+
+      expect(localStorage.getItem(TEST_TOKEN_PAIR.key)).toBeNull();
     });
 
     test("stores the ID token", async () => {
@@ -209,6 +220,31 @@ describe("IdaasClient.handleRedirect", () => {
       expect(spyOnValidateIdToken).not.toHaveBeenCalled();
       expect(localStorage.getItem(TEST_ID_TOKEN_KEY)).not.toBeNull();
       expect(localStorage.getItem(TEST_ACCESS_TOKEN_KEY)).not.toBeNull();
+    });
+
+    test("does not store dpopKeyRef and cleans persisted key when redirect token response is Bearer", async () => {
+      const keyMaterial = await generateDpopKeyMaterial("ES256");
+      const dpopKeyRef = await persistDpopKeyMaterial({ alg: "ES256", ...keyMaterial });
+
+      localStorage.setItem(
+        TEST_TOKEN_PAIR.key,
+        JSON.stringify({
+          ...TEST_TOKEN_PARAMS,
+          dpop: { alg: "ES256", includeJkt: true },
+          dpopKeyRef,
+          requireIdToken: true,
+        }),
+      );
+      storeData({ clientParams: true });
+      window.location.href = loginSuccessUrl;
+
+      await NO_DEFAULT_IDAAS_CLIENT.oidc.handleRedirect();
+
+      const storedTokens = JSON.parse(localStorage.getItem(TEST_ACCESS_TOKEN_KEY) as string) as AccessToken[];
+
+      expect(storedTokens[0]?.dpopBound).toBeFalse();
+      expect(storedTokens[0]?.dpopKeyRef).toBeUndefined();
+      expect(await retrievePersistedDpopKeyMaterial(dpopKeyRef)).toBeUndefined();
     });
   });
 });

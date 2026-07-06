@@ -4,6 +4,7 @@ import type { IdaasContext } from "./IdaasContext";
 import type { AuthorizeResponse, OidcLoginOptions, OidcLogoutOptions, TokenOptions } from "./models";
 import type { AccessToken, StorageManager, TokenParams } from "./storage/StorageManager";
 import { listenToAuthorizePopup, openPopup } from "./utils/browser";
+import { clearStoredDpopKeyMaterialBestEffort } from "./utils/dpopCleanup";
 import { calculateEpochExpiry, formatUrl, sanitizeUri } from "./utils/format";
 import { readAccessToken, validateIdToken } from "./utils/jwt";
 import { generateAuthorizationUrl } from "./utils/url";
@@ -80,6 +81,8 @@ export class OidcClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/oidc.md OIDC Guide}
    */
   public async logout({ redirectUri }: OidcLogoutOptions = {}): Promise<void> {
+    await clearStoredDpopKeyMaterialBestEffort(this.#context, this.#storageManager);
+
     this.#storageManager.remove();
 
     window.location.href = await this.#generateLogoutUrl(redirectUri);
@@ -123,17 +126,30 @@ export class OidcClient {
       throw new Error("No token params stored, unable to parse");
     }
 
-    const authorizeCode = this.#validateAuthorizeResponse(authorizeResponse, state);
+    try {
+      const authorizeCode = this.#validateAuthorizeResponse(authorizeResponse, state);
 
-    const validatedTokenResponse = await this.#requestAndValidateTokens(
-      authorizeCode,
-      codeVerifier,
-      redirectUri,
-      nonce,
-      tokenParams.requireIdToken ?? true,
-      tokenParams.acrValues?.split(" ").filter(Boolean),
-    );
-    this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
+      const validatedTokenResponse = await this.#requestAndValidateTokens(
+        authorizeCode,
+        codeVerifier,
+        redirectUri,
+        nonce,
+        tokenParams.requireIdToken ?? true,
+        tokenParams.acrValues?.split(" ").filter(Boolean),
+        tokenParams.dpop,
+        tokenParams.dpopKeyRef,
+      );
+      await this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
+    } catch (error) {
+      // On error, clean up any restored DPoP key material to prevent orphaned keys in IndexedDB
+      if (tokenParams.dpopKeyRef) {
+        await this.#context.clearDpopKeyMaterial(tokenParams.dpopKeyRef);
+      }
+      throw error;
+    } finally {
+      this.#storageManager.removeTokenParams();
+    }
+
     return null;
   }
 
@@ -212,6 +228,8 @@ export class OidcClient {
     nonce: string,
     requireIdToken: boolean,
     requestedAcrValues?: string[],
+    dpopOptions?: TokenOptions["dpop"],
+    dpopKeyRef?: string,
   ) {
     const { token_endpoint, id_token_signing_alg_values_supported, acr_values_supported, jwks_uri } =
       await this.#context.getConfig();
@@ -224,7 +242,19 @@ export class OidcClient {
       redirect_uri: redirectUri,
     };
 
-    const tokenResponse = await requestToken(token_endpoint, tokenRequest);
+    const dpopJwt = dpopKeyRef
+      ? await this.#context.createDpopProofForKeyRef({
+          method: "POST",
+          uri: token_endpoint,
+          dpopKeyRef,
+        })
+      : await this.#context.createDpopProof({
+          method: "POST",
+          uri: token_endpoint,
+          dpopOptions,
+        });
+
+    const tokenResponse = await requestToken(token_endpoint, tokenRequest, dpopJwt);
 
     if (!tokenResponse.id_token && !requireIdToken) {
       return { tokenResponse };
@@ -262,21 +292,38 @@ export class OidcClient {
   /**
    * Parses the token response from the OIDC provider and saves tokens to storage.
    * Extracts access token, ID token, and refresh token (if available).
+   * Preserves the DPoP key reference from tokenParams to enable recovery on page reload and cleanup on logout.
    * @param validatedTokenResponse The validated response from the token endpoint
    */
-  #parseAndSaveTokenResponse(validatedTokenResponse: ValidatedTokenResponse, tokenParams: TokenParams): void {
+  async #parseAndSaveTokenResponse(
+    validatedTokenResponse: ValidatedTokenResponse,
+    tokenParams: TokenParams,
+  ): Promise<void> {
     const { tokenResponse, decodedIdToken, encodedIdToken } = validatedTokenResponse;
     const { refresh_token, access_token, expires_in } = tokenResponse;
     const authTime = readAccessToken(access_token)?.auth_time;
     const expiresAt = calculateEpochExpiry(expires_in, authTime);
 
-    const { audience, scope, maxAge } = tokenParams;
+    const { audience, scope, maxAge, dpop } = tokenParams;
     const maxAgeExpiry = maxAge ? calculateEpochExpiry(maxAge.toString(), authTime) : undefined;
-
-    this.#storageManager.removeTokenParams();
 
     const token = readAccessToken(access_token);
     const acr = token?.acr ?? undefined;
+    const isDpopBound = tokenResponse.token_type.toLowerCase() === "dpop";
+
+    let dpopKeyRef = tokenParams.dpopKeyRef;
+    if (isDpopBound) {
+      if (!dpop?.alg) {
+        throw new Error("DPoP-bound token response received without DPoP key material");
+      }
+
+      if (!dpopKeyRef) {
+        dpopKeyRef = await this.#context.persistCurrentDpopKeyMaterialForAlg(dpop.alg);
+      }
+    } else if (dpopKeyRef) {
+      await this.#context.clearDpopKeyMaterial(dpopKeyRef);
+      dpopKeyRef = undefined;
+    }
 
     const newAccessToken: AccessToken = {
       refreshToken: refresh_token,
@@ -286,6 +333,8 @@ export class OidcClient {
       scope,
       maxAgeExpiry,
       acr,
+      dpopBound: isDpopBound,
+      dpopKeyRef,
     };
 
     if (encodedIdToken && decodedIdToken) {
@@ -303,6 +352,7 @@ export class OidcClient {
    */
   async #loginWithPopup({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<string | null> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
+    const dpopJkt = await this.#context.getDpopJkt(tokenOptions.dpop);
 
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
       await this.#context.getConfig(),
@@ -311,6 +361,7 @@ export class OidcClient {
         clientId: this.#context.clientId,
         responseMode: "web_message",
         redirectUri: finalRedirectUri,
+        dpopJkt,
         tokenOptions: {
           ...this.#context.tokenOptions,
           ...tokenOptions,
@@ -323,6 +374,7 @@ export class OidcClient {
       scope: usedScope,
       requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
       acrValues: tokenOptions.acrValues ?? this.#context.tokenOptions.acrValues,
+      dpop: this.#context.getEffectiveDpopOptions(tokenOptions.dpop),
     };
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
@@ -341,9 +393,10 @@ export class OidcClient {
       nonce,
       tokenParams.requireIdToken ?? true,
       tokenParams.acrValues?.split(" ").filter(Boolean),
+      tokenParams.dpop,
     );
 
-    this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
+    await this.#parseAndSaveTokenResponse(validatedTokenResponse, tokenParams);
 
     // redirect only if the redirectUri is not the current uri
     if (formatUrl(window.location.href) !== formatUrl(finalRedirectUri)) {
@@ -359,6 +412,15 @@ export class OidcClient {
    */
   async #loginWithRedirect({ redirectUri }: OidcLoginOptions, tokenOptions: TokenOptions): Promise<void> {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
+    await this.#clearAbandonedRedirectDpopKeyMaterial();
+
+    const effectiveDpop = this.#context.getEffectiveDpopOptions(tokenOptions.dpop);
+    const dpopJkt = await this.#context.getDpopJkt(tokenOptions.dpop);
+
+    const dpopKeyRef = effectiveDpop?.includeJkt
+      ? await this.#context.persistDpopKeyMaterialForAlg(effectiveDpop.alg)
+      : undefined;
+
     const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
       await this.#context.getConfig(),
       {
@@ -366,6 +428,7 @@ export class OidcClient {
         clientId: this.#context.clientId,
         responseMode: "query",
         redirectUri: finalRedirectUri,
+        dpopJkt,
         tokenOptions: {
           ...this.#context.tokenOptions,
           ...tokenOptions,
@@ -378,6 +441,8 @@ export class OidcClient {
       scope: usedScope,
       requireIdToken: (tokenOptions.includeOpenidScope ?? this.#context.tokenOptions.includeOpenidScope) !== false,
       acrValues: tokenOptions.acrValues ?? this.#context.tokenOptions.acrValues,
+      dpop: this.#context.getEffectiveDpopOptions(tokenOptions.dpop),
+      dpopKeyRef,
     };
 
     if (tokenOptions.maxAge !== undefined && tokenOptions.maxAge >= 0) {
@@ -394,5 +459,12 @@ export class OidcClient {
     });
 
     window.location.href = url;
+  }
+
+  async #clearAbandonedRedirectDpopKeyMaterial(): Promise<void> {
+    const existingTokenParams = this.#storageManager.getTokenParams();
+    if (existingTokenParams?.dpopKeyRef) {
+      await this.#context.clearDpopKeyMaterial(existingTokenParams.dpopKeyRef);
+    }
   }
 }

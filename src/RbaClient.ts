@@ -9,6 +9,7 @@ import type {
   TokenOptions,
 } from "./models";
 import type { StorageManager } from "./storage/StorageManager";
+import { clearStoredDpopKeyMaterialBestEffort } from "./utils/dpopCleanup";
 import { calculateEpochExpiry } from "./utils/format";
 import { validateIdToken } from "./utils/jwt";
 
@@ -130,14 +131,18 @@ export class RbaClient {
    * @see {@link https://github.com/EntrustCorporation/idaas-auth-js/blob/main/docs/guides/rba.md RBA Guide}
    */
   public async logout(): Promise<void> {
+    await clearStoredDpopKeyMaterialBestEffort(this.#context, this.#storageManager);
+
     const baseUrl = new URL(this.#context.issuerUrl).origin;
     const token = this.#storageManager.getIdaasSessionToken()?.token;
 
-    if (token) {
-      await logoutSilently(token, baseUrl);
+    try {
+      if (token) {
+        await logoutSilently(token, baseUrl);
+      }
+    } finally {
+      this.#storageManager.remove();
     }
-
-    this.#storageManager.remove();
   }
 
   /**
@@ -211,6 +216,7 @@ export class RbaClient {
     }
 
     this.#authenticationTransaction = new AuthenticationTransaction({
+      context: this.#context,
       oidcConfig,
       authenticationRequestParams,
       tokenOptions: {
@@ -220,6 +226,7 @@ export class RbaClient {
         useRefreshToken: tokenOptions?.useRefreshToken ?? this.#context.tokenOptions.useRefreshToken,
         maxAge: tokenOptions?.maxAge ?? this.#context.tokenOptions.maxAge,
         includeOpenidScope: effectiveincludeOpenidScope,
+        dpop: tokenOptions?.dpop ?? this.#context.tokenOptions.dpop,
       },
       clientId: this.#context.clientId,
     });
@@ -230,8 +237,19 @@ export class RbaClient {
       throw new Error("No authentication transaction in progress!");
     }
 
-    const { idToken, accessToken, refreshToken, scope, expiresAt, maxAge, audience, acr, nonce } =
-      this.#authenticationTransaction.getAuthenticationDetails();
+    const {
+      idToken,
+      accessToken,
+      refreshToken,
+      scope,
+      expiresAt,
+      maxAge,
+      audience,
+      acr,
+      nonce,
+      dpopBound,
+      dpopKeyRef,
+    } = this.#authenticationTransaction.getAuthenticationDetails();
 
     // Only require accessToken for OAuth-only flows
     const requireIdToken = this.#authenticationTransaction.requiresIdToken();
@@ -248,6 +266,8 @@ export class RbaClient {
       audience,
       maxAgeExpiry: maxAge ? calculateEpochExpiry(maxAge.toString()) : undefined,
       acr,
+      dpopBound,
+      dpopKeyRef,
     });
 
     // Save ID token only if present

@@ -1,4 +1,5 @@
 import type { OidcConfig } from "../api";
+import type { IdaasContext } from "../IdaasContext";
 import type {
   FaceChallenge,
   GridChallenge,
@@ -101,6 +102,56 @@ export interface TokenOptions {
    * @default true
    */
   includeOpenidScope?: boolean;
+
+  /**
+   * DPoP (Demonstration of Proof-of-Possession) configuration.
+   *
+   * Omit this field to disable DPoP.
+   * Provide an object to enable DPoP.
+   */
+  dpop?: DPoPOptions;
+}
+
+/**
+ * DPoP (Demonstration of Proof-of-Possession) options.
+ */
+export interface DPoPOptions {
+  /**
+   * Signing algorithm used for DPoP proof JWTs.
+   */
+  alg: "ES256" | "ES384" | "ES512" | "PS256" | "PS384" | "PS512" | "RS256" | "RS384" | "RS512";
+
+  /**
+   * When `true`, includes `dpop_jkt` in authorization requests.
+   *
+   * @default false
+   */
+  includeJkt?: boolean;
+}
+
+/**
+ * Options for creating DPoP Authorization headers for a protected resource request.
+ */
+export interface DpopHeadersOptions {
+  /**
+   * HTTP method that will be used for the protected resource request.
+   */
+  method: string;
+
+  /**
+   * Absolute HTTP or HTTPS URI that will be used for the protected resource request.
+   */
+  uri: string;
+
+  /**
+   * Optional access token to use. If omitted, the SDK retrieves one using `tokenOptions`.
+   */
+  accessToken?: string;
+
+  /**
+   * Token lookup options used when `accessToken` is omitted.
+   */
+  tokenOptions?: TokenOptions;
 }
 
 /**
@@ -168,6 +219,11 @@ export interface UserClaims {
 }
 
 export interface AuthenticationTransactionOptions {
+  /**
+   * Shared IDaaS client context.
+   */
+  context: IdaasContext;
+
   /**
    * The OIDC config of the IDaaSClient.
    */

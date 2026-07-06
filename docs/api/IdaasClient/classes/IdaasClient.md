@@ -165,6 +165,31 @@ Error if the refresh/token exchange fails
 
 ---
 
+### getDpopHeaders()
+
+> **getDpopHeaders**(`options`): `Promise`\<`Record`\<`string`, `string`\>\>
+
+Creates DPoP Authorization headers for a protected resource request.
+
+This returns both `Authorization: DPoP ...` and a signed `DPoP` proof header using
+the key material associated with the selected DPoP-bound access token.
+
+#### Parameters
+
+##### options
+
+[`DpopHeadersOptions`](../../index/interfaces/DpopHeadersOptions.md)
+
+Protected resource request details and optional token lookup options
+
+#### Returns
+
+`Promise`\<`Record`\<`string`, `string`\>\>
+
+DPoP headers to include with the protected resource request
+
+---
+
 ### getIdTokenClaims()
 
 > **getIdTokenClaims**(): [`UserClaims`](../../index/interfaces/UserClaims.md) \| `null`
@@ -184,7 +209,7 @@ Decoded ID token claims, or `null` if no ID token exists
 
 ### getUserInfo()
 
-> **getUserInfo**(`accessToken?`): `Promise`\<[`UserClaims`](../../index/interfaces/UserClaims.md) \| `null`\>
+> **getUserInfo**(`accessToken?`, `tokenOptions?`): `Promise`\<[`UserClaims`](../../index/interfaces/UserClaims.md) \| `null`\>
 
 Retrieves user claims from the OpenID Provider using the userinfo endpoint.
 
@@ -200,6 +225,10 @@ This method fetches fresh user information from the identity provider, as oppose
 Optional access token to use. When provided, its scopes determine the claims
 returned from the userinfo endpoint. If not provided, the access token with default scopes and
 audience will be used if available.
+
+##### tokenOptions?
+
+[`TokenOptions`](../../index/interfaces/TokenOptions.md) = `{}`
 
 #### Returns
 
