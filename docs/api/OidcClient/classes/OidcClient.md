@@ -37,7 +37,7 @@ Contains three main methods: login, logout, and handleRedirect.
 
 ### handleRedirect()
 
-> **handleRedirect**(): `Promise`\<`null`\>
+> **handleRedirect**(): `Promise`\<`null`>\>
 
 Completes the OIDC authorization code flow after redirect from the identity provider.
 
@@ -79,7 +79,7 @@ If token validation fails
 
 ### login()
 
-> **login**(`options?`, `tokenOptions?`): `Promise`\<`string` \| `null`\>
+> **login**(`options?`, `tokenOptions?`): `Promise`\<`string` \| `null`>\>
 
 Initiates the OIDC authorization code flow to authenticate the user.
 
@@ -124,7 +124,7 @@ The access token if using popup mode, otherwise `null`
 
 ### logout()
 
-> **logout**(`options?`): `Promise`\<`void`\>
+> **logout**(`options?`): `Promise`\<`void`>\>
 
 Logs the user out by clearing the local session and redirecting to the identity provider's logout endpoint.
 

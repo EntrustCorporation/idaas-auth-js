@@ -51,7 +51,7 @@ Under the hood, these methods use `RbaClient` with `strict: true` and a specifie
 
 ### cancel()
 
-> **cancel**(): `Promise`\<`void`\>
+> **cancel**(): `Promise`\<`void`>\>
 
 Cancels an ongoing authentication challenge.
 Terminates the current authentication transaction and cleans up any pending state.
@@ -64,7 +64,7 @@ Terminates the current authentication transaction and cleans up any pending stat
 
 ### faceBiometric()
 
-> **faceBiometric**(`userId`, `mutualChallenge?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **faceBiometric**(`userId`, `mutualChallenge?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Authenticate using Face.
 Requests a FACE challenge, then initializes the Onfido Web SDK and polls for completion on onComplete.
@@ -110,7 +110,7 @@ If faceChallenge is missing, Onfido initialization fails, or polling fails.
 
 ### grid()
 
-> **grid**(`userId`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **grid**(`userId`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Starts a GRID challenge.
 Response includes gridChallenge.challenge: [{ row: 0, column: 1 }, ...] (one entry per required cell).
@@ -134,7 +134,7 @@ AuthenticationResponse containing information regarding the authentication reque
 
 ### kba()
 
-> **kba**(`userId`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **kba**(`userId`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Starts a KBA (knowledge-based) challenge.
 Response includes kbaChallenge.userQuestions: [{ question: string }, ...].
@@ -159,7 +159,7 @@ AuthenticationResponse containing information regarding the authentication reque
 
 ### logout()
 
-> **logout**(): `Promise`\<`void`\>
+> **logout**(): `Promise`\<`void`>\>
 
 #### Returns
 
@@ -169,7 +169,7 @@ AuthenticationResponse containing information regarding the authentication reque
 
 ### magicLink()
 
-> **magicLink**(`userId`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **magicLink**(`userId`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Authenticate using Magic Link.
 Requests a MAGICLINK challenge, then immediately starts polling for completion.
@@ -192,7 +192,7 @@ AuthenticationResponse containing information regarding the authentication reque
 
 ### otp()
 
-> **otp**(`userId`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **otp**(`userId`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Requests an One-Time Password (OTP) to be sent to the user.
 
@@ -244,7 +244,7 @@ Authentication response containing the challenge (requires submission)
 
 ### passkey()
 
-> **passkey**(`userId?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md) \| `undefined`\>
+> **passkey**(`userId?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md) \| `undefined`>\>
 
 Authenticates a user with a passkey (WebAuthn/FIDO2).
 
@@ -304,7 +304,7 @@ If no credential is returned
 
 ### password()
 
-> **password**(`userId`, `password`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **password**(`userId`, `password`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Authenticates a user with username and password.
 
@@ -351,7 +351,7 @@ Authentication response with `authenticationCompleted: true` on success
 
 ### poll()
 
-> **poll**(): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **poll**(): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Polls the authentication provider to check for completion of an ongoing authentication process.
 Useful for authentication flows that may complete asynchronously (e.g., token push authentication).
@@ -366,7 +366,7 @@ AuthenticationResponse containing information regarding the authentication reque
 
 ### smartCredential()
 
-> **smartCredential**(`userId`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **smartCredential**(`userId`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Authenticate using Smart Credential Push.
 Requests a SMARTCREDENTIALPUSH challenge, then immediately starts polling for completion.
@@ -395,7 +395,7 @@ AuthenticationResponse containing information regarding the authentication reque
 
 ### softToken()
 
-> **softToken**(`userId`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **softToken**(`userId`, `options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Authenticate using Entrust Soft Token.
 
@@ -441,7 +441,7 @@ On request/poll errors.
 
 ### submit()
 
-> **submit**(`params`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **submit**(`params`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Submits a response to an authentication challenge.
 Processes authentication responses and completes the authentication if successful.
@@ -464,7 +464,7 @@ AuthenticationResponse containing information regarding the authentication reque
 
 ### tempAccessCode()
 
-> **tempAccessCode**(`userId`, `tempAccessCode`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **tempAccessCode**(`userId`, `tempAccessCode`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Authenticate using a temporary access code.
 Requests a TEMP_ACCESS_CODE challenge, then immediately submits the provided code.

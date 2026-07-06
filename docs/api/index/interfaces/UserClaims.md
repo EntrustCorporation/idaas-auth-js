@@ -32,15 +32,15 @@ The standard user claims of OIDC.
 
 ---
 
-### email_verified?
+### email\_verified?
 
-> `optional` **email_verified?**: `boolean`
+> `optional` **email\_verified?**: `boolean`
 
 ---
 
-### family_name?
+### family\_name?
 
-> `optional` **family_name?**: `string`
+> `optional` **family\_name?**: `string`
 
 ---
 
@@ -50,9 +50,9 @@ The standard user claims of OIDC.
 
 ---
 
-### given_name?
+### given\_name?
 
-> `optional` **given_name?**: `string`
+> `optional` **given\_name?**: `string`
 
 ---
 
@@ -62,9 +62,9 @@ The standard user claims of OIDC.
 
 ---
 
-### middle_name?
+### middle\_name?
 
-> `optional` **middle_name?**: `string`
+> `optional` **middle\_name?**: `string`
 
 ---
 
@@ -80,15 +80,15 @@ The standard user claims of OIDC.
 
 ---
 
-### phone_number?
+### phone\_number?
 
-> `optional` **phone_number?**: `string`
+> `optional` **phone\_number?**: `string`
 
 ---
 
-### phone_number_verified?
+### phone\_number\_verified?
 
-> `optional` **phone_number_verified?**: `boolean`
+> `optional` **phone\_number\_verified?**: `boolean`
 
 ---
 
@@ -98,9 +98,9 @@ The standard user claims of OIDC.
 
 ---
 
-### preferred_username?
+### preferred\_username?
 
-> `optional` **preferred_username?**: `string`
+> `optional` **preferred\_username?**: `string`
 
 ---
 
@@ -116,9 +116,9 @@ The standard user claims of OIDC.
 
 ---
 
-### updated_at?
+### updated\_at?
 
-> `optional` **updated_at?**: `number`
+> `optional` **updated\_at?**: `number`
 
 ---
 

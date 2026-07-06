@@ -53,7 +53,7 @@ Main methods:
 
 ### cancel()
 
-> **cancel**(): `Promise`\<`void`\>
+> **cancel**(): `Promise`\<`void`>\>
 
 Cancels the current authentication transaction.
 
@@ -82,7 +82,7 @@ If no authentication transaction is in progress
 
 ### logout()
 
-> **logout**(): `Promise`\<`void`\>
+> **logout**(): `Promise`\<`void`>\>
 
 Logs the user out and terminates their session.
 
@@ -109,7 +109,7 @@ It completes silently and returns a Promise.
 
 ### poll()
 
-> **poll**(): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **poll**(): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Polls for completion of an asynchronous authentication flow.
 
@@ -146,7 +146,7 @@ If no authentication transaction is in progress
 
 ### requestChallenge()
 
-> **requestChallenge**(`options?`, `tokenOptions?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **requestChallenge**(`options?`, `tokenOptions?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Initiates a risk-based authentication challenge based on configured Resource Rules.
 
@@ -194,7 +194,7 @@ Authentication response containing the challenge and method details
 
 ### submitChallenge()
 
-> **submitChallenge**(`options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)\>
+> **submitChallenge**(`options?`): `Promise`\<[`AuthenticationResponse`](../../index/interfaces/AuthenticationResponse.md)>\>
 
 Submits the user's response to an authentication challenge.
 

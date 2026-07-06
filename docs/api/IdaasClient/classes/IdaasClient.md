@@ -138,7 +138,7 @@ authenticator explicitly allows anonymous flows (e.g., passkey with discoverable
 
 ### getAccessToken()
 
-> **getAccessToken**(`options?`): `Promise`\<`string` \| `null`\>
+> **getAccessToken**(`options?`): `Promise`\<`string` \| `null`>\>
 
 Retrieves a cached access token matching the specified criteria.
 
@@ -167,7 +167,7 @@ Error if the refresh/token exchange fails
 
 ### getDpopHeaders()
 
-> **getDpopHeaders**(`options`): `Promise`\<`Record`\<`string`, `string`\>\>
+> **getDpopHeaders**(`options`): `Promise`\<`Record`\<`string`, `string`>>\>\>
 
 Creates DPoP Authorization headers for a protected resource request.
 
@@ -209,7 +209,7 @@ Decoded ID token claims, or `null` if no ID token exists
 
 ### getUserInfo()
 
-> **getUserInfo**(`accessToken?`, `tokenOptions?`): `Promise`\<[`UserClaims`](../../index/interfaces/UserClaims.md) \| `null`\>
+> **getUserInfo**(`accessToken?`, `tokenOptions?`): `Promise`\<[`UserClaims`](../../index/interfaces/UserClaims.md) \| `null`>\>
 
 Retrieves user claims from the OpenID Provider using the userinfo endpoint.
 
