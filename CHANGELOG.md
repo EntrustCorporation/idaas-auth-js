@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/compare/v2.2.0...v2.3.0) (2026-07-06)
+
+
+### Features
+
+* implement DPoP (Demonstration of Proof-of-Possession) support across authentication flows ([#1](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/issues/1)) ([46da3e3](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/commit/46da3e3df0437a72752daf9038ca57a952471e42))
+
 ## [2.2.0](https://github.com/EntrustCorporation/idaas-auth-js/compare/v2.1.0...v2.2.0) (2026-06-15)
 
 
