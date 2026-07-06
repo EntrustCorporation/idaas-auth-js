@@ -10,8 +10,11 @@ on:
 
 jobs:
   release-please:
-    # Runs on GHE only — creates the release PR and tag there; sync-to-github.yml
-    # mirrors the tag to github.com which triggers the publish job below.
+    # Runs on GHE only — creates the release PR, tag, and GHE release. A tag
+    # created via GITHUB_TOKEN does NOT trigger sync-to-github.yml's tag
+    # trigger (GitHub blocks GITHUB_TOKEN-created events from starting new
+    # workflow runs), so we mirror the tag + release to github.com directly
+    # below instead of relying on that chain.
     if: github.server_url != 'https://github.com' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -24,8 +27,46 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Checkout release tag
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ steps.release.outputs.tag_name }}
+
+      - name: Mirror tag + release to github.com
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GH_COM_PAT: ${{ secrets.GH_COM_PAT }}
+          GH_TOKEN: ${{ secrets.GH_COM_PAT }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          RELEASE_BODY: ${{ steps.release.outputs.body }}
+          GHE_REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          git -c credential.helper='!f() { echo "password=$GH_COM_PAT"; }; f' \
+            push https://x-access-token@github.com/EntrustCorporation/idaas-auth-js.git "refs/tags/$TAG_NAME"
+
+          # release-please's changelog links point at the GHE repo (where it runs).
+          # Rewrite commit/compare links to github.com — those SHAs/tags are
+          # identical across the mirror. Leave issues/PR links pointing at GHE:
+          # issue/PR numbers are per-repo and don't correspond between hosts, so
+          # rewriting them would silently point at the wrong github.com PR/issue.
+          NOTES="${RELEASE_BODY//"$GHE_REPO_URL/commit/"/https://github.com/EntrustCorporation/idaas-auth-js/commit/}"
+          NOTES="${NOTES//"$GHE_REPO_URL/compare/"/https://github.com/EntrustCorporation/idaas-auth-js/compare/}"
+          NOTES_FILE="$RUNNER_TEMP/release-notes.md"
+          printf '%s' "$NOTES" > "$NOTES_FILE"
+
+          # Idempotent: a release for this tag may already exist (e.g. prior
+          # manual remediation, or a re-run after a partial failure).
+          if gh release view "$TAG_NAME" --repo EntrustCorporation/idaas-auth-js >/dev/null 2>&1; then
+            gh release edit "$TAG_NAME" --repo EntrustCorporation/idaas-auth-js \
+              --title "$TAG_NAME" --notes-file "$NOTES_FILE"
+          else
+            gh release create "$TAG_NAME" --repo EntrustCorporation/idaas-auth-js \
+              --title "$TAG_NAME" --notes-file "$NOTES_FILE"
+          fi
+
   publish:
-    # Triggered by a v* tag push on github.com (mirrored from GHE by sync-to-github.yml).
+    # Triggered by the v* tag push mirrored directly by the job above.
     if: github.server_url == 'https://github.com' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
