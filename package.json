@@ -56,8 +56,7 @@
     "lint:knip": "knip",
     "test:unit": "bun test",
     "test:e2e": "node --env-file=.env ./node_modules/@playwright/test/cli.js test",
-    "test:manual": "bun run test/test-manual/app.ts",
-    "postinstall": "bun run api:generate"
+    "test:manual": "bun run test/test-manual/app.ts"
   },
   "dependencies": {
     "jose": "^6.1.0"

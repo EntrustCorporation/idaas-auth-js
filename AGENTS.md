@@ -43,7 +43,7 @@ test/
 
 Scripts live in `package.json`; a few have non-obvious behavior:
 
-- `bun install` — postinstall also runs `api:generate`
+- `bun run api:generate` — run manually after `bun install` (regenerates `src/models/openapi-ts`)
 - `bun run docs:generate` — regenerates `docs/api/` from TypeDoc
 - `bun run test:e2e` — Playwright auto-starts the test IdP (`:3000`) and test SPA (`:8080`)
 - `bun run lint:types` — runs `attw` (validates published type exports resolve), distinct from `bun run type-check` (tsc)
