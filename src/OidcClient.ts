@@ -354,20 +354,17 @@ export class OidcClient {
     const finalRedirectUri = redirectUri ?? sanitizeUri(window.location.href);
     const dpopJkt = await this.#context.getDpopJkt(tokenOptions.dpop);
 
-    const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
-      await this.#context.getConfig(),
-      {
-        type: "standard",
-        clientId: this.#context.clientId,
-        responseMode: "web_message",
-        redirectUri: finalRedirectUri,
-        dpopJkt,
-        tokenOptions: {
-          ...this.#context.tokenOptions,
-          ...tokenOptions,
-        },
+    const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl({
+      baseUrl: (await this.#context.getConfig()).authorization_endpoint,
+      clientId: this.#context.clientId,
+      responseMode: "web_message",
+      redirectUri: finalRedirectUri,
+      dpopJkt,
+      tokenOptions: {
+        ...this.#context.tokenOptions,
+        ...tokenOptions,
       },
-    );
+    });
 
     const tokenParams: TokenParams = {
       audience: tokenOptions.audience ?? this.#context.tokenOptions.audience,
@@ -421,20 +418,17 @@ export class OidcClient {
       ? await this.#context.persistDpopKeyMaterialForAlg(effectiveDpop.alg)
       : undefined;
 
-    const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl(
-      await this.#context.getConfig(),
-      {
-        type: "standard",
-        clientId: this.#context.clientId,
-        responseMode: "query",
-        redirectUri: finalRedirectUri,
-        dpopJkt,
-        tokenOptions: {
-          ...this.#context.tokenOptions,
-          ...tokenOptions,
-        },
+    const { url, nonce, state, codeVerifier, usedScope } = await generateAuthorizationUrl({
+      baseUrl: (await this.#context.getConfig()).authorization_endpoint,
+      clientId: this.#context.clientId,
+      responseMode: "query",
+      redirectUri: finalRedirectUri,
+      dpopJkt,
+      tokenOptions: {
+        ...this.#context.tokenOptions,
+        ...tokenOptions,
       },
-    );
+    });
 
     const tokenParams: TokenParams = {
       audience: tokenOptions.audience ?? this.#context.tokenOptions.audience,

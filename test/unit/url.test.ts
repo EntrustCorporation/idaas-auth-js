@@ -1,21 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import type { OidcConfig } from "../../src/api";
 import { generateAuthorizationUrl } from "../../src/utils/url";
 
 describe("generateAuthorizationUrl", () => {
-  const oidcConfig: OidcConfig = {
-    issuer: "https://issuer.example.com",
-    authorization_endpoint: "https://issuer.example.com/authorize",
-    token_endpoint: "",
-    userinfo_endpoint: "",
-    jwks_uri: "",
-    registration_endpoint: "",
-    scopes_supported: [],
-    subject_types_supported: [],
-    id_token_signing_alg_values_supported: [],
-    claims_supported: [],
-    end_session_endpoint: "",
-  };
+  const authorizationEndpoint = "https://issuer.example.com/authorize";
+  const issuer = "https://issuer.example.com";
 
   const parse = (urlStr: string) => {
     const u = new URL(urlStr);
@@ -29,8 +17,8 @@ describe("generateAuthorizationUrl", () => {
   const b64urlPattern = /^[A-Za-z0-9\-_]+$/;
 
   it("builds a standard flow URL with all optional params", async () => {
-    const result = await generateAuthorizationUrl(oidcConfig, {
-      type: "standard",
+    const result = await generateAuthorizationUrl({
+      baseUrl: authorizationEndpoint,
       clientId: "client123",
       tokenOptions: {
         scope: "openid profile profile email",
@@ -45,7 +33,7 @@ describe("generateAuthorizationUrl", () => {
 
     const { params, u } = parse(result.url);
 
-    expect(u.origin + u.pathname).toBe(oidcConfig.authorization_endpoint);
+    expect(u.origin + u.pathname).toBe(authorizationEndpoint);
 
     // Scope order: original scopes then appended openid + offline_access
     expect(result.usedScope).toBe("openid profile email offline_access");
@@ -76,8 +64,8 @@ describe("generateAuthorizationUrl", () => {
   });
 
   it("omits optional params when not provided", async () => {
-    const result = await generateAuthorizationUrl(oidcConfig, {
-      type: "standard",
+    const result = await generateAuthorizationUrl({
+      baseUrl: authorizationEndpoint,
       clientId: "abc",
       tokenOptions: {},
     });
@@ -93,8 +81,8 @@ describe("generateAuthorizationUrl", () => {
   });
 
   it("does not include max_age when negative", async () => {
-    const result = await generateAuthorizationUrl(oidcConfig, {
-      type: "standard",
+    const result = await generateAuthorizationUrl({
+      baseUrl: authorizationEndpoint,
       clientId: "abc",
       tokenOptions: {
         maxAge: -1,
@@ -105,8 +93,8 @@ describe("generateAuthorizationUrl", () => {
   });
 
   it("adds offline_access when useRefreshToken is true", async () => {
-    const result = await generateAuthorizationUrl(oidcConfig, {
-      type: "standard",
+    const result = await generateAuthorizationUrl({
+      baseUrl: authorizationEndpoint,
       clientId: "abc",
       tokenOptions: {
         scope: "profile",
@@ -118,12 +106,10 @@ describe("generateAuthorizationUrl", () => {
     expect(result.usedScope).toBe("profile openid offline_access");
   });
 
-  it("uses issuer/authorizejwt for jwt flow and ignores redirect_uri & response_mode", async () => {
-    const result = await generateAuthorizationUrl(oidcConfig, {
-      type: "jwt",
+  it("uses issuer/authorizejwt base URL for jwt flow", async () => {
+    const result = await generateAuthorizationUrl({
+      baseUrl: `${issuer}/authorizejwt`,
       clientId: "jwtClient",
-      redirectUri: "https://should-not.be/included",
-      responseMode: "web_message",
       tokenOptions: {
         scope: "email",
       },
@@ -139,8 +125,8 @@ describe("generateAuthorizationUrl", () => {
   });
 
   it("adds openid when missing and preserves order", async () => {
-    const result = await generateAuthorizationUrl(oidcConfig, {
-      type: "standard",
+    const result = await generateAuthorizationUrl({
+      baseUrl: authorizationEndpoint,
       clientId: "dupTest",
       tokenOptions: {
         scope: "profile email",

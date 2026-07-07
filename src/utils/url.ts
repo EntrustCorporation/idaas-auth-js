@@ -1,5 +1,4 @@
 // URL generation functions
-import type { OidcConfig } from "../api";
 import type { TokenOptions } from "../models";
 import { base64UrlStringEncode, createRandomString, generateChallengeVerifierPair } from "../utils/crypto";
 
@@ -9,12 +8,10 @@ export interface GenerateAuthorizationUrlOptions {
   tokenOptions: TokenOptions;
 
   // OIDC flow params
+  baseUrl: string;
   responseMode?: "query" | "web_message";
   redirectUri?: string;
   dpopJkt?: string;
-
-  // Control parameters
-  type: "standard" | "jwt";
 }
 
 export interface AuthorizationUrlResult {
@@ -26,23 +23,13 @@ export interface AuthorizationUrlResult {
 }
 
 /**
- * Unified method to generate authorization URLs for both standard OIDC flows and JWT auth flows
- * @param oidcConfig - OIDC configuration with endpoints
+ * Generates an authorization URL for OIDC and JWT auth flows.
  * @param options - Authorization URL generation options
  * @returns Authorization URL details including url, state, nonce and code verifier
  */
 export const generateAuthorizationUrl = async (
-  oidcConfig: OidcConfig,
   options: GenerateAuthorizationUrlOptions,
 ): Promise<AuthorizationUrlResult> => {
-  // Determine the base URL based on flow type
-  let baseUrl: string;
-  if (options.type === "jwt") {
-    baseUrl = `${oidcConfig.issuer}/authorizejwt`;
-  } else {
-    baseUrl = oidcConfig.authorization_endpoint;
-  }
-
   // Process scope (default to empty string if not provided)
   const scopeAsArray = options.tokenOptions.scope ? options.tokenOptions.scope.split(" ").filter(Boolean) : [];
 
@@ -64,7 +51,7 @@ export const generateAuthorizationUrl = async (
   const { codeVerifier, codeChallenge } = await generateChallengeVerifierPair();
 
   // Build URL
-  const url = new URL(baseUrl);
+  const url = new URL(options.baseUrl);
 
   // Add common parameters
   url.searchParams.append("client_id", options.clientId);
@@ -100,14 +87,12 @@ export const generateAuthorizationUrl = async (
   }
 
   // Add OIDC flow parameters
-  if (options.type === "standard") {
-    if (options.responseMode) {
-      url.searchParams.append("response_mode", options.responseMode);
-    }
+  if (options.responseMode) {
+    url.searchParams.append("response_mode", options.responseMode);
+  }
 
-    if (options.redirectUri) {
-      url.searchParams.append("redirect_uri", options.redirectUri);
-    }
+  if (options.redirectUri) {
+    url.searchParams.append("redirect_uri", options.redirectUri);
   }
 
   return {

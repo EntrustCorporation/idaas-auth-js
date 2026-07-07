@@ -72,6 +72,6 @@ export const listenToAuthorizePopup = (popup: Window, url: string) => {
   });
 };
 
-export const browserSupportsPasskey = async (): Promise<boolean> => {
+export const browserSupportsPasskey = (): boolean => {
   return !!window.PublicKeyCredential;
 };

@@ -35,10 +35,6 @@
       "import": "./dist/index.js"
     }
   },
-  "engines": {
-    "bun": ">= 1",
-    "node": ">= 22"
-  },
   "sideEffects": false,
   "publishConfig": {
     "access": "public",

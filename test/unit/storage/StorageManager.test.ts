@@ -171,11 +171,36 @@ describe("StorageManager", () => {
     });
   });
 
+  describe("IDaaS session token storage", () => {
+    test("returns undefined if no session token stored", () => {
+      expect(storageManager.getIdaasSessionToken()).toBeUndefined();
+    });
+
+    test("saves and returns the stored session token", () => {
+      storageManager.saveIdaasSessionToken("a-session-token");
+
+      expect(storageManager.getIdaasSessionToken()).toBe("a-session-token");
+    });
+
+    test("saving an empty token clears any stored value", () => {
+      storageManager.saveIdaasSessionToken("a-session-token");
+      storageManager.saveIdaasSessionToken("");
+
+      expect(storageManager.getIdaasSessionToken()).toBeUndefined();
+    });
+
+    test("unwraps legacy `{ token }` JSON format for backward compatibility", () => {
+      localStorage.setItem(`entrust.${CLIENT_ID}.idaasSessionToken`, JSON.stringify({ token: "legacy-token" }));
+
+      expect(storageManager.getIdaasSessionToken()).toBe("legacy-token");
+    });
+  });
+
   test("remove() clears storage", () => {
     storageManager.saveAccessToken(getAccessToken());
     storageManager.saveClientParams(getClientParams());
     storageManager.saveIdToken(getIdToken());
-    storageManager.saveIdaasSessionToken({ token: "testing-session-token" });
+    storageManager.saveIdaasSessionToken("testing-session-token");
     storageManager.saveTokenParams(getTokenParams());
 
     storageManager.remove();
