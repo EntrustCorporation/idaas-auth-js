@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/compare/v2.3.0...v2.3.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* remove postinstall script that broke npm install for consumers ([#44](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/issues/44)) ([aefeebc](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/commit/aefeebc1c128a610d62da70277dfac13c3f52eb6))
+
 ## [2.3.0](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/compare/v2.2.0...v2.3.0) (2026-07-06)
 
 
