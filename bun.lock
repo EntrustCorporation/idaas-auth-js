@@ -14,7 +14,7 @@
         "@commitlint/config-conventional": "21.2.0",
         "@happy-dom/global-registrator": "20.11.0",
         "@hey-api/openapi-ts": "0.99.0",
-        "@microsoft/api-extractor": "7.58.11",
+        "@microsoft/api-extractor": "7.58.12",
         "@playwright/test": "1.61.1",
         "@rslib/core": "0.23.2",
         "@tsconfig/bun": "1.0.10",
@@ -161,7 +161,7 @@
 
     "@lukeed/ms": ["@lukeed/ms@2.0.2", "", {}, "sha512-9I2Zn6+NJLfaGoz9jN3lpwDgAYvfGeNYdbAIjJOqzs4Tpc+VU3Jqq4IofSUBKajiDS8k9fZIg18/z13mpk1bsA=="],
 
-    "@microsoft/api-extractor": ["@microsoft/api-extractor@7.58.11", "", { "dependencies": { "@microsoft/api-extractor-model": "7.33.10", "@microsoft/tsdoc": "~0.16.0", "@microsoft/tsdoc-config": "~0.18.1", "@rushstack/node-core-library": "5.23.3", "@rushstack/rig-package": "0.7.3", "@rushstack/terminal": "0.24.2", "@rushstack/ts-command-line": "5.3.12", "diff": "~8.0.2", "minimatch": "10.2.3", "resolve": "~1.22.1", "semver": "~7.7.4", "source-map": "~0.6.1", "typescript": "5.9.3" }, "bin": { "api-extractor": "bin/api-extractor" } }, "sha512-ngeL7gd6HYwmq9VRWBh4mUBSM6mXlIK5hwyVXxJ9go5Xf70ohx9M57t+8LIgZTARmsyN5sk/q+RUBkD9Bgq5yA=="],
+    "@microsoft/api-extractor": ["@microsoft/api-extractor@7.58.12", "", { "dependencies": { "@microsoft/api-extractor-model": "7.33.10", "@microsoft/tsdoc": "~0.16.0", "@microsoft/tsdoc-config": "~0.18.1", "@rushstack/node-core-library": "5.23.3", "@rushstack/rig-package": "0.7.3", "@rushstack/terminal": "0.24.2", "@rushstack/ts-command-line": "5.3.12", "diff": "~8.0.2", "minimatch": "10.2.3", "resolve": "~1.22.1", "semver": "~7.7.4", "source-map": "~0.6.1", "typescript": "5.9.3" }, "bin": { "api-extractor": "bin/api-extractor" } }, "sha512-VNpgC/1LaroLbn+UKmwDYspq+9r3EHyj4vJ3qUy/g8vB0rKt+1Wgs7WFj/JGpgxhG8SNyXs1XwYwe7nqkk8IDg=="],
 
     "@microsoft/api-extractor-model": ["@microsoft/api-extractor-model@7.33.10", "", { "dependencies": { "@microsoft/tsdoc": "~0.16.0", "@microsoft/tsdoc-config": "~0.18.1", "@rushstack/node-core-library": "5.23.3" } }, "sha512-uPUK17xGxeQ3av6TN7awp+dTTSTvx8fZC0XFL1gyt7hFapYuxND3XLXH8vkmI7UjfW92oogzFAFqHSifmJROaw=="],
 
