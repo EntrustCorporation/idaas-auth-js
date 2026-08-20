@@ -55,7 +55,7 @@
     "lint:commits": "commitlint --from HEAD~10 --to HEAD --verbose",
     "lint:knip": "knip",
     "test:unit": "bun test",
-    "test:e2e": "node --env-file=.env ./node_modules/@playwright/test/cli.js test",
+    "test:e2e": "bun --env-file=.env run playwright test",
     "test:manual": "bun run test/test-manual/app.ts"
   },
   "dependencies": {
