@@ -85,7 +85,7 @@
     "@types/web": "0.0.355",
     "knip": "6.34.0",
     "oidc-provider": "9.12.2",
-    "onfido-sdk-ui": "14.82.1",
+    "onfido-sdk-ui": "14.83.0",
     "prettier": "3.9.6",
     "rsbuild-plugin-publint": "1.0.0",
     "typedoc": "0.28.20",
