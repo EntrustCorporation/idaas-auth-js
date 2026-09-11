@@ -78,7 +78,7 @@
     "@hey-api/openapi-ts": "0.99.0",
     "@microsoft/api-extractor": "7.59.0",
     "@playwright/test": "1.63.0",
-    "@rslib/core": "0.23.2",
+    "@rslib/core": "1.0.0",
     "@tsconfig/bun": "1.0.11",
     "@types/bun": "1.4.1",
     "@types/oidc-provider": "9.12.0",
