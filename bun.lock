@@ -19,7 +19,7 @@
         "@rslib/core": "1.0.0",
         "@tsconfig/bun": "1.0.11",
         "@types/bun": "1.4.2",
-        "@types/oidc-provider": "9.12.0",
+        "@types/oidc-provider": "9.12.1",
         "@types/web": "0.0.356",
         "knip": "6.35.0",
         "oidc-provider": "9.12.2",
@@ -351,7 +351,7 @@
 
     "@types/node": ["@types/node@26.4.0", "", { "dependencies": { "undici-types": "~8.3.0" } }, "sha512-faiGnoIrLH/V8cibOMEAZ8pMw6oXqSukl29ra4mN8GdaB2ZewzeaLj+INpV5N+Z1eKWzY+IzaIZH2EIR6YZRNQ=="],
 
-    "@types/oidc-provider": ["@types/oidc-provider@9.12.0", "", { "dependencies": { "@types/keygrip": "*", "@types/koa": "*", "@types/node": "*" } }, "sha512-qhPxnaiwUFePlUA6TP3+4RcAeNxxXOKIxws/MJ1WRaav419kOvPmV60/t0ybJnlxoMHWntWJMLVEiK4PIOR20A=="],
+    "@types/oidc-provider": ["@types/oidc-provider@9.12.1", "", { "dependencies": { "@types/keygrip": "*", "@types/koa": "*", "@types/node": "*" } }, "sha512-qRJksCw0I+VloInJxMV/4L4gLL5Qrws9Np9+rW+MZeBKauEz5WqKO99OVCpnj4LKB/o1+utkHoQq1c3GBhuE5g=="],
 
     "@types/qs": ["@types/qs@6.15.1", "", {}, "sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw=="],
 
