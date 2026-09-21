@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/compare/v2.3.1...v2.4.0) (2026-09-21)
+
+
+### Features
+
+* update IDaaS API to v5.47 ([#35](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/issues/35)) ([7655c05](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/commit/7655c05923262252377a015e149961df8c5ee8b7))
+
 ## [2.3.1](https://entrustcorp.ghe.com/Entrust/idaas-auth-js/compare/v2.3.0...v2.3.1) (2026-07-07)
 
 
