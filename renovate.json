@@ -6,5 +6,11 @@
     "enabled": true,
     "automerge": true
   },
+  "postUpgradeTasks": {
+    "commands": ["bun run docs:generate"],
+    "fileFilters": ["docs/**"],
+    "executionMode": "branch",
+    "installTools": {}
+  },
   "osvVulnerabilityAlerts": true
 }
