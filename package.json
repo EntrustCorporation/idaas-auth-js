@@ -76,7 +76,7 @@
     "@commitlint/config-conventional": "21.2.3",
     "@happy-dom/global-registrator": "20.14.5",
     "@hey-api/openapi-ts": "0.99.0",
-    "@microsoft/api-extractor": "7.59.3",
+    "@microsoft/api-extractor": "7.59.4",
     "@playwright/test": "1.63.0",
     "@rslib/core": "1.0.3",
     "@tsconfig/bun": "1.0.11",
