@@ -80,7 +80,7 @@
     "@playwright/test": "1.64.0",
     "@rslib/core": "1.0.3",
     "@tsconfig/bun": "1.0.11",
-    "@types/bun": "1.4.2",
+    "@types/bun": "1.4.3",
     "@types/oidc-provider": "9.12.1",
     "@types/web": "0.0.358",
     "knip": "6.41.0",
