@@ -20,7 +20,7 @@
         "@tsconfig/bun": "1.0.11",
         "@types/bun": "1.4.3",
         "@types/oidc-provider": "9.12.1",
-        "@types/web": "0.0.358",
+        "@types/web": "0.0.359",
         "knip": "6.41.0",
         "oidc-provider": "9.12.2",
         "onfido-sdk-ui": "14.88.0",
@@ -363,7 +363,7 @@
 
     "@types/unist": ["@types/unist@3.0.3", "", {}, "sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q=="],
 
-    "@types/web": ["@types/web@0.0.358", "", {}, "sha512-mNaTgu3PxD0NY0QTpMSFcs+BurApADI/h0oK/sKzkzobGw9F/GpAM4x3Vreul/EAsgm5I8uKzMnuSazZ1qHjgw=="],
+    "@types/web": ["@types/web@0.0.359", "", {}, "sha512-rggYl8j9E6R8CgHidONXf7B5jJk9iidDaNl6xhRKHgFtb8ES49mxrOIDjDVmiS3n0Mv2QcB3jC/9FvaGQ6n20A=="],
 
     "@types/whatwg-mimetype": ["@types/whatwg-mimetype@3.0.2", "", {}, "sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA=="],
 
