@@ -89,7 +89,7 @@
     "prettier": "3.9.10",
     "rsbuild-plugin-publint": "1.0.0",
     "typedoc": "0.28.20",
-    "typedoc-plugin-markdown": "4.14.0",
+    "typedoc-plugin-markdown": "4.14.1",
     "typescript": "6.0.3"
   }
 }
